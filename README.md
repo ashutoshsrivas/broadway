@@ -153,3 +153,42 @@ register, loyalty points, store credit / wallet, coupons and discount engines,
 salesman commissions, suppliers and purchase bills, stock transfers between
 locations, exchanges and credit notes, WhatsApp/SMS notifications, S3 image
 hosting (uploads go to `public/uploads`), and AI image generation.
+
+---
+
+## Deployment
+
+Live at **http://3.107.142.175** on an AWS EC2 instance (Ubuntu 26.04,
+ap-southeast-2), behind nginx, kept alive by pm2.
+
+```
+internet → nginx :80 → Next.js standalone :3000 → MySQL 8.4 (localhost)
+                    ↘ /_next/static served straight off disk
+```
+
+| Piece | Where |
+| --- | --- |
+| App | `/var/www/broadway` |
+| Process | pm2 app `broadway` (`pm2 logs broadway`) |
+| nginx vhost | `/etc/nginx/sites-available/broadway` (from `deploy/nginx.conf`) |
+| Logs | `/var/log/broadway/{out,error}.log` |
+| Secrets | `/var/www/broadway/.env`, mode 600, never in git |
+
+### Shipping a change
+
+```bash
+ssh -i broadway.pem ubuntu@ec2-3-107-142-175.ap-southeast-2.compute.amazonaws.com 'bash /var/www/broadway/deploy/update.sh'
+```
+
+That pulls `main`, installs, syncs the schema, rebuilds, and reloads pm2.
+
+### Notes on this instance
+
+- **908 MB of RAM.** A 2 GB swapfile is mounted, and the build caps the heap at
+  1536 MB. Without both, `next build` is OOM-killed partway through.
+- **Image storage** is the S3 bucket `broadway-web-images`. Credentials come
+  from the EC2 instance role via the SDK's default chain — there is no access
+  key on the box. With `S3_BUCKET` unset the app falls back to local disk.
+- **No TLS yet.** The site is served over plain HTTP on the bare IP. Point a
+  domain at it and run `certbot --nginx` to fix that; Razorpay live mode and
+  browser credential autofill will both want it.
