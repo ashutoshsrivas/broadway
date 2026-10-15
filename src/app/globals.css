@@ -1,0 +1,398 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BROADWAY OPTICALS — "Quiet Deco"
+
+   The house palette is warm paper and espresso ink, ruled with brass hairlines
+   borrowed from a theatre marquee. Bodoni Moda carries the display voice (high
+   contrast, playbill); Jost carries everything a shopper has to read or click
+   (geometric, deco-adjacent, excellent in tracked uppercase).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@theme {
+  /* ── Ink: the primary dark. Espresso rather than black, so it sits warm
+        against paper instead of punching a hole in it. ── */
+  --color-ink: #2A1F17;
+  --color-ink-soft: #4A3728;
+  --color-ink-muted: #8A7663;
+
+  /* ── Paper: the page. Three warm steps from canvas to card. ── */
+  --color-paper: #F6F1E8;
+  --color-paper-raised: #FCFAF5;
+  --color-paper-sunk: #EFE8DA;
+
+  /* ── Brass: the accent. Hairlines, rules, marquee dots, active states.
+        Used sparingly — brass reads as luxury only when it is rationed. ── */
+  --color-brass: #B08D4F;
+  --color-brass-soft: #D4BC8B;
+
+  /* ── Forest: the secondary ground, for full-bleed editorial bands. ── */
+  --color-forest: #1F3A2E;
+  --color-forest-soft: #33564A;
+  --color-forest-light: #2E5442;
+
+  /* ── Clay: the one warm alarm colour — sale badges, errors, stock warnings. ── */
+  --color-clay: #9C4A2F;
+
+  --color-line: #DED4C2;
+
+  --font-display: var(--font-bodoni);
+  --font-sans: var(--font-jost);
+
+  --radius-card: 2px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   BASE
+   ───────────────────────────────────────────────────────────────────────── */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  /* Force light rendering of native controls. Without this, a macOS user in
+     Dark Mode gets black-on-black <select> popups, and option colours set in
+     CSS are ignored by the native renderer. */
+  color-scheme: light;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+select,
+input,
+textarea {
+  color-scheme: light;
+}
+
+/* The steppers on number inputs are a misclick hazard on touch and add
+   nothing — every quantity on this site has its own +/- control. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+::selection {
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brass);
+  outline-offset: 3px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-paper-sunk);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border: 3px solid var(--color-paper-sunk);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink-muted);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   TYPE UTILITIES
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* The house label: tracked uppercase Jost. Eyebrows, nav, buttons, badges —
+   anything that is a signpost rather than prose. */
+.label {
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-weight: 500;
+  font-size: 0.6875rem;
+  line-height: 1;
+}
+
+.label-lg {
+  letter-spacing: 0.22em;
+  font-size: 0.8125rem;
+}
+
+/* Display headings run tight — Bodoni's high contrast needs the letters close
+   together or the page reads as scattered serifs. */
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   DECO ORNAMENT
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Double rule — the marquee divider. A brass hairline over a heavier ink one,
+   the way a deco border stacks weights. */
+.rule-deco {
+  border: 0;
+  height: 3px;
+  background:
+    linear-gradient(var(--color-brass), var(--color-brass)) top / 100% 1px no-repeat,
+    linear-gradient(var(--color-line), var(--color-line)) bottom / 100% 1px no-repeat;
+}
+
+/* Corner brackets, drawn with two gradients per corner so there is no extra
+   markup. Used on featured tiles and the legacy panel. */
+.deco-frame {
+  position: relative;
+}
+.deco-frame::before,
+.deco-frame::after {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-color: var(--color-brass);
+  pointer-events: none;
+}
+.deco-frame::before {
+  top: 10px;
+  left: 10px;
+  border-top: 1px solid;
+  border-left: 1px solid;
+}
+.deco-frame::after {
+  bottom: 10px;
+  right: 10px;
+  border-bottom: 1px solid;
+  border-right: 1px solid;
+}
+
+/* Paper grain. A single repeating SVG turbulence at very low opacity keeps
+   large cream fields from looking like flat #F6F1E8 fill. */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   INTERACTION
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Nav underline that draws in from the left. */
+.link-rule {
+  position: relative;
+}
+.link-rule::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  height: 1px;
+  width: 0;
+  background: currentColor;
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.link-rule:hover::after,
+.link-rule[data-active="true"]::after {
+  width: 100%;
+}
+
+/* Primary button: ink fill, brass wipe on hover from the bottom up. */
+.btn-ink {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  isolation: isolate;
+  transition: color 0.3s ease;
+}
+.btn-ink::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--color-brass);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.btn-ink:hover::before {
+  transform: scaleY(1);
+}
+.btn-ink:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn-ink:disabled::before {
+  transform: scaleY(0);
+}
+
+/* Outline button — same wipe, inverted. */
+.btn-outline {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--color-ink);
+  color: var(--color-ink);
+  isolation: isolate;
+  transition: color 0.3s ease;
+}
+.btn-outline::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--color-ink);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.btn-outline:hover {
+  color: var(--color-paper);
+}
+.btn-outline:hover::before {
+  transform: scaleY(1);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   MOTION
+   ───────────────────────────────────────────────────────────────────────── */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-left {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+/* The marquee: two identical tracks side by side, the pair shifted by exactly
+   half its width, so the seam never shows. */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.animate-rise {
+  opacity: 0;
+  animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.animate-fade {
+  opacity: 0;
+  animation: fade 0.6s ease-out forwards;
+}
+.animate-slide-left {
+  animation: slide-left 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.animate-marquee {
+  animation: marquee var(--marquee-duration, 40s) linear infinite;
+}
+.marquee-host:hover .animate-marquee {
+  animation-play-state: paused;
+}
+
+/* One orchestrated reveal per section beats scattered micro-animations. */
+.stagger > * {
+  opacity: 0;
+  animation: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.stagger > *:nth-child(1) { animation-delay: 60ms; }
+.stagger > *:nth-child(2) { animation-delay: 130ms; }
+.stagger > *:nth-child(3) { animation-delay: 200ms; }
+.stagger > *:nth-child(4) { animation-delay: 270ms; }
+.stagger > *:nth-child(5) { animation-delay: 340ms; }
+.stagger > *:nth-child(6) { animation-delay: 410ms; }
+.stagger > *:nth-child(7) { animation-delay: 480ms; }
+.stagger > *:nth-child(8) { animation-delay: 550ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .animate-marquee { animation: none; }
+  .animate-rise,
+  .animate-fade,
+  .animate-slide-left,
+  .stagger > * {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   FORMS
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Underline-only fields. A boxed input would fight the hairline rules that
+   structure the rest of the page. */
+.field {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--color-line);
+  padding: 0.65rem 0;
+  font-size: 0.9375rem;
+  color: var(--color-ink);
+  transition: border-color 0.25s ease;
+}
+.field::placeholder {
+  color: var(--color-ink-muted);
+}
+.field:focus {
+  outline: none;
+  border-bottom-color: var(--color-brass);
+}
+.field:disabled {
+  color: var(--color-ink-muted);
+}
+
+/* Boxed variant for the admin, where density matters more than elegance. */
+.field-box {
+  display: block;
+  width: 100%;
+  background: var(--color-paper-raised);
+  border: 1px solid var(--color-line);
+  border-radius: 2px;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.875rem;
+  color: var(--color-ink);
+  transition: border-color 0.2s ease;
+}
+.field-box:focus {
+  outline: none;
+  border-color: var(--color-brass);
+}
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; }
+}

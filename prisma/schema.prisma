@@ -1,0 +1,329 @@
+// Broadway Opticals — Prisma schema
+//
+// Deliberately small. This is the bare-minimum surface an optical store needs
+// to sell online: a catalogue (brand → product → colour variant), shoppers with
+// addresses, and orders with a payment state. Anything an ERP would add —
+// POS, loyalty, wallets, suppliers, stock transfers, exchanges — is out of
+// scope by design and should stay out unless the shop actually needs it.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// ENUMS
+// ──────────────────────────────────────────────────────────────────────────────
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum Gender {
+  MEN
+  WOMEN
+  KIDS
+  UNISEX
+}
+
+/// Silhouette of the frame. Drives the "Shop by shape" filter, which is the
+/// way people actually browse eyewear.
+enum FrameShape {
+  AVIATOR
+  WAYFARER
+  ROUND
+  SQUARE
+  RECTANGLE
+  CAT_EYE
+  OVAL
+  GEOMETRIC
+  SPORT
+}
+
+enum FrameMaterial {
+  ACETATE
+  METAL
+  TITANIUM
+  TR90
+  COMBINATION
+  WOOD
+}
+
+/// How much of the lens the frame encloses.
+enum FrameType {
+  FULL_RIM
+  HALF_RIM
+  RIMLESS
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  COD
+  RAZORPAY
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// PEOPLE
+// ──────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id       String  @id @default(cuid())
+  email    String  @unique
+  /// Null is allowed so an account can exist without a password later (social
+  /// or OTP sign-in). The credentials provider rejects password-less accounts,
+  /// so a null here can never be used to log in.
+  password String?
+  name     String
+  phone    String?
+  role     Role    @default(CUSTOMER)
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders    Order[]
+  addresses Address[]
+
+  @@index([email])
+}
+
+model Address {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name      String
+  phone     String
+  line1     String
+  line2     String?
+  city      String
+  state     String
+  pincode   String
+  isDefault Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// CATALOGUE
+// ──────────────────────────────────────────────────────────────────────────────
+
+/// Flat, on purpose. An optical store has a handful of departments
+/// (Sunglasses, Eyeglasses, Computer Glasses, Contact Lenses, Accessories);
+/// audience is a product attribute (`gender`), not a second tier of category.
+model Category {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String? @db.Text
+  imageUrl    String?
+  sortOrder   Int     @default(0)
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+
+  @@index([slug])
+}
+
+model Brand {
+  id         String  @id @default(cuid())
+  name       String
+  slug       String  @unique
+  logoUrl    String?
+  /// Shown in the homepage brand strip.
+  isFeatured Boolean @default(false)
+  sortOrder  Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+
+  @@index([slug])
+}
+
+model Product {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String? @db.Text
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  brandId    String?
+  brand      Brand?   @relation(fields: [brandId], references: [id])
+
+  /// `mrp` is the printed/list price and `price` is what we actually charge.
+  /// When price < mrp the storefront shows the struck-through MRP and a
+  /// "SAVE x%" badge; there is no separate discount engine.
+  mrp   Float
+  price Float
+
+  // ── Eyewear attributes (what the shop filters on) ──
+  gender        Gender         @default(UNISEX)
+  frameShape    FrameShape?
+  frameMaterial FrameMaterial?
+  frameType     FrameType?
+  /// Total frame width in millimetres — the number a shopper matches against a
+  /// pair they already own.
+  frameWidthMm  Int?
+  /// Free text because lens options are a moving target (Blue-cut, Polarised,
+  /// Photochromic, Progressive…). Not worth an enum.
+  lensType      String?
+
+  status       ProductStatus @default(DRAFT)
+  isFeatured   Boolean       @default(false)
+  isNewArrival Boolean       @default(false)
+  sortOrder    Int           @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  images   ProductImage[]
+  variants ProductVariant[]
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([status])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  url       String
+  alt       String?
+  sortOrder Int     @default(0)
+
+  @@index([productId])
+}
+
+/// One row per colourway. Stock lives here, never on Product — a frame is
+/// bought in a specific colour, so that is the only level at which "in stock"
+/// means anything.
+model ProductVariant {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  sku       String  @unique
+  colorName String
+  colorHex  String?
+  /// Overrides Product.price for this colourway only. Null = use the product price.
+  priceOverride Float?
+  stock     Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@index([sku])
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// ORDERS
+// ──────────────────────────────────────────────────────────────────────────────
+
+model Order {
+  id          String @id @default(cuid())
+  /// Human-facing reference (BO-2026-0001) shown on the order and in email.
+  orderNumber String @unique
+
+  /// Null for guest checkout. Signed-in orders carry the id so they appear
+  /// under /account/orders.
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  // Contact + shipping are snapshotted onto the order rather than joined to
+  // Address, so editing or deleting an address never rewrites order history.
+  email   String
+  phone   String
+  name    String
+  line1   String
+  line2   String?
+  city    String
+  state   String
+  pincode String
+
+  status        OrderStatus   @default(PENDING)
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus @default(PENDING)
+
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+
+  /// Set once, inside the transaction that decrements variant stock, so a
+  /// retried payment callback can never deduct the same order twice.
+  stockDeducted Boolean @default(false)
+
+  subtotal Float
+  shipping Float @default(0)
+  total    Float
+
+  notes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items OrderItem[]
+
+  @@index([userId])
+  @@index([orderNumber])
+  @@index([status])
+}
+
+/// Line items snapshot name/price/image at the time of purchase. The product
+/// can be renamed, repriced or archived later without altering what the
+/// customer actually bought.
+model OrderItem {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String
+  variantId String
+
+  productName String
+  variantLabel String?
+  sku         String?
+  imageUrl    String?
+
+  quantity   Int
+  unitPrice  Float
+  totalPrice Float
+
+  @@index([orderId])
+}
