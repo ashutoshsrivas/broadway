@@ -155,10 +155,19 @@ export function matchVocabulary(input: string, vocabulary: Candidate[]): MatchRe
   let exact: Candidate | null = null;
 
   if (best) {
+    const sameLength = best.entry.slug.length === key.length;
+
     if (best.rank === 1 && prefixMatches === 1 && key.length >= 3) {
       exact = best.entry;
-    } else if (best.rank === 3 && best.distance === 1 && key.length >= 5) {
-      exact = best.entry;
+    } else if (best.rank === 3 && best.distance === 1) {
+      // A single edit folds in once the word is long enough for one slip to be
+      // unambiguous. Below that, only a dropped or doubled letter counts —
+      // "Blak" is plainly Black and "itly" is Italy, but a SUBSTITUTION in a
+      // short word may well be a different word ("Bluu" is not safely "Blue",
+      // and "Gold" must never become "Bold"), so those stay suggestions.
+      if (key.length >= 5 || (key.length >= 4 && !sameLength)) {
+        exact = best.entry;
+      }
     }
   }
 
