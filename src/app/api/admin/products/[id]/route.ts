@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-guard";
 import { productSchema } from "../route";
 import { slugify } from "@/lib/utils";
+import { resolveValue } from "@/lib/attributes";
 
 async function uniqueSlug(name: string, excludeId: string): Promise<string> {
   const base = slugify(name) || "frame";
@@ -27,12 +28,25 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   }
   const { images, variants, ...fields } = parsed.data;
 
+  const [gender, shape, material, size, origin] = await Promise.all([
+    resolveValue("GENDER", fields.gender ?? "Unisex"),
+    fields.shape ? resolveValue("SHAPE", fields.shape) : null,
+    fields.material ? resolveValue("MATERIAL", fields.material) : null,
+    fields.size ? resolveValue("SIZE", fields.size) : null,
+    fields.countryOfOrigin ? resolveValue("ORIGIN", fields.countryOfOrigin) : null,
+  ]);
+
   try {
     await db.$transaction(async (tx) => {
       await tx.product.update({
         where: { id },
         data: {
           ...fields,
+          gender: gender ?? "Unisex",
+          shape,
+          material,
+          size,
+          countryOfOrigin: origin,
           description: fields.description || null,
           brandId: fields.brandId || null,
           slug: await uniqueSlug(fields.name, id),

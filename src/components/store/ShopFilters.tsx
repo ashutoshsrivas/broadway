@@ -5,15 +5,18 @@ import { useState } from "react";
 import { SlidersHorizontal, X, Check } from "lucide-react";
 import { titleCase } from "@/lib/utils";
 
+// Shapes, materials and genders are whatever the shop has actually used —
+// read from the attribute vocabulary, so a word coined in Uploads becomes a
+// filter without a code change. Rim is still a fixed enum.
 type Facets = {
   categories: { name: string; slug: string }[];
   brands: { name: string; slug: string }[];
+  genders: string[];
+  shapes: string[];
+  materials: string[];
 };
 
-const SHAPES = ["AVIATOR", "WAYFARER", "ROUND", "SQUARE", "RECTANGLE", "CAT_EYE", "OVAL", "GEOMETRIC", "SPORT"];
-const MATERIALS = ["ACETATE", "METAL", "TITANIUM", "TR90", "COMBINATION", "WOOD"];
 const FRAME_TYPES = ["FULL_RIM", "HALF_RIM", "RIMLESS"];
-const GENDERS = ["MEN", "WOMEN", "KIDS", "UNISEX"];
 const PRICE_BANDS = [
   { label: "Under ₹5,000", min: 0, max: 5000 },
   { label: "₹5,000 – ₹15,000", min: 5000, max: 15000 },
@@ -123,27 +126,31 @@ export function ShopFilters({
         ))}
       </Group>
 
-      <Group title="For">
-        {GENDERS.map((gender) => (
-          <Option
-            key={gender}
-            label={titleCase(gender)}
-            checked={params.getAll("gender").includes(gender)}
-            onChange={() => toggle("gender", gender)}
-          />
-        ))}
-      </Group>
+      {facets.genders.length > 0 && (
+        <Group title="For">
+          {facets.genders.map((gender) => (
+            <Option
+              key={gender}
+              label={gender}
+              checked={params.getAll("gender").includes(gender)}
+              onChange={() => toggle("gender", gender)}
+            />
+          ))}
+        </Group>
+      )}
 
-      <Group title="Frame Shape">
-        {SHAPES.map((shape) => (
-          <Option
-            key={shape}
-            label={titleCase(shape)}
-            checked={params.getAll("shape").includes(shape)}
-            onChange={() => toggle("shape", shape)}
-          />
-        ))}
-      </Group>
+      {facets.shapes.length > 0 && (
+        <Group title="Frame Shape">
+          {facets.shapes.map((shape) => (
+            <Option
+              key={shape}
+              label={shape}
+              checked={params.getAll("shape").includes(shape)}
+              onChange={() => toggle("shape", shape)}
+            />
+          ))}
+        </Group>
+      )}
 
       {facets.brands.length > 0 && (
         <Group title="Brand">
@@ -169,16 +176,18 @@ export function ShopFilters({
         ))}
       </Group>
 
-      <Group title="Material">
-        {MATERIALS.map((material) => (
-          <Option
-            key={material}
-            label={material === "TR90" ? "TR90" : titleCase(material)}
-            checked={params.getAll("material").includes(material)}
-            onChange={() => toggle("material", material)}
-          />
-        ))}
-      </Group>
+      {facets.materials.length > 0 && (
+        <Group title="Material">
+          {facets.materials.map((material) => (
+            <Option
+              key={material}
+              label={material}
+              checked={params.getAll("material").includes(material)}
+              onChange={() => toggle("material", material)}
+            />
+          ))}
+        </Group>
+      )}
     </div>
   );
 

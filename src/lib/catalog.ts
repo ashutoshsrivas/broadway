@@ -25,7 +25,7 @@ export const productCardSelect = {
   mrp: true,
   price: true,
   gender: true,
-  frameShape: true,
+  shape: true,
   isNewArrival: true,
   brand: { select: { name: true, slug: true } },
   category: { select: { name: true, slug: true } },
@@ -54,9 +54,9 @@ function buildWhere(f: ShopFilters): Prisma.ProductWhereInput {
 
   if (f.category) where.category = { slug: f.category };
   if (f.brand?.length) where.brand = { slug: { in: f.brand } };
-  if (f.gender?.length) where.gender = { in: f.gender as Prisma.EnumGenderFilter["in"] };
-  if (f.shape?.length) where.frameShape = { in: f.shape as never };
-  if (f.material?.length) where.frameMaterial = { in: f.material as never };
+  if (f.gender?.length) where.gender = { in: f.gender };
+  if (f.shape?.length) where.shape = { in: f.shape };
+  if (f.material?.length) where.material = { in: f.material };
   if (f.frameType?.length) where.frameType = { in: f.frameType as never };
 
   if (f.minPrice != null || f.maxPrice != null) {
@@ -73,6 +73,8 @@ function buildWhere(f: ShopFilters): Prisma.ProductWhereInput {
     where.OR = [
       { name: { contains: f.q } },
       { description: { contains: f.q } },
+      { shape: { contains: f.q } },
+      { material: { contains: f.q } },
       { brand: { name: { contains: f.q } } },
       { category: { name: { contains: f.q } } },
     ];
@@ -99,9 +101,14 @@ export async function findProducts(f: ShopFilters) {
   return { products, total, page, pageCount: Math.max(1, Math.ceil(total / PAGE_SIZE)) };
 }
 
-/** Facets for the shop sidebar. Only values that exist on live products. */
+/**
+ * Facets for the shop sidebar.
+ *
+ * The attribute lists are read from the vocabulary rather than hard-coded, so
+ * a shape coined in Uploads becomes a filter the moment a product uses it.
+ */
 export async function shopFacets() {
-  const [categories, brands] = await Promise.all([
+  const [categories, brands, vocabulary] = await Promise.all([
     db.category.findMany({
       where: { isActive: true },
       orderBy: { sortOrder: "asc" },
@@ -112,6 +119,20 @@ export async function shopFacets() {
       orderBy: { name: "asc" },
       select: { name: true, slug: true },
     }),
+    db.attributeValue.findMany({
+      orderBy: [{ usageCount: "desc" }, { label: "asc" }],
+      select: { kind: true, label: true },
+    }),
   ]);
-  return { categories, brands };
+
+  const of = (kind: string) =>
+    vocabulary.filter((v) => v.kind === kind).map((v) => v.label);
+
+  return {
+    categories,
+    brands,
+    genders: of("GENDER"),
+    shapes: of("SHAPE"),
+    materials: of("MATERIAL"),
+  };
 }

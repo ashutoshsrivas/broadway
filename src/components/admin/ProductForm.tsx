@@ -6,10 +6,7 @@ import toast from "react-hot-toast";
 import { Plus, Trash2, Upload, X } from "lucide-react";
 import { titleCase } from "@/lib/utils";
 
-const SHAPES = ["AVIATOR", "WAYFARER", "ROUND", "SQUARE", "RECTANGLE", "CAT_EYE", "OVAL", "GEOMETRIC", "SPORT"];
-const MATERIALS = ["ACETATE", "METAL", "TITANIUM", "TR90", "COMBINATION", "WOOD"];
 const FRAME_TYPES = ["FULL_RIM", "HALF_RIM", "RIMLESS"];
-const GENDERS = ["MEN", "WOMEN", "KIDS", "UNISEX"];
 const STATUSES = ["DRAFT", "ACTIVE", "ARCHIVED"];
 
 type VariantDraft = {
@@ -30,14 +27,16 @@ export type ProductFormValues = {
   mrp: string;
   price: string;
   gender: string;
-  frameShape: string;
-  frameMaterial: string;
+  shape: string;
+  material: string;
+  size: string;
+  countryOfOrigin: string;
   frameType: string;
-  frameWidthMm: string;
   lensType: string;
   status: string;
   isFeatured: boolean;
   isNewArrival: boolean;
+  isLimitedEdition: boolean;
   images: string[];
   variants: VariantDraft[];
 };
@@ -49,15 +48,17 @@ export const BLANK_PRODUCT: ProductFormValues = {
   brandId: "",
   mrp: "",
   price: "",
-  gender: "UNISEX",
-  frameShape: "",
-  frameMaterial: "",
+  gender: "Unisex",
+  shape: "",
+  material: "",
+  size: "",
+  countryOfOrigin: "",
   frameType: "",
-  frameWidthMm: "",
   lensType: "",
   status: "DRAFT",
   isFeatured: false,
   isNewArrival: false,
+  isLimitedEdition: false,
   images: [],
   variants: [{ sku: "", colorName: "", colorHex: "#2A1F17", priceOverride: "", stock: "0" }],
 };
@@ -121,15 +122,17 @@ export function ProductForm({
       brandId: values.brandId || null,
       mrp: Number(values.mrp),
       price: Number(values.price),
-      gender: values.gender,
-      frameShape: values.frameShape || null,
-      frameMaterial: values.frameMaterial || null,
+      gender: values.gender.trim() || "Unisex",
+      shape: values.shape.trim() || null,
+      material: values.material.trim() || null,
+      size: values.size.trim() || null,
+      countryOfOrigin: values.countryOfOrigin.trim() || null,
       frameType: values.frameType || null,
-      frameWidthMm: values.frameWidthMm ? Number(values.frameWidthMm) : null,
       lensType: values.lensType.trim() || null,
       status: values.status,
       isFeatured: values.isFeatured,
       isNewArrival: values.isNewArrival,
+      isLimitedEdition: values.isLimitedEdition,
       images: values.images,
       variants: values.variants.map((v) => ({
         id: v.id,
@@ -255,33 +258,22 @@ export function ProductForm({
       {/* ── Eyewear attributes ── */}
       <Section title="Frame Details" note="These drive the shop filters.">
         <div className="grid gap-5 sm:grid-cols-3">
-          <Label text="For">
-            <select
+          <Label text="For" hint="Free text — use Uploads for list suggestions">
+            <input
               value={values.gender}
               onChange={(e) => set("gender", e.target.value)}
+              placeholder="Unisex"
               className="field-box"
-            >
-              {GENDERS.map((g) => (
-                <option key={g} value={g}>
-                  {titleCase(g)}
-                </option>
-              ))}
-            </select>
+            />
           </Label>
 
           <Label text="Shape">
-            <select
-              value={values.frameShape}
-              onChange={(e) => set("frameShape", e.target.value)}
+            <input
+              value={values.shape}
+              onChange={(e) => set("shape", e.target.value)}
+              placeholder="Aviator"
               className="field-box"
-            >
-              <option value="">—</option>
-              {SHAPES.map((s) => (
-                <option key={s} value={s}>
-                  {titleCase(s)}
-                </option>
-              ))}
-            </select>
+            />
           </Label>
 
           <Label text="Rim">
@@ -300,26 +292,28 @@ export function ProductForm({
           </Label>
 
           <Label text="Material">
-            <select
-              value={values.frameMaterial}
-              onChange={(e) => set("frameMaterial", e.target.value)}
+            <input
+              value={values.material}
+              onChange={(e) => set("material", e.target.value)}
+              placeholder="Acetate"
               className="field-box"
-            >
-              <option value="">—</option>
-              {MATERIALS.map((m) => (
-                <option key={m} value={m}>
-                  {m === "TR90" ? "TR90" : titleCase(m)}
-                </option>
-              ))}
-            </select>
+            />
           </Label>
 
-          <Label text="Frame width (mm)">
+          <Label text="Size">
             <input
-              type="number"
-              min="0"
-              value={values.frameWidthMm}
-              onChange={(e) => set("frameWidthMm", e.target.value)}
+              value={values.size}
+              onChange={(e) => set("size", e.target.value)}
+              placeholder="52-18-140"
+              className="field-box"
+            />
+          </Label>
+
+          <Label text="Country of origin">
+            <input
+              value={values.countryOfOrigin}
+              onChange={(e) => set("countryOfOrigin", e.target.value)}
+              placeholder="Italy"
               className="field-box"
             />
           </Label>
@@ -502,6 +496,15 @@ export function ProductForm({
                 className="h-4 w-4 accent-[#B08D4F]"
               />
               Mark as a new arrival
+            </label>
+            <label className="flex items-center gap-3 text-sm text-ink-soft">
+              <input
+                type="checkbox"
+                checked={values.isLimitedEdition}
+                onChange={(e) => set("isLimitedEdition", e.target.checked)}
+                className="h-4 w-4 accent-[#B08D4F]"
+              />
+              Limited edition
             </label>
           </div>
         </div>

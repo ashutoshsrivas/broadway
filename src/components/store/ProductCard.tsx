@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatPrice, discountPct, titleCase } from "@/lib/utils";
+import { formatPrice, discountPct } from "@/lib/utils";
 import type { ProductCardData } from "@/lib/catalog";
 
 /**
@@ -68,8 +68,8 @@ export function ProductCard({ product, priority = false }: { product: ProductCar
       <div className="pt-4">
         <div className="flex items-baseline justify-between gap-3">
           <p className="label truncate text-ink-muted">{product.brand?.name ?? "Broadway"}</p>
-          {product.frameShape && (
-            <p className="label shrink-0 text-[0.6rem] text-brass">{titleCase(product.frameShape)}</p>
+          {product.shape && (
+            <p className="label shrink-0 text-[0.6rem] text-brass">{product.shape}</p>
           )}
         </div>
 

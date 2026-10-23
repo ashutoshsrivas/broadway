@@ -30,36 +30,6 @@ enum ProductStatus {
   ARCHIVED
 }
 
-enum Gender {
-  MEN
-  WOMEN
-  KIDS
-  UNISEX
-}
-
-/// Silhouette of the frame. Drives the "Shop by shape" filter, which is the
-/// way people actually browse eyewear.
-enum FrameShape {
-  AVIATOR
-  WAYFARER
-  ROUND
-  SQUARE
-  RECTANGLE
-  CAT_EYE
-  OVAL
-  GEOMETRIC
-  SPORT
-}
-
-enum FrameMaterial {
-  ACETATE
-  METAL
-  TITANIUM
-  TR90
-  COMBINATION
-  WOOD
-}
-
 /// How much of the lens the frame encloses.
 enum FrameType {
   FULL_RIM
@@ -191,21 +161,30 @@ model Product {
   price Float
 
   // ── Eyewear attributes (what the shop filters on) ──
-  gender        Gender         @default(UNISEX)
-  frameShape    FrameShape?
-  frameMaterial FrameMaterial?
-  frameType     FrameType?
-  /// Total frame width in millimetres — the number a shopper matches against a
-  /// pair they already own.
-  frameWidthMm  Int?
+  //
+  // These are plain strings, not enums, because the shop floor has to be able
+  // to coin a new shape or material mid-upload without a schema migration and
+  // a redeploy. The known values live in AttributeValue, which is a vocabulary
+  // for autocomplete — not a foreign key. Storing the text on the product
+  // means a past product keeps the words it was filed under even if someone
+  // later renames the vocabulary entry.
+  gender          String     @default("Unisex")
+  shape           String?
+  material        String?
+  /// Frame width as written on the arm — "52-18-140", "Medium", "52 mm".
+  /// Free text because the shop writes it a dozen different ways.
+  size            String?
+  countryOfOrigin String?
+  frameType       FrameType?
   /// Free text because lens options are a moving target (Blue-cut, Polarised,
   /// Photochromic, Progressive…). Not worth an enum.
-  lensType      String?
+  lensType        String?
 
-  status       ProductStatus @default(DRAFT)
-  isFeatured   Boolean       @default(false)
-  isNewArrival Boolean       @default(false)
-  sortOrder    Int           @default(0)
+  status           ProductStatus @default(DRAFT)
+  isFeatured       Boolean       @default(false)
+  isNewArrival     Boolean       @default(false)
+  isLimitedEdition Boolean       @default(false)
+  sortOrder        Int           @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -217,6 +196,8 @@ model Product {
   @@index([categoryId])
   @@index([brandId])
   @@index([status])
+  @@index([gender])
+  @@index([shape])
 }
 
 model ProductImage {
@@ -239,18 +220,56 @@ model ProductVariant {
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  sku       String  @unique
-  colorName String
-  colorHex  String?
+  sku           String  @unique
+  colorName     String
+  colorHex      String?
   /// Overrides Product.price for this colourway only. Null = use the product price.
   priceOverride Float?
-  stock     Int     @default(0)
+  stock         Int     @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([productId])
   @@index([sku])
+}
+
+/// What kind of list a vocabulary entry belongs to.
+enum AttributeKind {
+  GENDER
+  COLOUR
+  MATERIAL
+  SHAPE
+  SIZE
+  ORIGIN
+}
+
+/// The words the upload form offers, per field.
+///
+/// One table rather than six, because every one of these lists does exactly
+/// the same job: remember what has been typed before so the next person picks
+/// it instead of inventing a near-duplicate. New entries are written by the
+/// upload form the moment someone commits an unrecognised word.
+///
+/// `slug` is the normalised form ("cat eye", "Cat-Eye" and "CAT EYE" all
+/// collapse to "cat-eye") and carries the uniqueness constraint, so the list
+/// cannot accumulate the same word three times in three casings. `label` is
+/// what people actually see.
+model AttributeValue {
+  id    String        @id @default(cuid())
+  kind  AttributeKind
+  label String
+  slug  String
+
+  /// Bumped every time a product is saved with this value, so the combobox can
+  /// offer the shop's real favourites first instead of alphabetical order.
+  usageCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([kind, slug])
+  @@index([kind, usageCount])
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -316,10 +335,10 @@ model OrderItem {
   productId String
   variantId String
 
-  productName String
+  productName  String
   variantLabel String?
-  sku         String?
-  imageUrl    String?
+  sku          String?
+  imageUrl     String?
 
   quantity   Int
   unitPrice  Float

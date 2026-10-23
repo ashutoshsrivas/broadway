@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-guard";
 import { slugify } from "@/lib/utils";
+import { resolveValue } from "@/lib/attributes";
 
 const variantSchema = z.object({
   id: z.string().optional(),
@@ -20,21 +21,20 @@ export const productSchema = z.object({
   brandId: z.string().nullable().optional(),
   mrp: z.number().positive("MRP must be greater than zero"),
   price: z.number().positive("Price must be greater than zero"),
-  gender: z.enum(["MEN", "WOMEN", "KIDS", "UNISEX"]),
-  frameShape: z
-    .enum(["AVIATOR", "WAYFARER", "ROUND", "SQUARE", "RECTANGLE", "CAT_EYE", "OVAL", "GEOMETRIC", "SPORT"])
-    .nullable()
-    .optional(),
-  frameMaterial: z
-    .enum(["ACETATE", "METAL", "TITANIUM", "TR90", "COMBINATION", "WOOD"])
-    .nullable()
-    .optional(),
+  // Free text, matched against the attribute vocabulary on save — see
+  // lib/attributes.ts. Not enums, so the shop can coin a new shape or material
+  // without a migration.
+  gender: z.string().trim().max(60).optional(),
+  shape: z.string().trim().max(60).nullable().optional(),
+  material: z.string().trim().max(60).nullable().optional(),
+  size: z.string().trim().max(60).nullable().optional(),
+  countryOfOrigin: z.string().trim().max(60).nullable().optional(),
   frameType: z.enum(["FULL_RIM", "HALF_RIM", "RIMLESS"]).nullable().optional(),
-  frameWidthMm: z.number().int().positive().nullable().optional(),
   lensType: z.string().trim().max(120).nullable().optional(),
   status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]),
   isFeatured: z.boolean(),
   isNewArrival: z.boolean(),
+  isLimitedEdition: z.boolean().optional(),
   images: z.array(z.string().trim().min(1)).max(8),
   variants: z.array(variantSchema).min(1, "Add at least one colour"),
 });
@@ -78,10 +78,25 @@ export async function POST(req: NextRequest) {
   }
   const { images, variants, ...fields } = parsed.data;
 
+  // Fold typed attributes into the shared vocabulary so this form and Uploads
+  // feed the same lists.
+  const [gender, shape, material, size, origin] = await Promise.all([
+    resolveValue("GENDER", fields.gender ?? "Unisex"),
+    fields.shape ? resolveValue("SHAPE", fields.shape) : null,
+    fields.material ? resolveValue("MATERIAL", fields.material) : null,
+    fields.size ? resolveValue("SIZE", fields.size) : null,
+    fields.countryOfOrigin ? resolveValue("ORIGIN", fields.countryOfOrigin) : null,
+  ]);
+
   try {
     const product = await db.product.create({
       data: {
         ...fields,
+        gender: gender ?? "Unisex",
+        shape,
+        material,
+        size,
+        countryOfOrigin: origin,
         description: fields.description || null,
         brandId: fields.brandId || null,
         slug: await uniqueSlug(fields.name),

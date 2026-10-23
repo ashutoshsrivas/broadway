@@ -23,11 +23,13 @@ type Product = {
   mrp: number;
   price: number;
   gender: string;
-  frameShape: string | null;
-  frameMaterial: string | null;
+  shape: string | null;
+  material: string | null;
+  size: string | null;
+  countryOfOrigin: string | null;
   frameType: string | null;
-  frameWidthMm: number | null;
   lensType: string | null;
+  isLimitedEdition: boolean;
   brand: { name: string } | null;
   category: { name: string };
   images: { url: string; alt: string | null }[];
@@ -50,12 +52,13 @@ export function ProductDetail({ product }: { product: Product }) {
   const inStock = (variant?.stock ?? 0) > 0;
 
   const specs = [
-    ["Frame shape", product.frameShape && titleCase(product.frameShape)],
+    ["Frame shape", product.shape],
     ["Rim", product.frameType && titleCase(product.frameType)],
-    ["Material", product.frameMaterial && (product.frameMaterial === "TR90" ? "TR90" : titleCase(product.frameMaterial))],
-    ["Frame width", product.frameWidthMm && `${product.frameWidthMm} mm`],
+    ["Material", product.material],
+    ["Size", product.size],
     ["Lens", product.lensType],
-    ["Best for", titleCase(product.gender)],
+    ["Best for", product.gender],
+    ["Country of origin", product.countryOfOrigin],
     ["Colour", variant?.colorName],
     ["SKU", variant?.sku],
   ].filter(([, value]) => Boolean(value)) as [string, string][];
@@ -128,7 +131,14 @@ export function ProductDetail({ product }: { product: Product }) {
 
       {/* ── Purchase column ── */}
       <div>
-        <p className="label text-brass">{product.brand?.name ?? "Broadway"}</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="label text-brass">{product.brand?.name ?? "Broadway"}</p>
+          {product.isLimitedEdition && (
+            <span className="label border border-brass px-2.5 py-1 text-[0.6rem] text-brass">
+              ◆ Limited Edition
+            </span>
+          )}
+        </div>
         <h1 className="display mt-3 text-[clamp(1.9rem,4.5vw,3rem)]">{product.name}</h1>
         <p className="label mt-3 text-ink-muted">{product.category.name}</p>
 

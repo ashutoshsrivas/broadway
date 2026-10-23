@@ -6,7 +6,7 @@
  *
  *   npm run db:seed
  */
-import { PrismaClient, type Gender, type FrameShape, type FrameMaterial, type FrameType } from "@prisma/client";
+import { PrismaClient, type FrameType } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const db = new PrismaClient();
@@ -79,11 +79,15 @@ type Seed = {
   category: string;
   mrp: number;
   price: number;
-  gender: Gender;
-  shape?: FrameShape;
-  material?: FrameMaterial;
+  // Plain strings now: these feed the AttributeValue vocabulary that the
+  // Uploads form offers, and the shop filters read back out of it.
+  gender: string;
+  shape?: string;
+  material?: string;
   rim?: FrameType;
-  width?: number;
+  width?: string;
+  origin?: string;
+  limited?: boolean;
   lens?: string;
   description: string;
   featured?: boolean;
@@ -98,7 +102,7 @@ const PRODUCTS: Seed[] = [
     brand: "ray-ban",
     category: "sunglasses",
     mrp: 12790, price: 11511,
-    gender: "UNISEX", shape: "AVIATOR", material: "METAL", rim: "FULL_RIM", width: 140,
+    gender: "Unisex", shape: "Aviator", material: "Metal", rim: "FULL_RIM", width: "140 mm",
     lens: "G-15 Polarised",
     description:
       "The frame that started it all. Designed in 1937 for US Air Force pilots and unchanged in silhouette since — thin metal temples, a double bridge, and teardrop lenses that still suit almost every face.",
@@ -115,7 +119,7 @@ const PRODUCTS: Seed[] = [
     brand: "ray-ban",
     category: "sunglasses",
     mrp: 11890, price: 10701,
-    gender: "UNISEX", shape: "WAYFARER", material: "ACETATE", rim: "FULL_RIM", width: 137,
+    gender: "Unisex", shape: "Wayfarer", material: "Acetate", rim: "FULL_RIM", width: "137 mm",
     lens: "Crystal Green",
     description:
       "Heavy acetate, a forward rake, and the trapezoid front that made the Wayfarer the most recognisable frame of the twentieth century.",
@@ -131,7 +135,7 @@ const PRODUCTS: Seed[] = [
     brand: "persol",
     category: "sunglasses",
     mrp: 28900, price: 26010,
-    gender: "MEN", shape: "OVAL", material: "ACETATE", rim: "FULL_RIM", width: 136,
+    gender: "Men", shape: "Oval", material: "Acetate", rim: "FULL_RIM", width: "136 mm", origin: "Italy",
     lens: "Blue Polarised",
     description:
       "The folding original, with Persol's Meflecto flex stems and the arrow hinge. Made in Italy, and still folded down to the size of a cigarette case.",
@@ -147,7 +151,7 @@ const PRODUCTS: Seed[] = [
     brand: "tom-ford",
     category: "sunglasses",
     mrp: 48000, price: 43200,
-    gender: "WOMEN", shape: "CAT_EYE", material: "ACETATE", rim: "FULL_RIM", width: 145,
+    gender: "Women", shape: "Cat Eye", material: "Acetate", rim: "FULL_RIM", width: "145 mm", origin: "Italy", limited: true,
     lens: "Gradient Smoke",
     description:
       "A sharply lifted cat-eye in thick Italian acetate, finished with the T-hinge in polished gold. Oversized without tipping into costume.",
@@ -164,7 +168,7 @@ const PRODUCTS: Seed[] = [
     brand: "gucci",
     category: "sunglasses",
     mrp: 36700, price: 32296,
-    gender: "WOMEN", shape: "SQUARE", material: "ACETATE", rim: "FULL_RIM", width: 143,
+    gender: "Women", shape: "Square", material: "Acetate", rim: "FULL_RIM", width: "143 mm",
     lens: "Brown Gradient",
     description:
       "Broad square lenses with the interlocking G at the temple. Substantial acetate, balanced so it sits light on the bridge.",
@@ -181,7 +185,7 @@ const PRODUCTS: Seed[] = [
     brand: "prada",
     category: "sunglasses",
     mrp: 38490, price: 34641,
-    gender: "WOMEN", shape: "GEOMETRIC", material: "ACETATE", rim: "FULL_RIM", width: 142,
+    gender: "Women", shape: "Geometric", material: "Acetate", rim: "FULL_RIM", width: "142 mm", origin: "Italy", limited: true,
     lens: "Dark Grey",
     description:
       "An angular geometric front with the Symbole triangle set into the temple — one of the few genuinely new shapes of the last decade.",
@@ -198,7 +202,7 @@ const PRODUCTS: Seed[] = [
     brand: "oakley",
     category: "sunglasses",
     mrp: 16490, price: 13192,
-    gender: "MEN", shape: "SPORT", material: "TR90", rim: "FULL_RIM", width: 147,
+    gender: "Men", shape: "Sport", material: "TR90", rim: "FULL_RIM", width: "147 mm",
     lens: "Prizm Polarised",
     description:
       "O-Matter frame, Unobtainium earsocks, and Prizm lenses tuned to lift contrast in bright light. Built for glare, not for galleries.",
@@ -213,7 +217,7 @@ const PRODUCTS: Seed[] = [
     brand: "carrera",
     category: "sunglasses",
     mrp: 14200, price: 9940,
-    gender: "MEN", shape: "AVIATOR", material: "METAL", rim: "HALF_RIM", width: 141,
+    gender: "Men", shape: "Aviator", material: "Metal", rim: "HALF_RIM", width: "141 mm",
     lens: "Mirrored Gold",
     description:
       "A half-rim pilot with a flat-top brow bar and mirrored lenses. Carrera's racing lineage, at a price that doesn't need explaining.",
@@ -228,7 +232,7 @@ const PRODUCTS: Seed[] = [
     brand: "broadway",
     category: "eyeglasses",
     mrp: 5900, price: 4425,
-    gender: "UNISEX", shape: "ROUND", material: "ACETATE", rim: "FULL_RIM", width: 138,
+    gender: "Unisex", shape: "Round", material: "Acetate", rim: "FULL_RIM", width: "138 mm", origin: "India",
     lens: "Single Vision (included)",
     description:
       "Our own house round, cut from Mazzucchelli acetate and hand-polished. Comes with clear single-vision lenses to your prescription at no extra cost.",
@@ -245,7 +249,7 @@ const PRODUCTS: Seed[] = [
     brand: "broadway",
     category: "eyeglasses",
     mrp: 9900, price: 8415,
-    gender: "MEN", shape: "RECTANGLE", material: "TITANIUM", rim: "RIMLESS", width: 142,
+    gender: "Men", shape: "Rectangle", material: "Titanium", rim: "RIMLESS", width: "142 mm", origin: "Japan",
     lens: "Single Vision (included)",
     description:
       "Beta-titanium, 11 grams on the face, and no rim to interrupt the view. The frame we fit most often to people who say they hate wearing glasses.",
@@ -261,7 +265,7 @@ const PRODUCTS: Seed[] = [
     brand: "prada",
     category: "eyeglasses",
     mrp: 24900, price: 21165,
-    gender: "WOMEN", shape: "CAT_EYE", material: "ACETATE", rim: "FULL_RIM", width: 140,
+    gender: "Women", shape: "Cat Eye", material: "Acetate", rim: "FULL_RIM", width: "140 mm",
     description:
       "A softened cat-eye optical frame with the enamelled logo plaque at the temple. Reads as a frame first and a label second.",
     isNew: true,
@@ -276,7 +280,7 @@ const PRODUCTS: Seed[] = [
     brand: "titan-eye-plus",
     category: "eyeglasses",
     mrp: 3499, price: 2449,
-    gender: "MEN", shape: "RECTANGLE", material: "TR90", rim: "FULL_RIM", width: 139,
+    gender: "Men", shape: "Rectangle", material: "TR90", rim: "FULL_RIM", width: "139 mm",
     lens: "Single Vision (included)",
     description:
       "Light, flexible TR90 in a straightforward rectangle. The frame we recommend for a first pair, or a second one to leave at the office.",
@@ -292,7 +296,7 @@ const PRODUCTS: Seed[] = [
     brand: "broadway",
     category: "computer-glasses",
     mrp: 2999, price: 1799,
-    gender: "UNISEX", shape: "ROUND", material: "TR90", rim: "FULL_RIM", width: 137,
+    gender: "Unisex", shape: "Round", material: "TR90", rim: "FULL_RIM", width: "137 mm",
     lens: "Blue-cut anti-glare",
     description:
       "Filters the blue end of the screen spectrum without the yellow cast cheaper coatings leave behind. Zero power by default, or to your prescription.",
@@ -310,7 +314,7 @@ const PRODUCTS: Seed[] = [
     brand: "broadway",
     category: "computer-glasses",
     mrp: 2999, price: 1799,
-    gender: "UNISEX", shape: "SQUARE", material: "TR90", rim: "FULL_RIM", width: 140,
+    gender: "Unisex", shape: "Square", material: "TR90", rim: "FULL_RIM", width: "140 mm",
     lens: "Blue-cut anti-glare",
     description:
       "The square cut of the Lumen, for faces that a round frame swallows. Same lens, same coating, same weight.",
@@ -326,7 +330,7 @@ const PRODUCTS: Seed[] = [
     brand: "acuvue",
     category: "contact-lenses",
     mrp: 2650, price: 2385,
-    gender: "UNISEX",
+    gender: "Unisex",
     lens: "Daily disposable, silicone hydrogel",
     description:
       "Thirty daily lenses with HydraLuxe tear-infused technology. Supplied to your prescription — send us your power at checkout and we'll confirm before dispatch.",
@@ -338,7 +342,7 @@ const PRODUCTS: Seed[] = [
     brand: "broadway",
     category: "accessories",
     mrp: 1290, price: 990,
-    gender: "UNISEX",
+    gender: "Unisex",
     description:
       "A rigid case in full-grain leather with a microfibre lining, made for us in Kanpur. Fits every frame in the catalogue, including the oversized ones.",
     colours: [
@@ -353,7 +357,7 @@ const PRODUCTS: Seed[] = [
     brand: "broadway",
     category: "accessories",
     mrp: 690, price: 490,
-    gender: "UNISEX",
+    gender: "Unisex",
     description:
       "Alcohol-free spray, two microfibre cloths and a screwdriver for the temple screws that always loosen at the worst moment.",
     colours: [{ name: "Standard", hex: "#D8D4CC", stock: 65 }],
@@ -398,14 +402,16 @@ async function main() {
         mrp: seed.mrp,
         price: seed.price,
         gender: seed.gender,
-        frameShape: seed.shape ?? null,
-        frameMaterial: seed.material ?? null,
+        shape: seed.shape ?? null,
+        material: seed.material ?? null,
+        size: seed.width ?? null,
+        countryOfOrigin: seed.origin ?? null,
         frameType: seed.rim ?? null,
-        frameWidthMm: seed.width ?? null,
         lensType: seed.lens ?? null,
         status: "ACTIVE",
         isFeatured: seed.featured ?? false,
         isNewArrival: seed.isNew ?? false,
+        isLimitedEdition: seed.limited ?? false,
         sortOrder: i,
       },
       create: {
@@ -417,14 +423,16 @@ async function main() {
         mrp: seed.mrp,
         price: seed.price,
         gender: seed.gender,
-        frameShape: seed.shape ?? null,
-        frameMaterial: seed.material ?? null,
+        shape: seed.shape ?? null,
+        material: seed.material ?? null,
+        size: seed.width ?? null,
+        countryOfOrigin: seed.origin ?? null,
         frameType: seed.rim ?? null,
-        frameWidthMm: seed.width ?? null,
         lensType: seed.lens ?? null,
         status: "ACTIVE",
         isFeatured: seed.featured ?? false,
         isNewArrival: seed.isNew ?? false,
+        isLimitedEdition: seed.limited ?? false,
         sortOrder: i,
       },
     });
@@ -458,6 +466,45 @@ async function main() {
       });
     }
   }
+
+  console.log("→ Attribute vocabulary");
+  // Derived from the seeded catalogue rather than listed separately — one
+  // source of truth, and the usage counts come out right for free.
+  const vocab = new Map<string, { kind: string; label: string; count: number }>();
+  const note = (kind: string, label?: string | null) => {
+    if (!label) return;
+    const slug = label
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    if (!slug) return;
+    const key = `${kind}:${slug}`;
+    const row = vocab.get(key);
+    if (row) row.count += 1;
+    else vocab.set(key, { kind, label, count: 1 });
+  };
+
+  for (const seed of PRODUCTS) {
+    note("GENDER", seed.gender);
+    note("SHAPE", seed.shape);
+    note("MATERIAL", seed.material);
+    note("SIZE", seed.width);
+    note("ORIGIN", seed.origin);
+    for (const colour of seed.colours) note("COLOUR", colour.name);
+  }
+  // A couple of origins the catalogue does not use yet, so the list starts useful.
+  for (const extra of ["France", "China", "Germany"]) note("ORIGIN", extra);
+
+  for (const [key, row] of vocab) {
+    const slug = key.split(":").slice(1).join(":");
+    await db.attributeValue.upsert({
+      where: { kind_slug: { kind: row.kind as never, slug } },
+      update: { label: row.label, usageCount: row.count },
+      create: { kind: row.kind as never, slug, label: row.label, usageCount: row.count },
+    });
+  }
+  console.log(`   ${vocab.size} values across 6 lists`);
 
   console.log("→ Admin account");
   const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@broadwayopticals.com";
