@@ -467,6 +467,62 @@ async function main() {
     }
   }
 
+  console.log("→ Hero banners");
+  // Seeded only when the deck is empty, so re-seeding never clobbers slides
+  // the shop has set up in the admin panel.
+  if ((await db.banner.count()) === 0) {
+    const BANNERS = [
+      {
+        mediaUrl:
+          "https://images.unsplash.com/photo-1605813808456-26c16c0dfb77?w=2400&q=80&auto=format&fit=crop",
+        eyebrow: "Est. 1974 · New Delhi",
+        heading: "See, and be seen.",
+        subheading:
+          "Fifty years of lens craft behind every frame we sell. Browse the houses that define modern eyewear.",
+        ctaLabel: "Shop All Frames",
+        ctaHref: "/shop",
+        align: "LEFT" as const,
+        overlay: 40,
+        durationMs: 5000,
+        sortOrder: 1,
+      },
+      {
+        mediaUrl:
+          "https://images.unsplash.com/photo-1534078477103-9f6a18b3a5e2?w=2400&q=80&auto=format&fit=crop",
+        eyebrow: "The Autumn Frame Edit",
+        heading: "Handpicked, not stocked.",
+        subheading: "A wall of frames, narrowed to the few our opticians would wear themselves.",
+        ctaLabel: "View the Edit",
+        ctaHref: "/shop?sort=newest",
+        align: "CENTRE" as const,
+        overlay: 45,
+        durationMs: 5000,
+        sortOrder: 2,
+      },
+      {
+        mediaUrl:
+          "https://images.unsplash.com/photo-1517948430535-1e2469d314fe?w=2400&q=80&auto=format&fit=crop",
+        eyebrow: "Complimentary",
+        heading: "A frame is only right once it's fitted.",
+        subheading:
+          "Free eye test, lens consultation and fitting at all six stores — whether you bought the frame from us or not.",
+        ctaLabel: "Find a Store",
+        ctaHref: "/stores",
+        align: "LEFT" as const,
+        overlay: 50,
+        durationMs: 5000,
+        sortOrder: 3,
+      },
+    ];
+
+    for (const banner of BANNERS) {
+      await db.banner.create({ data: banner });
+    }
+    console.log(`   ${BANNERS.length} slides`);
+  } else {
+    console.log("   skipped — banners already configured");
+  }
+
   console.log("→ Attribute vocabulary");
   // Derived from the seeded catalogue rather than listed separately — one
   // source of truth, and the usage counts come out right for free.

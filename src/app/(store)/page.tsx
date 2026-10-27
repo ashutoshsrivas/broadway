@@ -2,6 +2,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { productCardSelect } from "@/lib/catalog";
 import { Hero } from "@/components/sections/Hero";
+import { HeroSlider } from "@/components/sections/HeroSlider";
 import { ServiceRail } from "@/components/sections/ServiceRail";
 import { CategoryShowcase } from "@/components/sections/CategoryShowcase";
 import { ProductRail } from "@/components/sections/ProductRail";
@@ -11,7 +12,17 @@ import { BrandStrip } from "@/components/sections/BrandStrip";
 export default async function HomePage() {
   // One round of parallel queries for the whole page — each section is a pure
   // renderer, so nothing below fetches on its own.
-  const [categories, featured, newArrivals, brands] = await Promise.all([
+  const [banners, categories, featured, newArrivals, brands] = await Promise.all([
+    db.banner.findMany({
+      where: { isActive: true },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      select: {
+        id: true, mediaUrl: true, mediaType: true, posterUrl: true,
+        eyebrow: true, heading: true, subheading: true,
+        ctaLabel: true, ctaHref: true, align: true,
+        overlay: true, durationMs: true,
+      },
+    }),
     db.category.findMany({
       where: { isActive: true },
       orderBy: { sortOrder: "asc" },
@@ -40,7 +51,10 @@ export default async function HomePage() {
 
   return (
     <>
-      <Hero />
+      {/* The banner deck is admin-managed and may legitimately be empty — a
+          fresh install, or every slide switched off mid-campaign. The original
+          static hero stands in so the homepage never opens on a void. */}
+      {banners.length > 0 ? <HeroSlider slides={banners} /> : <Hero />}
       <ServiceRail />
 
       <ProductRail

@@ -5,7 +5,11 @@ import path from "path";
 import { requireAdmin } from "@/lib/admin-guard";
 import { isS3Configured, uploadToS3 } from "@/lib/s3";
 
-const MAX_BYTES = 5 * 1024 * 1024;
+// Hero banners carry video, which is an order of magnitude bigger than a
+// product photo — so the ceiling depends on what was actually uploaded rather
+// than being one number for everything.
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 64 * 1024 * 1024;
 
 // The extension is taken from this map, keyed on the sniffed MIME type, never
 // from the uploaded filename — so an upload named "x.php" cannot keep an
@@ -15,6 +19,9 @@ const ALLOWED = new Map([
   ["image/png", "png"],
   ["image/webp", "webp"],
   ["image/avif", "avif"],
+  ["video/mp4", "mp4"],
+  ["video/webm", "webm"],
+  ["video/quicktime", "mov"],
 ]);
 
 /**
@@ -37,12 +44,18 @@ export async function POST(req: NextRequest) {
   const ext = ALLOWED.get(file.type);
   if (!ext) {
     return NextResponse.json(
-      { error: "Only JPG, PNG, WebP or AVIF images are allowed." },
+      { error: "Allowed: JPG, PNG, WebP, AVIF images, or MP4, WebM, MOV video." },
       { status: 400 }
     );
   }
-  if (file.size > MAX_BYTES) {
-    return NextResponse.json({ error: "Images must be 5 MB or smaller." }, { status: 400 });
+
+  const isVideo = file.type.startsWith("video/");
+  const ceiling = isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
+  if (file.size > ceiling) {
+    return NextResponse.json(
+      { error: `${isVideo ? "Videos" : "Images"} must be ${ceiling / 1024 / 1024} MB or smaller.` },
+      { status: 400 }
+    );
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());

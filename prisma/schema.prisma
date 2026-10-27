@@ -234,6 +234,54 @@ model ProductVariant {
   @@index([sku])
 }
 
+enum BannerMedia {
+  IMAGE
+  VIDEO
+}
+
+/// Where the caption sits over the media.
+enum BannerAlign {
+  LEFT
+  CENTRE
+  RIGHT
+}
+
+/// A full-screen slide in the homepage hero.
+///
+/// Managed entirely from /admin/banners — the storefront renders whatever is
+/// active, in sortOrder, so the shop can run a campaign without a deploy.
+model Banner {
+  id        String      @id @default(cuid())
+  mediaUrl  String
+  mediaType BannerMedia @default(IMAGE)
+  /// Still shown while a video loads, and the fallback if it cannot play.
+  /// Also what a data-saver browser gets instead of downloading the video.
+  posterUrl String?
+
+  eyebrow    String?
+  heading    String?
+  subheading String?     @db.Text
+  ctaLabel   String?
+  ctaHref    String?
+  align      BannerAlign @default(LEFT)
+
+  /// How dark to veil the media so the caption stays legible, 0–80.
+  /// A bright photo needs more than a moody one, and only the person who
+  /// picked the photo knows which.
+  overlay Int @default(35)
+
+  /// How long this slide holds, in milliseconds, before advancing.
+  durationMs Int @default(5000)
+
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
 /// What kind of list a vocabulary entry belongs to.
 enum AttributeKind {
   GENDER

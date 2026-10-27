@@ -50,6 +50,20 @@
   box-sizing: border-box;
 }
 
+/* Height of the fixed furniture above the hero — the marquee plus the header
+   rows. The hero subtracts it so "full screen" means the whole viewport that
+   is actually free, with no scroll needed to see the bottom of a slide. Kept
+   here rather than hard-coded in the component so the two cannot drift. */
+:root {
+  --site-chrome: 7.1rem;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --site-chrome: 10.4rem;
+  }
+}
+
 html {
   /* Force light rendering of native controls. Without this, a macOS user in
      Dark Mode gets black-on-black <select> popups, and option colours set in
@@ -297,6 +311,14 @@ input[type="number"] {
 
 /* The marquee: two identical tracks side by side, the pair shifted by exactly
    half its width, so the seam never shows. */
+/* Hero dot progress. Animated on width rather than transform so the bar grows
+   from the left inside its rounded track — a scaleX would stretch the rounded
+   cap into an ellipse. */
+@keyframes hero-progress {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
 @keyframes marquee {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
@@ -337,6 +359,8 @@ input[type="number"] {
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .animate-marquee { animation: none; }
+  /* The hero stops advancing on its own in the component; this stops the bar
+     animating too, so it reads as a static position indicator instead. */
   .animate-rise,
   .animate-fade,
   .animate-slide-left,
