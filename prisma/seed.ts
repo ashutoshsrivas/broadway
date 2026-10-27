@@ -526,6 +526,38 @@ async function main() {
     console.log("   skipped — banners already configured");
   }
 
+  console.log("→ Discover panels");
+  // Like the banners: seeded only when empty, so re-seeding never clobbers
+  // panels the shop has set up. Video is left for the admin to upload — these
+  // ship with thumbnails so the band looks finished from the first run.
+  if ((await db.discoverPanel.count()) === 0) {
+    await db.discoverPanel.createMany({
+      data: [
+        {
+          eyebrow: "For Him",
+          heading: "Built for the long look.",
+          posterUrl:
+            "https://images.unsplash.com/photo-1496345875659-11f7dd282d1d?w=1600&q=80&auto=format&fit=crop",
+          href: "/shop?gender=Men",
+          overlay: 30,
+          sortOrder: 1,
+        },
+        {
+          eyebrow: "For Her",
+          heading: "Shapes that hold a room.",
+          posterUrl:
+            "https://images.unsplash.com/photo-1605813808456-26c16c0dfb77?w=1600&q=80&auto=format&fit=crop",
+          href: "/shop?gender=Women",
+          overlay: 30,
+          sortOrder: 2,
+        },
+      ],
+    });
+    console.log("   2 panels");
+  } else {
+    console.log("   skipped — panels already configured");
+  }
+
   console.log("→ Attribute vocabulary");
   // Derived from the seeded catalogue rather than listed separately — one
   // source of truth, and the usage counts come out right for free.

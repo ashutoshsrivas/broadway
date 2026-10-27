@@ -4,6 +4,7 @@ import { productCardSelect } from "@/lib/catalog";
 import { Hero } from "@/components/sections/Hero";
 import { HeroSlider } from "@/components/sections/HeroSlider";
 import { NewArrivalsDeck } from "@/components/sections/NewArrivalsDeck";
+import { DiscoverSplit } from "@/components/sections/DiscoverSplit";
 import { ServiceRail } from "@/components/sections/ServiceRail";
 import { CategoryShowcase } from "@/components/sections/CategoryShowcase";
 import { ProductRail } from "@/components/sections/ProductRail";
@@ -13,7 +14,7 @@ import { BrandStrip } from "@/components/sections/BrandStrip";
 export default async function HomePage() {
   // One round of parallel queries for the whole page — each section is a pure
   // renderer, so nothing below fetches on its own.
-  const [banners, categories, featured, brands, newArrivalBrands] = await Promise.all([
+  const [banners, categories, featured, brands, discoverPanels, newArrivalBrands] = await Promise.all([
     db.banner.findMany({
       where: { isActive: true },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
@@ -41,6 +42,14 @@ export default async function HomePage() {
       orderBy: { sortOrder: "asc" },
       take: 10,
       select: { name: true, slug: true },
+    }),
+    db.discoverPanel.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: "asc" },
+      select: {
+        id: true, eyebrow: true, heading: true,
+        mediaUrl: true, posterUrl: true, href: true, overlay: true,
+      },
     }),
     // Brands tabbed in the arrivals deck, each with its own newest stock.
     db.brand.findMany({
@@ -73,6 +82,8 @@ export default async function HomePage() {
       {banners.length > 0 ? <HeroSlider slides={banners} /> : <Hero />}
 
       <NewArrivalsDeck brands={arrivalBrands} />
+
+      <DiscoverSplit panels={discoverPanels} />
 
       <ServiceRail />
 

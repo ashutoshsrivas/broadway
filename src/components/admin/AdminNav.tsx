@@ -8,7 +8,7 @@ import { LayoutDashboard, GalleryHorizontal, Package, Tags, Receipt, Store, LogO
 const LINKS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/uploads", label: "Uploads", icon: Upload },
-  { href: "/admin/banners", label: "Banners", icon: GalleryHorizontal },
+  { href: "/admin/banners", label: "Homepage", icon: GalleryHorizontal },
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/categories", label: "Categories", icon: Tags },
   { href: "/admin/orders", label: "Orders", icon: Receipt },

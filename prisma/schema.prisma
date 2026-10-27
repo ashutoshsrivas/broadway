@@ -286,6 +286,34 @@ model Banner {
   @@index([isActive, sortOrder])
 }
 
+/// One half of the split "Discover" band under the arrivals deck.
+///
+/// A list rather than a fixed him/her pair, so the shop can run three panels
+/// for a season or swap in Kids without a migration. The storefront lays out
+/// whatever is active in sortOrder.
+model DiscoverPanel {
+  id        String  @id @default(cuid())
+  eyebrow   String?
+  heading   String
+  /// Video is optional: a panel is perfectly good as a still, and a shop
+  /// without footage should not be left with an empty black rectangle.
+  mediaUrl  String?
+  /// Shown while the video loads, and the whole panel when there is none.
+  /// Required, so a panel is never blank at first paint.
+  posterUrl String
+  /// Where clicking the panel goes, e.g. /shop?gender=Men
+  href      String
+  overlay   Int     @default(30)
+
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
 /// What kind of list a vocabulary entry belongs to.
 enum AttributeKind {
   GENDER

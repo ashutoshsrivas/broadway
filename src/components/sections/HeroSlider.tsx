@@ -124,7 +124,7 @@ export function HeroSlider({ slides }: { slides: Slide[] }) {
                 // Only the first slide is worth the bandwidth up front; the
                 // rest load their poster and fetch the video when they come up.
                 preload={i === 0 ? "auto" : "none"}
-                className="h-full w-full object-cover"
+                className="absolute inset-0 h-full w-full object-cover"
               />
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
@@ -133,7 +133,7 @@ export function HeroSlider({ slides }: { slides: Slide[] }) {
                 alt={slide.heading ?? ""}
                 loading={i === 0 ? "eager" : "lazy"}
                 fetchPriority={i === 0 ? "high" : "auto"}
-                className="h-full w-full object-cover"
+                className="absolute inset-0 h-full w-full object-cover"
               />
             )}
 
