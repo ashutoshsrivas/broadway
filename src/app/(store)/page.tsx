@@ -9,7 +9,7 @@ import { ServiceRail } from "@/components/sections/ServiceRail";
 import { CategoryShowcase } from "@/components/sections/CategoryShowcase";
 import { ProductRail } from "@/components/sections/ProductRail";
 import { LegacyBand } from "@/components/sections/LegacyBand";
-import { BrandStrip } from "@/components/sections/BrandStrip";
+import { BrandStripScroll } from "@/components/sections/BrandStripScroll";
 
 export default async function HomePage() {
   // One round of parallel queries for the whole page — each section is a pure
@@ -37,11 +37,13 @@ export default async function HomePage() {
       take: 8,
       select: productCardSelect,
     }),
+    // The strip needs an image as well as the flag — an entry without one is
+    // just a gap in the run.
     db.brand.findMany({
-      where: { isFeatured: true },
+      where: { showInBrandStrip: true, logoUrl: { not: null } },
       orderBy: { sortOrder: "asc" },
-      take: 10,
-      select: { name: true, slug: true },
+      take: 20,
+      select: { id: true, name: true, slug: true, logoUrl: true },
     }),
     db.discoverPanel.findMany({
       where: { isActive: true },
@@ -85,6 +87,10 @@ export default async function HomePage() {
 
       <DiscoverSplit panels={discoverPanels} />
 
+      <BrandStripScroll
+        brands={brands.map((b) => ({ ...b, logoUrl: b.logoUrl! }))}
+      />
+
       <ServiceRail />
 
       <ProductRail
@@ -103,7 +109,6 @@ export default async function HomePage() {
 
       <LegacyBand />
 
-      <BrandStrip brands={brands} />
 
       {/* Closing call to the stores — the part of the business a website can't replace. */}
       <section className="mx-auto max-w-[1500px] px-5 py-20 lg:px-10 lg:py-28">

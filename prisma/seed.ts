@@ -48,16 +48,26 @@ const CATEGORIES = [
 // gives it a tab in the arrivals deck under the hero. Both are editable from
 // /admin/categories.
 const BRANDS = [
-  { name: "Ray-Ban", slug: "ray-ban", isFeatured: true, showInNewArrivals: true },
-  { name: "Oakley", slug: "oakley", isFeatured: true, showInNewArrivals: true },
-  { name: "Persol", slug: "persol", isFeatured: true, showInNewArrivals: false },
-  { name: "Tom Ford", slug: "tom-ford", isFeatured: true, showInNewArrivals: true },
-  { name: "Gucci", slug: "gucci", isFeatured: true, showInNewArrivals: true },
-  { name: "Prada", slug: "prada", isFeatured: true, showInNewArrivals: true },
-  { name: "Carrera", slug: "carrera", isFeatured: true, showInNewArrivals: false },
-  { name: "Titan Eye+", slug: "titan-eye-plus", isFeatured: true, showInNewArrivals: false },
-  { name: "Broadway", slug: "broadway", isFeatured: false, showInNewArrivals: true },
-  { name: "Acuvue", slug: "acuvue", isFeatured: false, showInNewArrivals: false },
+  // `logoUrl` is the tile image in the scrolling strip — a shot of the frames
+  // being worn, not a logo on white, because the strip is a shop window.
+  { name: "Ray-Ban", slug: "ray-ban", isFeatured: true, showInNewArrivals: true, showInBrandStrip: true,
+    logoUrl: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=900&q=80&auto=format&fit=crop" },
+  { name: "Oakley", slug: "oakley", isFeatured: true, showInNewArrivals: true, showInBrandStrip: true,
+    logoUrl: "https://images.unsplash.com/photo-1616424831766-d616a58f1459?w=900&q=80&auto=format&fit=crop" },
+  { name: "Persol", slug: "persol", isFeatured: true, showInNewArrivals: false, showInBrandStrip: true,
+    logoUrl: "https://images.unsplash.com/photo-1496345875659-11f7dd282d1d?w=900&q=80&auto=format&fit=crop" },
+  { name: "Tom Ford", slug: "tom-ford", isFeatured: true, showInNewArrivals: true, showInBrandStrip: true,
+    logoUrl: "https://images.unsplash.com/photo-1605813808456-26c16c0dfb77?w=900&q=80&auto=format&fit=crop" },
+  { name: "Gucci", slug: "gucci", isFeatured: true, showInNewArrivals: true, showInBrandStrip: true,
+    logoUrl: "https://images.unsplash.com/photo-1611824204322-24963b44d68b?w=900&q=80&auto=format&fit=crop" },
+  { name: "Prada", slug: "prada", isFeatured: true, showInNewArrivals: true, showInBrandStrip: true,
+    logoUrl: "https://images.unsplash.com/photo-1552954277-0c45bd503b54?w=900&q=80&auto=format&fit=crop" },
+  { name: "Carrera", slug: "carrera", isFeatured: true, showInNewArrivals: false, showInBrandStrip: true,
+    logoUrl: "https://images.unsplash.com/photo-1577803645773-f96470509666?w=900&q=80&auto=format&fit=crop" },
+  { name: "Titan Eye+", slug: "titan-eye-plus", isFeatured: true, showInNewArrivals: false, showInBrandStrip: true,
+    logoUrl: "https://images.unsplash.com/photo-1603578119639-798b8413d8d7?w=900&q=80&auto=format&fit=crop" },
+  { name: "Broadway", slug: "broadway", isFeatured: false, showInNewArrivals: true, showInBrandStrip: false },
+  { name: "Acuvue", slug: "acuvue", isFeatured: false, showInNewArrivals: false, showInBrandStrip: false },
 ];
 
 // A handful of eyewear photographs, reused across the catalogue so every tile
