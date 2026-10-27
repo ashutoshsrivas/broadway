@@ -137,6 +137,9 @@ model Brand {
   /// isFeatured because the roll-call and the deck are different shelves —
   /// a house can be worth naming without having new stock worth showing.
   showInNewArrivals Boolean @default(false)
+  /// Appears in the scrolling brand strip. Needs logoUrl to be worth showing,
+  /// so the storefront filters on both.
+  showInBrandStrip  Boolean @default(false)
   sortOrder         Int     @default(0)
 
   createdAt DateTime @default(now())

@@ -12,24 +12,9 @@ type Category = {
   isActive: boolean;
   productCount: number;
 };
-type Brand = {
-  id: string;
-  name: string;
-  slug: string;
-  isFeatured: boolean;
-  showInNewArrivals: boolean;
-  productCount: number;
-};
-
-export function CategoryManager({
-  categories,
-  brands,
-}: {
-  categories: Category[];
-  brands: Brand[];
-}) {
+export function CategoryManager({ categories }: { categories: Category[] }) {
   return (
-    <div className="grid gap-8 lg:grid-cols-2">
+    <div>
       <Panel
         title="Categories"
         note="The departments in the header. A category with products cannot be deleted."
@@ -45,21 +30,6 @@ export function CategoryManager({
         }))}
       />
 
-      <Panel
-        title="Brands"
-        note="Houses shown in the homepage roll-call when marked featured."
-        endpoint="/api/admin/brands"
-        placeholder="Ray-Ban"
-        featurable
-        rows={brands.map((brand) => ({
-          id: brand.id,
-          name: brand.name,
-          meta: `${brand.slug} · ${brand.productCount} product${
-            brand.productCount === 1 ? "" : "s"
-          }`,
-          flag: brand.isFeatured ? "Featured" : null,
-        }))}
-      />
     </div>
   );
 }

@@ -8,6 +8,7 @@ const schema = z.object({
   logoUrl: z.string().trim().max(500).nullable().optional(),
   isFeatured: z.boolean().optional(),
   showInNewArrivals: z.boolean().optional(),
+  showInBrandStrip: z.boolean().optional(),
   sortOrder: z.number().int().min(0).max(999).optional(),
 });
 

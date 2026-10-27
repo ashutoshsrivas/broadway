@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { CategoryManager } from "@/components/admin/CategoryManager";
+import { BrandManager } from "@/components/admin/BrandManager";
 
 export default async function AdminCategoriesPage() {
   const [categories, brands] = await Promise.all([
@@ -27,15 +28,29 @@ export default async function AdminCategoriesPage() {
           isActive: c.isActive,
           productCount: c._count.products,
         }))}
-        brands={brands.map((b) => ({
-          id: b.id,
-          name: b.name,
-          slug: b.slug,
-          isFeatured: b.isFeatured,
-          showInNewArrivals: b.showInNewArrivals,
-          productCount: b._count.products,
-        }))}
       />
+
+      <section className="mt-16">
+        <h2 className="label-lg">Brands</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          Upload an image per house and choose where it appears. The brand strip needs an image;
+          the arrivals deck and the featured roll-call do not.
+        </p>
+        <hr className="rule-deco mt-5 mb-6" />
+
+        <BrandManager
+          initial={brands.map((b) => ({
+            id: b.id,
+            name: b.name,
+            slug: b.slug,
+            logoUrl: b.logoUrl,
+            isFeatured: b.isFeatured,
+            showInNewArrivals: b.showInNewArrivals,
+            showInBrandStrip: b.showInBrandStrip,
+            productCount: b._count.products,
+          }))}
+        />
+      </section>
     </>
   );
 }
