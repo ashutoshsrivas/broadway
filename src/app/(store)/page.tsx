@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { productCardSelect } from "@/lib/catalog";
 import { Hero } from "@/components/sections/Hero";
 import { HeroSlider } from "@/components/sections/HeroSlider";
+import { NewArrivalsDeck } from "@/components/sections/NewArrivalsDeck";
 import { ServiceRail } from "@/components/sections/ServiceRail";
 import { CategoryShowcase } from "@/components/sections/CategoryShowcase";
 import { ProductRail } from "@/components/sections/ProductRail";
@@ -12,7 +13,7 @@ import { BrandStrip } from "@/components/sections/BrandStrip";
 export default async function HomePage() {
   // One round of parallel queries for the whole page — each section is a pure
   // renderer, so nothing below fetches on its own.
-  const [banners, categories, featured, newArrivals, brands] = await Promise.all([
+  const [banners, categories, featured, brands, newArrivalBrands] = await Promise.all([
     db.banner.findMany({
       where: { isActive: true },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
@@ -35,19 +36,34 @@ export default async function HomePage() {
       take: 8,
       select: productCardSelect,
     }),
-    db.product.findMany({
-      where: { status: "ACTIVE", isNewArrival: true },
-      orderBy: { createdAt: "desc" },
-      take: 4,
-      select: productCardSelect,
-    }),
     db.brand.findMany({
       where: { isFeatured: true },
       orderBy: { sortOrder: "asc" },
       take: 10,
       select: { name: true, slug: true },
     }),
+    // Brands tabbed in the arrivals deck, each with its own newest stock.
+    db.brand.findMany({
+      where: { showInNewArrivals: true },
+      orderBy: { sortOrder: "asc" },
+      take: 8,
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        products: {
+          where: { status: "ACTIVE" },
+          orderBy: { createdAt: "desc" },
+          take: 6,
+          select: productCardSelect,
+        },
+      },
+    }),
   ]);
+
+  // A brand with nothing new has an empty tab, which reads as a mistake —
+  // drop it rather than show it.
+  const arrivalBrands = newArrivalBrands.filter((b) => b.products.length > 0);
 
   return (
     <>
@@ -55,6 +71,9 @@ export default async function HomePage() {
           fresh install, or every slide switched off mid-campaign. The original
           static hero stands in so the homepage never opens on a void. */}
       {banners.length > 0 ? <HeroSlider slides={banners} /> : <Hero />}
+
+      <NewArrivalsDeck brands={arrivalBrands} />
+
       <ServiceRail />
 
       <ProductRail
@@ -72,19 +91,6 @@ export default async function HomePage() {
       <CategoryShowcase categories={categories} />
 
       <LegacyBand />
-
-      <ProductRail
-        eyebrow="Just Arrived"
-        title={
-          <>
-            New on the <em>rack</em>
-          </>
-        }
-        blurb="Fresh from the houses we carry — usually in limited numbers."
-        href="/shop?sort=newest"
-        products={newArrivals}
-        tone="raised"
-      />
 
       <BrandStrip brands={brands} />
 

@@ -32,6 +32,7 @@ export default async function AdminCategoriesPage() {
           name: b.name,
           slug: b.slug,
           isFeatured: b.isFeatured,
+          showInNewArrivals: b.showInNewArrivals,
           productCount: b._count.products,
         }))}
       />

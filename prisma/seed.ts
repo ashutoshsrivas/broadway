@@ -44,17 +44,20 @@ const CATEGORIES = [
   },
 ];
 
+// `isFeatured` puts a house in the homepage roll-call; `showInNewArrivals`
+// gives it a tab in the arrivals deck under the hero. Both are editable from
+// /admin/categories.
 const BRANDS = [
-  { name: "Ray-Ban", slug: "ray-ban", isFeatured: true },
-  { name: "Oakley", slug: "oakley", isFeatured: true },
-  { name: "Persol", slug: "persol", isFeatured: true },
-  { name: "Tom Ford", slug: "tom-ford", isFeatured: true },
-  { name: "Gucci", slug: "gucci", isFeatured: true },
-  { name: "Prada", slug: "prada", isFeatured: true },
-  { name: "Carrera", slug: "carrera", isFeatured: true },
-  { name: "Titan Eye+", slug: "titan-eye-plus", isFeatured: true },
-  { name: "Broadway", slug: "broadway", isFeatured: false },
-  { name: "Acuvue", slug: "acuvue", isFeatured: false },
+  { name: "Ray-Ban", slug: "ray-ban", isFeatured: true, showInNewArrivals: true },
+  { name: "Oakley", slug: "oakley", isFeatured: true, showInNewArrivals: true },
+  { name: "Persol", slug: "persol", isFeatured: true, showInNewArrivals: false },
+  { name: "Tom Ford", slug: "tom-ford", isFeatured: true, showInNewArrivals: true },
+  { name: "Gucci", slug: "gucci", isFeatured: true, showInNewArrivals: true },
+  { name: "Prada", slug: "prada", isFeatured: true, showInNewArrivals: true },
+  { name: "Carrera", slug: "carrera", isFeatured: true, showInNewArrivals: false },
+  { name: "Titan Eye+", slug: "titan-eye-plus", isFeatured: true, showInNewArrivals: false },
+  { name: "Broadway", slug: "broadway", isFeatured: false, showInNewArrivals: true },
+  { name: "Acuvue", slug: "acuvue", isFeatured: false, showInNewArrivals: false },
 ];
 
 // A handful of eyewear photographs, reused across the catalogue so every tile

@@ -17,6 +17,7 @@ type Brand = {
   name: string;
   slug: string;
   isFeatured: boolean;
+  showInNewArrivals: boolean;
   productCount: number;
 };
 
@@ -75,7 +76,13 @@ function Panel({
   note: string;
   endpoint: string;
   placeholder: string;
-  rows: { id: string; name: string; meta: string; flag: string | null }[];
+  rows: {
+    id: string;
+    name: string;
+    meta: string;
+    flag: string | null;
+    toggle?: { field: "showInNewArrivals"; on: boolean };
+  }[];
   featurable?: boolean;
 }) {
   const router = useRouter();
@@ -125,7 +132,33 @@ function Panel({
                 <p className="truncate font-display text-base">{row.name}</p>
                 <p className="mt-0.5 truncate text-xs text-ink-muted">{row.meta}</p>
               </div>
-              {row.flag && <span className="label shrink-0 text-brass">{row.flag}</span>}
+
+              <div className="flex shrink-0 items-center gap-3">
+                {row.flag && <span className="label text-brass">{row.flag}</span>}
+                {row.toggle && (
+                  <label className="label flex cursor-pointer items-center gap-2 text-ink-muted">
+                    <input
+                      type="checkbox"
+                      defaultChecked={row.toggle.on}
+                      onChange={async (e) => {
+                        const res = await fetch(`${endpoint}/${row.id}`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ [row.toggle!.field]: e.target.checked }),
+                        });
+                        if (!res.ok) {
+                          toast.error("Could not save that change.");
+                          e.target.checked = !e.target.checked;
+                          return;
+                        }
+                        router.refresh();
+                      }}
+                      className="h-3.5 w-3.5 accent-[#B08D4F]"
+                    />
+                    Arrivals deck
+                  </label>
+                )}
+              </div>
             </li>
           ))}
         </ul>

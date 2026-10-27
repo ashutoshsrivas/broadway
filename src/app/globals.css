@@ -371,6 +371,16 @@ input[type="number"] {
   }
 }
 
+/* Carousels scroll but do not show a bar — the arrows and the card peeking in
+   from the edge are the affordance. Scrolling itself stays untouched. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* ─────────────────────────────────────────────────────────────────────────
    FORMS
    ───────────────────────────────────────────────────────────────────────── */
