@@ -312,6 +312,32 @@ model StoreSetting {
   updatedAt DateTime @updatedAt
 }
 
+/// An editorial image dropped into the shop grid between products.
+///
+/// Breaks up a long run of frames-on-white with something worn on a face.
+/// Occupies the footprint of four product cells, so the grid rhythm is
+/// interrupted rather than merely decorated.
+model ShopEditorial {
+  id       String  @id @default(cuid())
+  imageUrl String
+  eyebrow  String?
+  heading  String?
+  /// Optional destination — a collection, a brand, a campaign page.
+  href     String?
+
+  /// How many products to show before this image appears. Lets the shop place
+  /// a run of imagery deliberately instead of on a fixed cadence.
+  afterProducts Int @default(6)
+
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
 /// A post in the Instagram band. The image is ours (uploaded), the link
 /// points at the real post, so the band works without an Instagram API token
 /// and keeps working when the token would have expired.

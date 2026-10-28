@@ -598,6 +598,35 @@ async function main() {
     console.log("   skipped — panels already configured");
   }
 
+  console.log("→ Shop editorial");
+  if ((await db.shopEditorial.count()) === 0) {
+    await db.shopEditorial.createMany({
+      data: [
+        {
+          imageUrl:
+            "https://images.unsplash.com/photo-1605813808456-26c16c0dfb77?w=1600&q=80&auto=format&fit=crop",
+          eyebrow: "The Cat-Eye Edit",
+          heading: "Shapes that hold a room.",
+          href: "/shop?shape=Cat+Eye",
+          afterProducts: 6,
+          sortOrder: 1,
+        },
+        {
+          imageUrl:
+            "https://images.unsplash.com/photo-1496345875659-11f7dd282d1d?w=1600&q=80&auto=format&fit=crop",
+          eyebrow: "Everyday Metal",
+          heading: "Built for the long look.",
+          href: "/shop?material=Metal",
+          afterProducts: 12,
+          sortOrder: 2,
+        },
+      ],
+    });
+    console.log("   2 images");
+  } else {
+    console.log("   skipped — already configured");
+  }
+
   console.log("→ Attribute vocabulary");
   // Derived from the seeded catalogue rather than listed separately — one
   // source of truth, and the usage counts come out right for free.

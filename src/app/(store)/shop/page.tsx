@@ -6,6 +6,8 @@ import { ProductCard } from "@/components/store/ProductCard";
 import { ShopFilters } from "@/components/store/ShopFilters";
 import { SortSelect } from "@/components/store/SortSelect";
 import { Pagination } from "@/components/store/Pagination";
+import { ShopEditorialTile } from "@/components/store/ShopEditorialTile";
+import { db } from "@/lib/db";
 
 export const metadata: Metadata = {
   title: "Shop Eyewear",
@@ -35,7 +37,7 @@ export default async function ShopPage({
   const category = Array.isArray(sp.category) ? sp.category[0] : sp.category;
   const query = (Array.isArray(sp.q) ? sp.q[0] : sp.q)?.trim();
 
-  const [{ products, total, page, pageCount }, facets] = await Promise.all([
+  const [{ products, total, page, pageCount }, facets, editorials] = await Promise.all([
     findProducts({
       category,
       q: query,
@@ -50,7 +52,35 @@ export default async function ShopPage({
       page: asNumber(sp.page),
     }),
     shopFacets(),
+    db.shopEditorial.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: "asc" },
+      select: { id: true, imageUrl: true, eyebrow: true, heading: true, href: true, afterProducts: true },
+    }),
   ]);
+
+  // Interleave the editorial images into the run of products.
+  //
+  // `afterProducts` is a running total, so a shop can say "third image after
+  // twenty frames" without recomputing the others. Only the first page is
+  // interleaved: on page four the counts would describe a position the
+  // shopper never scrolled past, and the same three images would reappear.
+  type Cell =
+    | { kind: "product"; product: (typeof products)[number] }
+    | { kind: "editorial"; editorial: (typeof editorials)[number] };
+
+  const cells: Cell[] = products.map((product) => ({ kind: "product" as const, product }));
+
+  if (page === 1) {
+    // Inserted back-to-front so each index still refers to the original run.
+    const placements = editorials
+      .map((editorial) => ({ editorial, at: Math.min(editorial.afterProducts, products.length) }))
+      .sort((a, b) => b.at - a.at);
+
+    for (const { editorial, at } of placements) {
+      cells.splice(at, 0, { kind: "editorial", editorial });
+    }
+  }
 
   const activeCategory = facets.categories.find((c) => c.slug === category);
   const heading = query
@@ -117,11 +147,15 @@ export default async function ShopPage({
           ) : (
             <>
               <ul className="grid grid-cols-2 gap-x-5 gap-y-12 lg:grid-cols-3 lg:gap-x-7">
-                {products.map((product, i) => (
-                  <li key={product.id}>
-                    <ProductCard product={product} priority={i < 6} />
-                  </li>
-                ))}
+                {cells.map((cell, i) =>
+                  cell.kind === "product" ? (
+                    <li key={cell.product.id}>
+                      <ProductCard product={cell.product} priority={i < 6} />
+                    </li>
+                  ) : (
+                    <ShopEditorialTile key={cell.editorial.id} editorial={cell.editorial} />
+                  )
+                )}
               </ul>
               <Pagination page={page} pageCount={pageCount} searchParams={urlParams} />
             </>

@@ -3,12 +3,13 @@ import { BannerManager } from "@/components/admin/BannerManager";
 import { DiscoverManager } from "@/components/admin/DiscoverManager";
 import { HomepagePicks } from "@/components/admin/HomepagePicks";
 import { InstagramManager } from "@/components/admin/InstagramManager";
+import { ShopEditorialManager } from "@/components/admin/ShopEditorialManager";
 import { SETTING_KEYS, getSettings } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
 export default async function BannersPage() {
-  const [banners, panels, settings, products, brands, instaPosts] = await Promise.all([
+  const [banners, panels, settings, products, brands, instaPosts, editorials] = await Promise.all([
     db.banner.findMany({ orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] }),
     db.discoverPanel.findMany({ orderBy: { sortOrder: "asc" } }),
     getSettings(),
@@ -22,6 +23,7 @@ export default async function BannersPage() {
       select: { id: true, name: true, _count: { select: { products: true } } },
     }),
     db.instagramPost.findMany({ orderBy: { sortOrder: "asc" } }),
+    db.shopEditorial.findMany({ orderBy: { sortOrder: "asc" } }),
   ]);
 
   const totalMs = banners
@@ -89,6 +91,16 @@ export default async function BannersPage() {
         </p>
         <hr className="rule-deco mt-5 mb-6" />
         <InstagramManager initial={instaPosts} settings={settings} keys={SETTING_KEYS} />
+      </section>
+
+      <section className="mt-16">
+        <h2 className="label-lg">Shop Editorial</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          Images dropped into the shop grid between products, each filling the space of four
+          product cards. Breaks up a long run of frames on white with something worn on a face.
+        </p>
+        <hr className="rule-deco mt-5 mb-6" />
+        <ShopEditorialManager initial={editorials} />
       </section>
     </>
   );
