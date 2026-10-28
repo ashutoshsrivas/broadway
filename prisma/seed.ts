@@ -544,6 +544,28 @@ async function main() {
     console.log("   skipped — banners already configured");
   }
 
+  console.log("→ Brand logos");
+  // Only the eight whose logo was downloaded and checked by eye against the
+  // real mark. Searching by name alone returned a port authority for Persol,
+  // a bridge authority for Cartier and a farm-equipment firm for Titan — the
+  // rest fall back to their name set in the house face until someone uploads
+  // the official asset from the distributor's brand kit.
+  const LOGOS: Record<string, string> = {
+    "ray-ban": "/brands/ray-ban.svg",
+    "oakley": "/brands/oakley.svg",
+    "tom-ford": "/brands/tom-ford.svg",
+    "gucci": "/brands/gucci.svg",
+    "prada": "/brands/prada.svg",
+    "maui-jim": "/brands/maui-jim.svg",
+    "montblanc": "/brands/montblanc.svg",
+    "acuvue": "/brands/acuvue.svg",
+  };
+  for (const [slug, logoUrl] of Object.entries(LOGOS)) {
+    const row = await db.brand.findUnique({ where: { slug }, select: { id: true, logoUrl: true } });
+    if (row && !row.logoUrl) await db.brand.update({ where: { id: row.id }, data: { logoUrl } });
+  }
+  console.log(`   ${Object.keys(LOGOS).length} logos`);
+
   console.log("→ Discover panels");
   // Like the banners: seeded only when empty, so re-seeding never clobbers
   // panels the shop has set up. Video is left for the admin to upload — these

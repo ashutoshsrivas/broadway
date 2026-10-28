@@ -21,23 +21,28 @@ export type WallBrand = {
 export function OurBrands({
   brands,
   whatsappNumber,
+  showHeading = true,
 }: {
   brands: WallBrand[];
   whatsappNumber?: string | null;
+  /** Off when the page around it already carries the title. */
+  showHeading?: boolean;
 }) {
   if (brands.length === 0) return null;
 
   return (
     <section className="border-b border-line bg-paper-raised">
-      <div className="mx-auto max-w-[1500px] px-5 py-20 lg:px-10 lg:py-24">
-        <div className="text-center">
-          <p className="label text-brass">Our Brands</p>
-          <h2 className="display mx-auto mt-4 max-w-2xl text-[clamp(1.85rem,4vw,3rem)]">
-            The houses we <em>carry</em>.
-          </h2>
-        </div>
+      <div className="mx-auto max-w-[1500px] px-5 py-16 lg:px-10 lg:py-20">
+        {showHeading && (
+          <div className="mb-14 text-center">
+            <p className="label text-brass">Our Brands</p>
+            <h2 className="display mx-auto mt-4 max-w-2xl text-[clamp(1.85rem,4vw,3rem)]">
+              The houses we <em>carry</em>.
+            </h2>
+          </div>
+        )}
 
-        <ul className="mt-14 grid grid-cols-2 gap-px border border-line bg-line sm:grid-cols-3 lg:grid-cols-5">
+        <ul className="grid grid-cols-2 gap-px border border-line bg-line sm:grid-cols-3 lg:grid-cols-5">
           {brands.map((brand) => (
             <li key={brand.id} className="bg-paper">
               <BrandCell brand={brand} whatsappNumber={whatsappNumber} />

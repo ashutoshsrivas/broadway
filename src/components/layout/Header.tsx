@@ -137,6 +137,12 @@ export function Header({ categories }: { categories: NavCategory[] }) {
                 {category.name}
               </Link>
             ))}
+            <Link
+              href="/brands"
+              className="label link-rule text-ink-soft transition-colors hover:text-ink"
+            >
+              Brands
+            </Link>
             <Link href="/shop?sale=1" className="label link-rule text-clay">
               Sale
             </Link>
@@ -202,6 +208,11 @@ export function Header({ categories }: { categories: NavCategory[] }) {
                 <li>
                   <Link href="/account/orders" className="label-lg text-ink-soft">
                     My Orders
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/brands" className="label-lg text-ink-soft">
+                    Our Brands
                   </Link>
                 </li>
                 <li>
