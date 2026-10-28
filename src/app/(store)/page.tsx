@@ -12,6 +12,7 @@ import { BrandStripScroll } from "@/components/sections/BrandStripScroll";
 import { MustHaveSpotlight } from "@/components/sections/MustHaveSpotlight";
 import { IntroducingBrand } from "@/components/sections/IntroducingBrand";
 import { InstagramBand } from "@/components/sections/InstagramBand";
+import { OurBrands } from "@/components/sections/OurBrands";
 import { SETTING_KEYS, getSettings } from "@/lib/settings";
 
 export default async function HomePage() {
@@ -19,7 +20,7 @@ export default async function HomePage() {
   // renderer, so nothing below fetches on its own.
   const settings = await getSettings();
 
-  const [banners, featured, brands, discoverPanels, newArrivalBrands, instaPosts] = await Promise.all([
+  const [banners, featured, brands, allBrands, discoverPanels, newArrivalBrands, instaPosts] = await Promise.all([
     db.banner.findMany({
       where: { isActive: true },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
@@ -39,10 +40,22 @@ export default async function HomePage() {
     // The strip needs an image as well as the flag — an entry without one is
     // just a gap in the run.
     db.brand.findMany({
-      where: { showInBrandStrip: true, logoUrl: { not: null } },
+      where: { showInBrandStrip: true, tileUrl: { not: null } },
       orderBy: { sortOrder: "asc" },
       take: 20,
-      select: { id: true, name: true, slug: true, logoUrl: true },
+      select: { id: true, name: true, slug: true, tileUrl: true },
+    }),
+    // Every house, for the logo wall — including ones we don't stock, which
+    // route to a WhatsApp enquiry instead of a page with nothing on it.
+    db.brand.findMany({
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        logoUrl: true,
+        _count: { select: { products: { where: { status: "ACTIVE" } } } },
+      },
     }),
     db.discoverPanel.findMany({
       where: { isActive: true },
@@ -139,7 +152,7 @@ export default async function HomePage() {
       )}
 
       <BrandStripScroll
-        brands={brands.map((b) => ({ ...b, logoUrl: b.logoUrl! }))}
+        brands={brands.map((b) => ({ ...b, tileUrl: b.tileUrl! }))}
       />
 
       <ServiceRail />
@@ -171,6 +184,17 @@ export default async function HomePage() {
         products={featured}
       />
 
+
+      <OurBrands
+        brands={allBrands.map((b) => ({
+          id: b.id,
+          name: b.name,
+          slug: b.slug,
+          logoUrl: b.logoUrl,
+          productCount: b._count.products,
+        }))}
+        whatsappNumber={settings[SETTING_KEYS.whatsappNumber]}
+      />
 
       <LegacyBand />
 

@@ -27,6 +27,7 @@ export function HomepagePicks({
     mustHaveHeading: settings[keys.mustHaveHeading] ?? "",
     introducingBrandId: settings[keys.introducingBrandId] ?? "",
     introducingEyebrow: settings[keys.introducingEyebrow] ?? "",
+    whatsappNumber: settings[keys.whatsappNumber] ?? "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -40,6 +41,7 @@ export function HomepagePicks({
         [keys.mustHaveHeading]: v.mustHaveHeading,
         [keys.introducingBrandId]: v.introducingBrandId,
         [keys.introducingEyebrow]: v.introducingEyebrow,
+        [keys.whatsappNumber]: v.whatsappNumber,
       }),
     });
     setSaving(false);
@@ -132,6 +134,22 @@ export function HomepagePicks({
             ))}
           </select>
         </label>
+      </section>
+
+      <section className="border border-line bg-paper-raised p-6 lg:col-span-2">
+        <h3 className="label-lg">Enquiry WhatsApp</h3>
+        <p className="mt-2.5 text-xs leading-relaxed text-ink-muted">
+          Brands listed on the wall that have no products link here instead of to an empty page,
+          with the enquiry already written. Digits only, including country code.
+        </p>
+        <hr className="rule-deco mt-4 mb-5" />
+        <input
+          value={v.whatsappNumber}
+          onChange={(e) => setV({ ...v, whatsappNumber: e.target.value })}
+          placeholder="919810012345"
+          inputMode="numeric"
+          className="field-box max-w-xs"
+        />
       </section>
 
       <div className="lg:col-span-2">

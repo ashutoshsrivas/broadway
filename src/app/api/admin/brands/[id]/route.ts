@@ -6,6 +6,9 @@ import { requireAdmin } from "@/lib/admin-guard";
 const schema = z.object({
   name: z.string().trim().min(1).max(120).optional(),
   logoUrl: z.string().trim().max(500).nullable().optional(),
+  tileUrl: z.string().trim().max(500).nullable().optional(),
+  bannerUrl: z.string().trim().max(500).nullable().optional(),
+  description: z.string().trim().max(4000).nullable().optional(),
   isFeatured: z.boolean().optional(),
   showInNewArrivals: z.boolean().optional(),
   showInBrandStrip: z.boolean().optional(),

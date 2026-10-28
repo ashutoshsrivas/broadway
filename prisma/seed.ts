@@ -51,23 +51,31 @@ const BRANDS = [
   // `logoUrl` is the tile image in the scrolling strip — a shot of the frames
   // being worn, not a logo on white, because the strip is a shop window.
   { name: "Ray-Ban", slug: "ray-ban", isFeatured: true, showInNewArrivals: true, showInBrandStrip: true,
-    logoUrl: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=900&q=80&auto=format&fit=crop" },
+    tileUrl: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=900&q=80&auto=format&fit=crop" },
   { name: "Oakley", slug: "oakley", isFeatured: true, showInNewArrivals: true, showInBrandStrip: true,
-    logoUrl: "https://images.unsplash.com/photo-1616424831766-d616a58f1459?w=900&q=80&auto=format&fit=crop" },
+    tileUrl: "https://images.unsplash.com/photo-1616424831766-d616a58f1459?w=900&q=80&auto=format&fit=crop" },
   { name: "Persol", slug: "persol", isFeatured: true, showInNewArrivals: false, showInBrandStrip: true,
-    logoUrl: "https://images.unsplash.com/photo-1496345875659-11f7dd282d1d?w=900&q=80&auto=format&fit=crop" },
+    tileUrl: "https://images.unsplash.com/photo-1496345875659-11f7dd282d1d?w=900&q=80&auto=format&fit=crop" },
   { name: "Tom Ford", slug: "tom-ford", isFeatured: true, showInNewArrivals: true, showInBrandStrip: true,
-    logoUrl: "https://images.unsplash.com/photo-1605813808456-26c16c0dfb77?w=900&q=80&auto=format&fit=crop" },
+    tileUrl: "https://images.unsplash.com/photo-1605813808456-26c16c0dfb77?w=900&q=80&auto=format&fit=crop" },
   { name: "Gucci", slug: "gucci", isFeatured: true, showInNewArrivals: true, showInBrandStrip: true,
-    logoUrl: "https://images.unsplash.com/photo-1611824204322-24963b44d68b?w=900&q=80&auto=format&fit=crop" },
+    tileUrl: "https://images.unsplash.com/photo-1611824204322-24963b44d68b?w=900&q=80&auto=format&fit=crop" },
   { name: "Prada", slug: "prada", isFeatured: true, showInNewArrivals: true, showInBrandStrip: true,
-    logoUrl: "https://images.unsplash.com/photo-1552954277-0c45bd503b54?w=900&q=80&auto=format&fit=crop" },
+    tileUrl: "https://images.unsplash.com/photo-1552954277-0c45bd503b54?w=900&q=80&auto=format&fit=crop" },
   { name: "Carrera", slug: "carrera", isFeatured: true, showInNewArrivals: false, showInBrandStrip: true,
-    logoUrl: "https://images.unsplash.com/photo-1577803645773-f96470509666?w=900&q=80&auto=format&fit=crop" },
+    tileUrl: "https://images.unsplash.com/photo-1577803645773-f96470509666?w=900&q=80&auto=format&fit=crop" },
   { name: "Titan Eye+", slug: "titan-eye-plus", isFeatured: true, showInNewArrivals: false, showInBrandStrip: true,
-    logoUrl: "https://images.unsplash.com/photo-1603578119639-798b8413d8d7?w=900&q=80&auto=format&fit=crop" },
+    tileUrl: "https://images.unsplash.com/photo-1603578119639-798b8413d8d7?w=900&q=80&auto=format&fit=crop" },
   { name: "Broadway", slug: "broadway", isFeatured: false, showInNewArrivals: true, showInBrandStrip: false },
   { name: "Acuvue", slug: "acuvue", isFeatured: false, showInNewArrivals: false, showInBrandStrip: false },
+  // Houses we list but do not stock. They appear on the brand wall and route
+  // to a WhatsApp enquiry rather than an empty page — a real shop can usually
+  // order these in, and a dead tile would lose that sale.
+  { name: "Cartier", slug: "cartier", isFeatured: false, showInNewArrivals: false, showInBrandStrip: false },
+  { name: "Lindberg", slug: "lindberg", isFeatured: false, showInNewArrivals: false, showInBrandStrip: false },
+  { name: "Maui Jim", slug: "maui-jim", isFeatured: false, showInNewArrivals: false, showInBrandStrip: false },
+  { name: "Silhouette", slug: "silhouette", isFeatured: false, showInNewArrivals: false, showInBrandStrip: false },
+  { name: "Montblanc", slug: "montblanc", isFeatured: false, showInNewArrivals: false, showInBrandStrip: false },
 ];
 
 // A handful of eyewear photographs, reused across the catalogue so every tile
@@ -634,6 +642,42 @@ async function main() {
   await pick("homepage.instagram.handle", "@broadwayopticals");
   await pick("homepage.instagram.url", "https://instagram.com/explore/tags/eyewear/");
   await pick("homepage.instagram.heading", "Follow Along");
+  await pick("shop.whatsapp", "919810012345");
+
+  // Brand-page copy. Only filled when blank, so a shop's own words survive.
+  const BRAND_COPY: Record<string, string> = {
+    "ray-ban": "Founded in 1937 for US Air Force pilots and never really redesigned since. Ray-Ban's value is that its shapes stopped being fashion a long time ago — an Aviator or a Wayfarer dates a photograph by almost nothing.",
+    "oakley": "Sports optics first, style second — and the better for it. Prizm lenses are tuned per activity to lift the contrast that matters, which is why you see them on people who need to read a road surface at speed.",
+    "persol": "Turin, 1917. The arrow hinge and the Meflecto flex stem are Persol's own, and both are still made the same way. Quietly the most engineered frame most people will ever wear.",
+    "tom-ford": "Unapologetically bold acetate, cut heavier than almost anyone else dares. The T-hinge is the tell. Frames that are meant to be the first thing noticed.",
+    "gucci": "Maximalist Italian eyewear with the confidence to carry it. Broad fronts, strong colour, and the interlocking G placed where it reads from across a room.",
+    "prada": "Angular, architectural, and ahead of itself — Prada is one of very few houses still inventing genuinely new silhouettes rather than reissuing old ones.",
+    "carrera": "Racing lineage, worn without ceremony. Flat brow bars, mirrored lenses and a price that doesn't need explaining.",
+    "titan-eye-plus": "India's own, and the frame we fit most often to a first pair. Light TR90, honest construction, and a range that covers a whole family.",
+  };
+  const BRAND_BANNERS: Record<string, string> = {
+    "ray-ban": "1572635196237-14b3f281503f",
+    "oakley": "1616424831766-d616a58f1459",
+    "persol": "1496345875659-11f7dd282d1d",
+    "tom-ford": "1605813808456-26c16c0dfb77",
+    "gucci": "1611824204322-24963b44d68b",
+    "prada": "1552954277-0c45bd503b54",
+    "carrera": "1577803645773-f96470509666",
+    "titan-eye-plus": "1603578119639-798b8413d8d7",
+  };
+  for (const [slug, description] of Object.entries(BRAND_COPY)) {
+    const row = await db.brand.findUnique({ where: { slug }, select: { id: true, description: true, bannerUrl: true } });
+    if (!row) continue;
+    await db.brand.update({
+      where: { id: row.id },
+      data: {
+        description: row.description ?? description,
+        bannerUrl:
+          row.bannerUrl ??
+          `https://images.unsplash.com/photo-${BRAND_BANNERS[slug]}?w=2000&q=80&auto=format&fit=crop`,
+      },
+    });
+  }
 
   if ((await db.instagramPost.count()) === 0) {
     const tiles = [

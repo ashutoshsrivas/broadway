@@ -4,7 +4,7 @@ export type StripBrand = {
   id: string;
   name: string;
   slug: string;
-  logoUrl: string;
+  tileUrl: string;
 };
 
 /**
@@ -56,7 +56,7 @@ function StripRun({ brands, ariaHidden = false }: { brands: StripBrand[]; ariaHi
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={brand.logoUrl}
+              src={brand.tileUrl}
               alt={brand.name}
               loading="lazy"
               className="h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-105"

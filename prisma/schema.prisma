@@ -130,14 +130,24 @@ model Brand {
   id                String  @id @default(cuid())
   name              String
   slug              String  @unique
+  /// The brand's own logo, transparent PNG or WebP — what the "Our Brands"
+  /// wall shows. Distinct from tileUrl, which is a photograph.
   logoUrl           String?
+  /// Lifestyle photograph for the scrolling strip. A logo on white looks
+  /// wrong there and a photo looks wrong on the logo wall, so these are two
+  /// fields rather than one reused badly.
+  tileUrl           String?
+  /// Hero image at the top of the brand's own page.
+  bannerUrl         String?
+  /// A paragraph or two about the house, shown under that banner.
+  description       String? @db.Text
   /// Shown in the homepage brand strip.
   isFeatured        Boolean @default(false)
   /// Gets a tab in the "New Arrivals" deck under the hero. Separate from
   /// isFeatured because the roll-call and the deck are different shelves —
   /// a house can be worth naming without having new stock worth showing.
   showInNewArrivals Boolean @default(false)
-  /// Appears in the scrolling brand strip. Needs logoUrl to be worth showing,
+  /// Appears in the scrolling brand strip. Needs tileUrl to be worth showing,
   /// so the storefront filters on both.
   showInBrandStrip  Boolean @default(false)
   sortOrder         Int     @default(0)

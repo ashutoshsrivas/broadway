@@ -10,6 +10,9 @@ export type BrandRow = {
   name: string;
   slug: string;
   logoUrl: string | null;
+  tileUrl: string | null;
+  bannerUrl: string | null;
+  description: string | null;
   isFeatured: boolean;
   showInNewArrivals: boolean;
   showInBrandStrip: boolean;
@@ -91,7 +94,9 @@ export function BrandManager({ initial }: { initial: BrandRow[] }) {
           <li key={brand.id} className="border border-line bg-paper-raised p-5">
             <div className="flex items-start gap-4">
               <BrandImage
-                brand={brand}
+                label="Logo"
+                url={brand.logoUrl}
+                hint="Transparent PNG"
                 onChange={(logoUrl) => void patch(brand.id, { logoUrl })}
               />
 
@@ -113,12 +118,43 @@ export function BrandManager({ initial }: { initial: BrandRow[] }) {
               </button>
             </div>
 
+            <div className="mt-4 flex gap-3 border-t border-line pt-4">
+              <BrandImage
+                label="Strip photo"
+                url={brand.tileUrl}
+                hint="Lifestyle shot"
+                onChange={(tileUrl) => void patch(brand.id, { tileUrl })}
+              />
+              <BrandImage
+                label="Page banner"
+                url={brand.bannerUrl}
+                hint="Wide"
+                onChange={(bannerUrl) => void patch(brand.id, { bannerUrl })}
+              />
+            </div>
+
+            <label className="mt-4 block">
+              <span className="label text-[0.55rem] text-ink-muted">About the house</span>
+              <textarea
+                defaultValue={brand.description ?? ""}
+                onBlur={(e) => {
+                  const description = e.target.value.trim();
+                  if (description !== (brand.description ?? "")) {
+                    void patch(brand.id, { description: description || null });
+                  }
+                }}
+                rows={3}
+                placeholder="Shown under the banner on the brand page."
+                className="field-box mt-1 resize-none !text-xs"
+              />
+            </label>
+
             <div className="mt-4 space-y-2.5 border-t border-line pt-4">
               <Toggle
                 label="Brand strip"
-                hint={!brand.logoUrl ? "Needs an image" : undefined}
+                hint={!brand.tileUrl ? "Needs a strip photo" : undefined}
                 checked={brand.showInBrandStrip}
-                disabled={!brand.logoUrl}
+                disabled={!brand.tileUrl}
                 onChange={(v) => void patch(brand.id, { showInBrandStrip: v })}
               />
               <Toggle
@@ -160,10 +196,14 @@ export function BrandManager({ initial }: { initial: BrandRow[] }) {
 }
 
 function BrandImage({
-  brand,
+  label,
+  url,
+  hint,
   onChange,
 }: {
-  brand: BrandRow;
+  label: string;
+  url: string | null;
+  hint?: string;
   onChange: (url: string | null) => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -187,14 +227,15 @@ function BrandImage({
   };
 
   return (
-    <div className="relative h-16 w-16 shrink-0">
+    <div className="relative">
+      <span className="label mb-1 block text-[0.5rem] text-ink-muted">{label}</span>
       <label
-        title={brand.logoUrl ? "Replace image" : "Upload image"}
-        className="flex h-full w-full cursor-pointer items-center justify-center overflow-hidden border border-dashed border-line bg-paper transition-colors hover:border-brass"
+        title={hint ? `${label} — ${hint}` : label}
+        className="relative flex h-16 w-16 cursor-pointer items-center justify-center overflow-hidden border border-dashed border-line bg-paper transition-colors hover:border-brass"
       >
-        {brand.logoUrl ? (
+        {url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={brand.logoUrl} alt="" className="h-full w-full object-contain p-1.5" />
+          <img src={url} alt="" className="h-full w-full object-contain p-1.5" />
         ) : (
           <Upload className="h-4 w-4 text-ink-muted" strokeWidth={1.5} />
         )}
@@ -207,17 +248,17 @@ function BrandImage({
       </label>
 
       {busy && (
-        <span className="label absolute inset-0 flex items-center justify-center bg-paper/85 text-[0.5rem] text-brass">
+        <span className="label absolute bottom-0 left-0 flex h-16 w-16 items-center justify-center bg-paper/85 text-[0.5rem] text-brass">
           …
         </span>
       )}
 
-      {brand.logoUrl && !busy && (
+      {url && !busy && (
         <button
           type="button"
           onClick={() => onChange(null)}
           title="Remove image"
-          className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-line bg-paper text-ink-muted transition-colors hover:text-clay"
+          className="absolute -right-1.5 top-4 flex h-5 w-5 items-center justify-center rounded-full border border-line bg-paper text-ink-muted transition-colors hover:text-clay"
         >
           <X className="h-2.5 w-2.5" strokeWidth={2.5} />
         </button>
