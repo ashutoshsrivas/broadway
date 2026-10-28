@@ -1,13 +1,27 @@
 import { db } from "@/lib/db";
 import { BannerManager } from "@/components/admin/BannerManager";
 import { DiscoverManager } from "@/components/admin/DiscoverManager";
+import { HomepagePicks } from "@/components/admin/HomepagePicks";
+import { InstagramManager } from "@/components/admin/InstagramManager";
+import { SETTING_KEYS, getSettings } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
 export default async function BannersPage() {
-  const [banners, panels] = await Promise.all([
+  const [banners, panels, settings, products, brands, instaPosts] = await Promise.all([
     db.banner.findMany({ orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] }),
     db.discoverPanel.findMany({ orderBy: { sortOrder: "asc" } }),
+    getSettings(),
+    db.product.findMany({
+      where: { status: "ACTIVE" },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, brand: { select: { name: true } } },
+    }),
+    db.brand.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, _count: { select: { products: true } } },
+    }),
+    db.instagramPost.findMany({ orderBy: { sortOrder: "asc" } }),
   ]);
 
   const totalMs = banners
@@ -42,6 +56,39 @@ export default async function BannersPage() {
         </p>
         <hr className="rule-deco mt-5 mb-6" />
         <DiscoverManager initial={panels} />
+      </section>
+
+      <section className="mt-16">
+        <h2 className="label-lg">Homepage Picks</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          The must-have spotlight sits just before the brand strip; Introducing sits just after
+          it. Either can be switched off by choosing nothing.
+        </p>
+        <hr className="rule-deco mt-5 mb-6" />
+        <HomepagePicks
+          products={products.map((p) => ({
+            id: p.id,
+            label: p.name,
+            sub: p.brand?.name ?? undefined,
+          }))}
+          brands={brands.map((b) => ({
+            id: b.id,
+            label: b.name,
+            sub: `${b._count.products} product${b._count.products === 1 ? "" : "s"}`,
+          }))}
+          settings={settings}
+          keys={SETTING_KEYS}
+        />
+      </section>
+
+      <section className="mt-16">
+        <h2 className="label-lg">Instagram</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          Uploaded images rather than a live feed — an Instagram token expires every 60 days and
+          takes the band down with it. Post there, upload the good ones here.
+        </p>
+        <hr className="rule-deco mt-5 mb-6" />
+        <InstagramManager initial={instaPosts} settings={settings} keys={SETTING_KEYS} />
       </section>
     </>
   );

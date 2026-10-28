@@ -607,6 +607,54 @@ async function main() {
   }
   console.log(`   ${vocab.size} values across 6 lists`);
 
+  console.log("→ Homepage picks & Instagram");
+  // Only set when unset, so a shop's own choices survive a re-seed.
+  const pick = async (key: string, value: string) => {
+    const existing = await db.storeSetting.findUnique({ where: { key } });
+    if (!existing) await db.storeSetting.create({ data: { key, value } });
+  };
+
+  const spotlight = await db.product.findFirst({
+    where: { status: "ACTIVE", isFeatured: true },
+    orderBy: { sortOrder: "asc" },
+    select: { id: true },
+  });
+  if (spotlight) await pick("homepage.mustHave.productId", spotlight.id);
+  await pick("homepage.mustHave.heading", "Eyewear You Must Have!");
+
+  // Pick a house with enough stock to fill the row of four.
+  const introBrand = await db.brand.findFirst({
+    where: { products: { some: { status: "ACTIVE" } } },
+    orderBy: { products: { _count: "desc" } },
+    select: { id: true },
+  });
+  if (introBrand) await pick("homepage.introducing.brandId", introBrand.id);
+  await pick("homepage.introducing.eyebrow", "Introducing");
+
+  await pick("homepage.instagram.handle", "@broadwayopticals");
+  await pick("homepage.instagram.url", "https://instagram.com/explore/tags/eyewear/");
+  await pick("homepage.instagram.heading", "Follow Along");
+
+  if ((await db.instagramPost.count()) === 0) {
+    const tiles = [
+      "1605813808456-26c16c0dfb77", "1496345875659-11f7dd282d1d",
+      "1611824204322-24963b44d68b", "1616424831766-d616a58f1459",
+      "1552954277-0c45bd503b54", "1591076482161-42ce6da69f67",
+      "1603578119639-798b8413d8d7", "1614715838608-dd527c46231d",
+      "1508296695146-257a814070b4", "1572635196237-14b3f281503f",
+      "1534078477103-9f6a18b3a5e2", "1511499767150-a48a237f0083",
+    ];
+    await db.instagramPost.createMany({
+      data: tiles.map((id, i) => ({
+        imageUrl: `https://images.unsplash.com/photo-${id}?w=600&q=75&auto=format&fit=crop`,
+        sortOrder: i + 1,
+      })),
+    });
+    console.log(`   ${tiles.length} posts`);
+  } else {
+    console.log("   skipped — posts already configured");
+  }
+
   console.log("→ Admin account");
   const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@broadwayopticals.com";
   const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? "broadway123";

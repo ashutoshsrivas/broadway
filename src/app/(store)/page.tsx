@@ -6,15 +6,20 @@ import { HeroSlider } from "@/components/sections/HeroSlider";
 import { NewArrivalsDeck } from "@/components/sections/NewArrivalsDeck";
 import { DiscoverSplit } from "@/components/sections/DiscoverSplit";
 import { ServiceRail } from "@/components/sections/ServiceRail";
-import { CategoryShowcase } from "@/components/sections/CategoryShowcase";
 import { ProductRail } from "@/components/sections/ProductRail";
 import { LegacyBand } from "@/components/sections/LegacyBand";
 import { BrandStripScroll } from "@/components/sections/BrandStripScroll";
+import { MustHaveSpotlight } from "@/components/sections/MustHaveSpotlight";
+import { IntroducingBrand } from "@/components/sections/IntroducingBrand";
+import { InstagramBand } from "@/components/sections/InstagramBand";
+import { SETTING_KEYS, getSettings } from "@/lib/settings";
 
 export default async function HomePage() {
   // One round of parallel queries for the whole page — each section is a pure
   // renderer, so nothing below fetches on its own.
-  const [banners, categories, featured, brands, discoverPanels, newArrivalBrands] = await Promise.all([
+  const settings = await getSettings();
+
+  const [banners, featured, brands, discoverPanels, newArrivalBrands, instaPosts] = await Promise.all([
     db.banner.findMany({
       where: { isActive: true },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
@@ -24,12 +29,6 @@ export default async function HomePage() {
         ctaLabel: true, ctaHref: true, align: true,
         overlay: true, durationMs: true,
       },
-    }),
-    db.category.findMany({
-      where: { isActive: true },
-      orderBy: { sortOrder: "asc" },
-      take: 5,
-      select: { name: true, slug: true, description: true, imageUrl: true },
     }),
     db.product.findMany({
       where: { status: "ACTIVE", isFeatured: true },
@@ -70,7 +69,52 @@ export default async function HomePage() {
         },
       },
     }),
+    db.instagramPost.findMany({
+      where: { isActive: true },
+      orderBy: { sortOrder: "asc" },
+      take: 12,
+      select: { id: true, imageUrl: true, href: true, caption: true },
+    }),
   ]);
+
+  // The two admin-picked bands. Each is skipped entirely when nothing is
+  // chosen, rather than falling back to an arbitrary product or brand — a
+  // homepage slot showing something nobody selected is worse than no slot.
+  const mustHaveId = settings[SETTING_KEYS.mustHaveProductId];
+  const mustHave = mustHaveId
+    ? await db.product.findFirst({
+        where: { id: mustHaveId, status: "ACTIVE" },
+        select: {
+          id: true, name: true, slug: true, mrp: true, price: true,
+          brand: { select: { name: true } },
+          images: { orderBy: { sortOrder: "asc" }, take: 1, select: { url: true, alt: true } },
+          variants: {
+            orderBy: { createdAt: "asc" },
+            select: { id: true, colorName: true, colorHex: true, stock: true, priceOverride: true },
+          },
+        },
+      })
+    : null;
+
+  const introBrandId = settings[SETTING_KEYS.introducingBrandId];
+  const introBrand = introBrandId
+    ? await db.brand.findUnique({
+        where: { id: introBrandId },
+        select: {
+          name: true,
+          slug: true,
+          products: {
+            where: { status: "ACTIVE" },
+            orderBy: { createdAt: "desc" },
+            take: 4,
+            select: {
+              id: true, name: true, slug: true, mrp: true, price: true,
+              images: { orderBy: { sortOrder: "asc" }, take: 1, select: { url: true, alt: true } },
+            },
+          },
+        },
+      })
+    : null;
 
   // A brand with nothing new has an empty tab, which reads as a mistake —
   // drop it rather than show it.
@@ -87,11 +131,33 @@ export default async function HomePage() {
 
       <DiscoverSplit panels={discoverPanels} />
 
+      {mustHave && mustHave.variants.length > 0 && (
+        <MustHaveSpotlight
+          product={mustHave}
+          heading={settings[SETTING_KEYS.mustHaveHeading] || "Eyewear You Must Have!"}
+        />
+      )}
+
       <BrandStripScroll
         brands={brands.map((b) => ({ ...b, logoUrl: b.logoUrl! }))}
       />
 
       <ServiceRail />
+
+      {introBrand && (
+        <IntroducingBrand
+          brand={{ name: introBrand.name, slug: introBrand.slug }}
+          products={introBrand.products}
+          eyebrow={settings[SETTING_KEYS.introducingEyebrow] || "Introducing"}
+        />
+      )}
+
+      <InstagramBand
+        posts={instaPosts}
+        handle={settings[SETTING_KEYS.instagramHandle] || "@broadwayopticals"}
+        profileUrl={settings[SETTING_KEYS.instagramUrl] || "https://instagram.com"}
+        heading={settings[SETTING_KEYS.instagramHeading] || "Follow Along"}
+      />
 
       <ProductRail
         eyebrow="Featured Picks"
@@ -105,7 +171,6 @@ export default async function HomePage() {
         products={featured}
       />
 
-      <CategoryShowcase categories={categories} />
 
       <LegacyBand />
 

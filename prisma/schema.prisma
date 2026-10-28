@@ -289,6 +289,37 @@ model Banner {
   @@index([isActive, sortOrder])
 }
 
+/// Small pieces of homepage configuration — which product the must-have
+/// spotlight shows, which house the "Introducing" band features, the shop's
+/// Instagram handle.
+///
+/// A key/value table rather than a column per setting: these are single
+/// values an admin picks, and each new one would otherwise be a migration.
+/// Anything with structure gets a real model instead.
+model StoreSetting {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+}
+
+/// A post in the Instagram band. The image is ours (uploaded), the link
+/// points at the real post, so the band works without an Instagram API token
+/// and keeps working when the token would have expired.
+model InstagramPost {
+  id       String  @id @default(cuid())
+  imageUrl String
+  /// Link to the post itself. Falls back to the shop profile when empty.
+  href     String?
+  caption  String? @db.Text
+
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+
+  @@index([isActive, sortOrder])
+}
+
 /// One half of the split "Discover" band under the arrivals deck.
 ///
 /// A list rather than a fixed him/her pair, so the shop can run three panels

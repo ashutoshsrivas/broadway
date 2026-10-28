@@ -1,26 +1,7 @@
 import Link from "next/link";
 import { Phone, Mail, MapPin } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
-
-// Drawn inline: lucide dropped its brand glyphs, and two 24px paths are not
-// worth another dependency.
-function InstagramIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className} aria-hidden="true">
-      <rect x="3" y="3" width="18" height="18" rx="5" />
-      <circle cx="12" cy="12" r="4" />
-      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-function FacebookIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className} aria-hidden="true">
-      <path d="M14.5 8.5h2.5V5.2h-2.6c-2.3 0-3.7 1.5-3.7 3.9v2.1H8.4v3.3h2.3V21h3.4v-6.5h2.4l.4-3.3h-2.8V9.5c0-.7.3-1 .9-1Z" />
-    </svg>
-  );
-}
+import { Instagram, Facebook } from "@/components/Icons";
 
 const COLUMNS = [
   {
@@ -78,7 +59,7 @@ export function Footer() {
                 aria-label="Instagram"
                 className="border border-paper/20 p-2.5 transition-colors hover:border-brass hover:text-brass"
               >
-                <InstagramIcon className="h-4 w-4" />
+                <Instagram className="h-4 w-4" />
               </a>
               <a
                 href="https://facebook.com"
@@ -87,7 +68,7 @@ export function Footer() {
                 aria-label="Facebook"
                 className="border border-paper/20 p-2.5 transition-colors hover:border-brass hover:text-brass"
               >
-                <FacebookIcon className="h-4 w-4" />
+                <Facebook className="h-4 w-4" />
               </a>
             </div>
           </div>
