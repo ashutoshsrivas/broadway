@@ -17,6 +17,7 @@ const COLUMNS = [
   {
     heading: "The House",
     links: [
+      { label: "BO Exclusive", href: "/bo-exclusive" },
       { label: "Our Brands", href: "/brands" },
       { label: "Our Story", href: "/about" },
       { label: "Find a Store", href: "/stores" },

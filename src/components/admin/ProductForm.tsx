@@ -37,6 +37,7 @@ export type ProductFormValues = {
   isFeatured: boolean;
   isNewArrival: boolean;
   isLimitedEdition: boolean;
+  isBoExclusive: boolean;
   images: string[];
   variants: VariantDraft[];
 };
@@ -59,6 +60,7 @@ export const BLANK_PRODUCT: ProductFormValues = {
   isFeatured: false,
   isNewArrival: false,
   isLimitedEdition: false,
+  isBoExclusive: false,
   images: [],
   variants: [{ sku: "", colorName: "", colorHex: "#2A1F17", priceOverride: "", stock: "0" }],
 };
@@ -133,6 +135,7 @@ export function ProductForm({
       isFeatured: values.isFeatured,
       isNewArrival: values.isNewArrival,
       isLimitedEdition: values.isLimitedEdition,
+      isBoExclusive: values.isBoExclusive,
       images: values.images,
       variants: values.variants.map((v) => ({
         id: v.id,
@@ -505,6 +508,15 @@ export function ProductForm({
                 className="h-4 w-4 accent-[#B08D4F]"
               />
               Limited edition
+            </label>
+            <label className="flex items-center gap-3 text-sm text-ink-soft">
+              <input
+                type="checkbox"
+                checked={values.isBoExclusive}
+                onChange={(e) => set("isBoExclusive", e.target.checked)}
+                className="h-4 w-4 accent-[#B08D4F]"
+              />
+              BO Exclusive
             </label>
           </div>
         </div>

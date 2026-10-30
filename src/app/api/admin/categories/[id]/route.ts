@@ -9,6 +9,7 @@ const schema = z.object({
   imageUrl: z.string().trim().max(500).nullable().optional(),
   sortOrder: z.number().int().optional(),
   isActive: z.boolean().optional(),
+  isBoExclusive: z.boolean().optional(),
 });
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

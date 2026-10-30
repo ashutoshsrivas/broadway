@@ -4,12 +4,14 @@ import { DiscoverManager } from "@/components/admin/DiscoverManager";
 import { HomepagePicks } from "@/components/admin/HomepagePicks";
 import { InstagramManager } from "@/components/admin/InstagramManager";
 import { ShopEditorialManager } from "@/components/admin/ShopEditorialManager";
+import { ExclusiveSettings } from "@/components/admin/ExclusiveSettings";
+import { EXCLUSIVE_WHERE } from "@/lib/exclusive";
 import { SETTING_KEYS, getSettings } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
 export default async function BannersPage() {
-  const [banners, panels, settings, products, brands, instaPosts, editorials] = await Promise.all([
+  const [banners, panels, settings, products, brands, instaPosts, editorials, exclusiveCount] = await Promise.all([
     db.banner.findMany({ orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] }),
     db.discoverPanel.findMany({ orderBy: { sortOrder: "asc" } }),
     getSettings(),
@@ -24,6 +26,7 @@ export default async function BannersPage() {
     }),
     db.instagramPost.findMany({ orderBy: { sortOrder: "asc" } }),
     db.shopEditorial.findMany({ orderBy: { sortOrder: "asc" } }),
+    db.product.count({ where: { status: "ACTIVE", ...EXCLUSIVE_WHERE } }),
   ]);
 
   const totalMs = banners
@@ -105,6 +108,17 @@ export default async function BannersPage() {
           everyRows={settings[SETTING_KEYS.editorialEveryRows] ?? "3"}
           settingKey={SETTING_KEYS.editorialEveryRows}
         />
+      </section>
+
+      <section className="mt-16">
+        <h2 className="label-lg">BO Exclusive</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          Mark a product as BO Exclusive while uploading it, or mark a whole department under
+          Categories. The copy below is the badge wording and the notice shown on every exclusive
+          product and at the head of <code className="text-brass">/bo-exclusive</code>.
+        </p>
+        <hr className="rule-deco mt-5 mb-6" />
+        <ExclusiveSettings settings={settings} keys={SETTING_KEYS} count={exclusiveCount} />
       </section>
     </>
   );

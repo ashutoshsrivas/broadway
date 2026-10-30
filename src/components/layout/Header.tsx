@@ -143,6 +143,9 @@ export function Header({ categories }: { categories: NavCategory[] }) {
             >
               Brands
             </Link>
+            <Link href="/bo-exclusive" className="label link-rule text-brass">
+              BO Exclusive
+            </Link>
             <Link href="/shop?sale=1" className="label link-rule text-clay">
               Sale
             </Link>
@@ -208,6 +211,11 @@ export function Header({ categories }: { categories: NavCategory[] }) {
                 <li>
                   <Link href="/account/orders" className="label-lg text-ink-soft">
                     My Orders
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/bo-exclusive" className="label-lg text-brass">
+                    BO Exclusive
                   </Link>
                 </li>
                 <li>

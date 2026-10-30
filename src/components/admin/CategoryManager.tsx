@@ -10,6 +10,7 @@ type Category = {
   name: string;
   slug: string;
   isActive: boolean;
+  isBoExclusive: boolean;
   productCount: number;
 };
 export function CategoryManager({ categories }: { categories: Category[] }) {
@@ -27,6 +28,7 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
             category.productCount === 1 ? "" : "s"
           }`,
           flag: category.isActive ? null : "Hidden",
+          toggle: { field: "isBoExclusive" as const, on: category.isBoExclusive },
         }))}
       />
 
@@ -51,7 +53,7 @@ function Panel({
     name: string;
     meta: string;
     flag: string | null;
-    toggle?: { field: "showInNewArrivals"; on: boolean };
+    toggle?: { field: "showInNewArrivals" | "isBoExclusive"; on: boolean };
   }[];
   featurable?: boolean;
 }) {
@@ -125,7 +127,7 @@ function Panel({
                       }}
                       className="h-3.5 w-3.5 accent-[#B08D4F]"
                     />
-                    Arrivals deck
+                    {row.toggle.field === "isBoExclusive" ? "BO Exclusive" : "Arrivals deck"}
                   </label>
                 )}
               </div>

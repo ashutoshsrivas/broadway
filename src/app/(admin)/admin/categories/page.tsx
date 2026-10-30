@@ -26,6 +26,7 @@ export default async function AdminCategoriesPage() {
           name: c.name,
           slug: c.slug,
           isActive: c.isActive,
+          isBoExclusive: c.isBoExclusive,
           productCount: c._count.products,
         }))}
       />

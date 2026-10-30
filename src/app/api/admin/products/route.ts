@@ -35,6 +35,7 @@ export const productSchema = z.object({
   isFeatured: z.boolean(),
   isNewArrival: z.boolean(),
   isLimitedEdition: z.boolean().optional(),
+  isBoExclusive: z.boolean().optional(),
   images: z.array(z.string().trim().min(1)).max(8),
   variants: z.array(variantSchema).min(1, "Add at least one colour"),
 });

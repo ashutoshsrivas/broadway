@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
+import { EXCLUSIVE_WHERE } from "@/lib/exclusive";
 
 export const PAGE_SIZE = 24;
 
@@ -13,6 +14,7 @@ export type ShopFilters = {
   minPrice?: number;
   maxPrice?: number;
   q?: string;
+  exclusive?: boolean;
   sort?: string;
   page?: number;
 };
@@ -27,8 +29,9 @@ export const productCardSelect = {
   gender: true,
   shape: true,
   isNewArrival: true,
+  isBoExclusive: true,
   brand: { select: { name: true, slug: true } },
-  category: { select: { name: true, slug: true } },
+  category: { select: { name: true, slug: true, isBoExclusive: true } },
   images: { orderBy: { sortOrder: "asc" }, take: 2, select: { url: true, alt: true } },
   variants: { select: { id: true, stock: true, colorHex: true, colorName: true } },
 } satisfies Prisma.ProductSelect;
@@ -53,6 +56,7 @@ function buildWhere(f: ShopFilters): Prisma.ProductWhereInput {
   const where: Prisma.ProductWhereInput = { status: "ACTIVE" };
 
   if (f.category) where.category = { slug: f.category };
+  if (f.exclusive) where.AND = [EXCLUSIVE_WHERE];
   if (f.brand?.length) where.brand = { slug: { in: f.brand } };
   if (f.gender?.length) where.gender = { in: f.gender };
   if (f.shape?.length) where.shape = { in: f.shape };

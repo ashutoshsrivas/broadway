@@ -33,6 +33,7 @@ const schema = z.object({
   countryOfOrigin: z.string().trim().max(60).optional(),
 
   isLimitedEdition: z.boolean().default(false),
+  isBoExclusive: z.boolean().default(false),
   stock: z.number().int().min(0).max(100000).default(0),
   sku: z.string().trim().max(60).optional(),
   images: z.array(z.string().trim().min(1)).max(8).default([]),
@@ -142,6 +143,7 @@ export async function POST(req: NextRequest) {
         size,
         countryOfOrigin: origin,
         isLimitedEdition: d.isLimitedEdition,
+        isBoExclusive: d.isBoExclusive,
         status: d.status,
         isNewArrival: true,
         images: { create: d.images.map((url, i) => ({ url, sortOrder: i })) },

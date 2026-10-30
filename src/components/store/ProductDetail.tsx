@@ -30,8 +30,9 @@ type Product = {
   frameType: string | null;
   lensType: string | null;
   isLimitedEdition: boolean;
+  isBoExclusive: boolean;
+  category: { name: string; isBoExclusive?: boolean | null };
   brand: { name: string } | null;
-  category: { name: string };
   images: { url: string; alt: string | null }[];
   variants: Variant[];
 };
@@ -133,6 +134,11 @@ export function ProductDetail({ product }: { product: Product }) {
       <div>
         <div className="flex flex-wrap items-center gap-3">
           <p className="label text-brass">{product.brand?.name ?? "Broadway"}</p>
+          {(product.isBoExclusive || product.category.isBoExclusive) && (
+            <span className="label border border-brass bg-brass/15 px-2.5 py-1 text-[0.6rem] text-brass">
+              ◆ BO Exclusive
+            </span>
+          )}
           {product.isLimitedEdition && (
             <span className="label border border-brass px-2.5 py-1 text-[0.6rem] text-brass">
               ◆ Limited Edition

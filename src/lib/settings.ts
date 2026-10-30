@@ -17,6 +17,11 @@ export const SETTING_KEYS = {
   instagramHeading: "homepage.instagram.heading",
   whatsappNumber: "shop.whatsapp",
   editorialEveryRows: "shop.editorial.everyRows",
+  exclusiveLabel: "exclusive.label",
+  exclusiveTitle: "exclusive.title",
+  exclusiveMessage: "exclusive.message",
+  exclusiveCtaLabel: "exclusive.ctaLabel",
+  exclusiveCtaHref: "exclusive.ctaHref",
 } as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];

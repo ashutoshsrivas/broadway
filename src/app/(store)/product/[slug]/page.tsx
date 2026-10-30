@@ -5,13 +5,16 @@ import { db } from "@/lib/db";
 import { productCardSelect } from "@/lib/catalog";
 import { ProductDetail } from "@/components/store/ProductDetail";
 import { ProductRail } from "@/components/sections/ProductRail";
+import { ExclusiveNotice } from "@/components/store/ExclusiveNotice";
+import { isExclusive, exclusiveCopy } from "@/lib/exclusive";
+import { getSettings } from "@/lib/settings";
 
 async function getProduct(slug: string) {
   return db.product.findFirst({
     where: { slug, status: "ACTIVE" },
     include: {
       brand: { select: { name: true } },
-      category: { select: { name: true, slug: true } },
+      category: { select: { name: true, slug: true, isBoExclusive: true } },
       images: { orderBy: { sortOrder: "asc" } },
       variants: { orderBy: { createdAt: "asc" } },
     },
@@ -42,6 +45,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const product = await getProduct(slug);
   if (!product) notFound();
 
+  const exclusive = isExclusive(product);
+  const copy = exclusive ? exclusiveCopy(await getSettings()) : null;
+
   // Same department, different frame — the only "related" rule worth having
   // without a recommendation engine.
   const related = await db.product.findMany({
@@ -67,6 +73,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </nav>
 
         <ProductDetail product={product} />
+
+        {copy && (
+          <div className="mt-14 lg:ml-auto lg:w-[calc((100%-4rem)*0.4762)]">
+            <ExclusiveNotice copy={copy} />
+          </div>
+        )}
       </div>
 
       <ProductRail

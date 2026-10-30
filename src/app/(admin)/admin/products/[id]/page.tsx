@@ -49,6 +49,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
           isFeatured: product.isFeatured,
           isNewArrival: product.isNewArrival,
           isLimitedEdition: product.isLimitedEdition,
+          isBoExclusive: product.isBoExclusive,
           images: product.images.map((image) => image.url),
           variants: product.variants.map((variant) => ({
             id: variant.id,

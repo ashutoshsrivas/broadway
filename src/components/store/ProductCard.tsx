@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatPrice, discountPct } from "@/lib/utils";
+import { isExclusive } from "@/lib/exclusive";
 import type { ProductCardData } from "@/lib/catalog";
 
 /**
@@ -11,6 +12,7 @@ import type { ProductCardData } from "@/lib/catalog";
  */
 export function ProductCard({ product, priority = false }: { product: ProductCardData; priority?: boolean }) {
   const save = discountPct(product.mrp, product.price);
+  const exclusive = isExclusive(product);
   const inStock = product.variants.some((v) => v.stock > 0);
   const [primary, secondary] = product.images;
   const colours = product.variants.filter((v) => v.colorHex).slice(0, 4);
@@ -49,10 +51,13 @@ export function ProductCard({ product, priority = false }: { product: ProductCar
 
           {/* Badges — at most two, so the image stays the hero. */}
           <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
+            {exclusive && (
+              <span className="label bg-brass px-2.5 py-1.5 text-ink">BO Exclusive</span>
+            )}
             {save > 0 && (
               <span className="label bg-clay px-2.5 py-1.5 text-paper">Save {save}%</span>
             )}
-            {product.isNewArrival && save === 0 && (
+            {product.isNewArrival && save === 0 && !exclusive && (
               <span className="label bg-ink px-2.5 py-1.5 text-paper">New</span>
             )}
           </div>

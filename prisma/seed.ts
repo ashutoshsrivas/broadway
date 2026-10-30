@@ -544,6 +544,31 @@ async function main() {
     console.log("   skipped — banners already configured");
   }
 
+  console.log("→ BO Exclusive");
+  // A handful of pieces to show the selection working. Only set when nothing
+  // is marked yet, so a shop's own choices survive a re-seed.
+  if ((await db.product.count({ where: { isBoExclusive: true } })) === 0) {
+    const picks = ["tom-ford-ft-1077-cat-eye", "persol-po-0714-steve-mcqueen", "prada-0pr-a54s-symbole"];
+    const res = await db.product.updateMany({
+      where: { slug: { in: picks } },
+      data: { isBoExclusive: true },
+    });
+    console.log(`   ${res.count} products marked`);
+  } else {
+    console.log("   skipped — already marked");
+  }
+  for (const [key, value] of Object.entries({
+    "exclusive.label": "BO Exclusive",
+    "exclusive.title": "A Broadway Exclusive",
+    "exclusive.message":
+      "Held exclusively by Broadway Opticals. Numbers are limited and every piece is fitted in store by our own opticians \u2014 talk to us before you buy and we'll make sure it sits right on your face.",
+    "exclusive.ctaLabel": "Talk to an optician",
+    "exclusive.ctaHref": "/contact",
+  })) {
+    const existing = await db.storeSetting.findUnique({ where: { key } });
+    if (!existing) await db.storeSetting.create({ data: { key, value } });
+  }
+
   console.log("→ Brand logos");
   // Only the eight whose logo was downloaded and checked by eye against the
   // real mark. Searching by name alone returned a port authority for Persol,

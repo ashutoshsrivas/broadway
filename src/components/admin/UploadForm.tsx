@@ -26,6 +26,7 @@ const BLANK = {
   sku: "",
   stock: "0",
   isLimitedEdition: false,
+  isBoExclusive: false,
   images: [] as string[],
 };
 
@@ -94,6 +95,7 @@ export function UploadForm({
         sku: v.sku.trim() || undefined,
         stock: Number(v.stock || 0),
         isLimitedEdition: v.isLimitedEdition,
+        isBoExclusive: v.isBoExclusive,
         images: v.images,
         status,
       }),
@@ -232,12 +234,39 @@ export function UploadForm({
           />
         </div>
 
-        {/* ── Limited edition ── */}
+        {/* ── Flags ── */}
+        <button
+          type="button"
+          onClick={() => set("isBoExclusive", !v.isBoExclusive)}
+          aria-pressed={v.isBoExclusive}
+          className={`mt-6 flex w-full items-center gap-3.5 border p-4 text-left transition-colors sm:w-auto sm:pr-8 ${
+            v.isBoExclusive ? "border-brass bg-brass/10" : "border-line hover:border-ink-muted"
+          }`}
+        >
+          <span
+            className={`flex h-5 w-5 shrink-0 items-center justify-center border transition-colors ${
+              v.isBoExclusive ? "border-brass bg-brass" : "border-line"
+            }`}
+          >
+            {v.isBoExclusive && <Check className="h-3 w-3 text-ink" strokeWidth={3} />}
+          </span>
+          <Sparkles
+            className={`h-4 w-4 shrink-0 ${v.isBoExclusive ? "text-brass" : "text-ink-muted"}`}
+            strokeWidth={1.5}
+          />
+          <span>
+            <span className="label block">BO Exclusive</span>
+            <span className="mt-1 block text-xs text-ink-muted">
+              Lists it under BO Exclusive and shows the house notice on the product
+            </span>
+          </span>
+        </button>
+
         <button
           type="button"
           onClick={() => set("isLimitedEdition", !v.isLimitedEdition)}
           aria-pressed={v.isLimitedEdition}
-          className={`mt-6 flex w-full items-center gap-3.5 border p-4 text-left transition-colors sm:w-auto sm:pr-8 ${
+          className={`mt-3 flex w-full items-center gap-3.5 border p-4 text-left transition-colors sm:w-auto sm:pr-8 ${
             v.isLimitedEdition
               ? "border-brass bg-brass/10"
               : "border-line hover:border-ink-muted"

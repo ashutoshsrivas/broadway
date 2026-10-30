@@ -110,13 +110,16 @@ model Address {
 /// (Sunglasses, Eyeglasses, Computer Glasses, Contact Lenses, Accessories);
 /// audience is a product attribute (`gender`), not a second tier of category.
 model Category {
-  id          String  @id @default(cuid())
-  name        String
-  slug        String  @unique
-  description String? @db.Text
-  imageUrl    String?
-  sortOrder   Int     @default(0)
-  isActive    Boolean @default(true)
+  id            String  @id @default(cuid())
+  name          String
+  slug          String  @unique
+  description   String? @db.Text
+  imageUrl      String?
+  sortOrder     Int     @default(0)
+  isActive      Boolean @default(true)
+  /// Marks the whole department as BO Exclusive — every product inside it
+  /// counts, without each needing its own flag.
+  isBoExclusive Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -201,6 +204,10 @@ model Product {
   isFeatured       Boolean       @default(false)
   isNewArrival     Boolean       @default(false)
   isLimitedEdition Boolean       @default(false)
+  /// Part of the BO Exclusive selection. A product is exclusive if this is
+  /// set OR its category is — see `isExclusive` in lib/exclusive.ts, which is
+  /// the only place that rule should live.
+  isBoExclusive    Boolean       @default(false)
   sortOrder        Int           @default(0)
 
   createdAt DateTime @default(now())
