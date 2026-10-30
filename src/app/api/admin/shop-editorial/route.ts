@@ -8,7 +8,6 @@ export const editorialSchema = z.object({
   eyebrow: z.string().trim().max(80).nullable().optional(),
   heading: z.string().trim().max(160).nullable().optional(),
   href: z.string().trim().max(300).nullable().optional(),
-  afterProducts: z.number().int().min(1).max(60).default(6),
   sortOrder: z.number().int().min(0).max(99).default(0),
   isActive: z.boolean().default(true),
 });

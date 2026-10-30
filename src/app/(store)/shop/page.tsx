@@ -7,6 +7,8 @@ import { ShopFilters } from "@/components/store/ShopFilters";
 import { SortSelect } from "@/components/store/SortSelect";
 import { Pagination } from "@/components/store/Pagination";
 import { ShopEditorialTile } from "@/components/store/ShopEditorialTile";
+import { buildShopGrid, DEFAULT_ROWS_BETWEEN } from "@/lib/shop-grid";
+import { SETTING_KEYS, getSettings } from "@/lib/settings";
 import { db } from "@/lib/db";
 
 export const metadata: Metadata = {
@@ -55,32 +57,16 @@ export default async function ShopPage({
     db.shopEditorial.findMany({
       where: { isActive: true },
       orderBy: { sortOrder: "asc" },
-      select: { id: true, imageUrl: true, eyebrow: true, heading: true, href: true, afterProducts: true },
+      select: { id: true, imageUrl: true, eyebrow: true, heading: true, href: true },
     }),
   ]);
 
-  // Interleave the editorial images into the run of products.
-  //
-  // `afterProducts` is a running total, so a shop can say "third image after
-  // twenty frames" without recomputing the others. Only the first page is
-  // interleaved: on page four the counts would describe a position the
-  // shopper never scrolled past, and the same three images would reappear.
-  type Cell =
-    | { kind: "product"; product: (typeof products)[number] }
-    | { kind: "editorial"; editorial: (typeof editorials)[number] };
-
-  const cells: Cell[] = products.map((product) => ({ kind: "product" as const, product }));
-
-  if (page === 1) {
-    // Inserted back-to-front so each index still refers to the original run.
-    const placements = editorials
-      .map((editorial) => ({ editorial, at: Math.min(editorial.afterProducts, products.length) }))
-      .sort((a, b) => b.at - a.at);
-
-    for (const { editorial, at } of placements) {
-      cells.splice(at, 0, { kind: "editorial", editorial });
-    }
-  }
+  // Interleave the editorial images into the run of products: one every few
+  // rows, alternating sides. Only the first page is interleaved — on page four
+  // the same handful of images would reappear in the same positions.
+  const settings = await getSettings();
+  const rowsBetween = Number(settings[SETTING_KEYS.editorialEveryRows]) || DEFAULT_ROWS_BETWEEN;
+  const cells = buildShopGrid(products, page === 1 ? editorials : [], rowsBetween);
 
   const activeCategory = facets.categories.find((c) => c.slug === category);
   const heading = query

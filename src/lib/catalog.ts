@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 
-export const PAGE_SIZE = 12;
+export const PAGE_SIZE = 24;
 
 export type ShopFilters = {
   category?: string;

@@ -100,7 +100,11 @@ export default async function BannersPage() {
           product cards. Breaks up a long run of frames on white with something worn on a face.
         </p>
         <hr className="rule-deco mt-5 mb-6" />
-        <ShopEditorialManager initial={editorials} />
+        <ShopEditorialManager
+          initial={editorials}
+          everyRows={settings[SETTING_KEYS.editorialEveryRows] ?? "3"}
+          settingKey={SETTING_KEYS.editorialEveryRows}
+        />
       </section>
     </>
   );

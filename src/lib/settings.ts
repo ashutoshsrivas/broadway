@@ -16,6 +16,7 @@ export const SETTING_KEYS = {
   instagramUrl: "homepage.instagram.url",
   instagramHeading: "homepage.instagram.heading",
   whatsappNumber: "shop.whatsapp",
+  editorialEveryRows: "shop.editorial.everyRows",
 } as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];

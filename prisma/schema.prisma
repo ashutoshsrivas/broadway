@@ -325,10 +325,6 @@ model ShopEditorial {
   /// Optional destination — a collection, a brand, a campaign page.
   href     String?
 
-  /// How many products to show before this image appears. Lets the shop place
-  /// a run of imagery deliberately instead of on a fixed cadence.
-  afterProducts Int @default(6)
-
   sortOrder Int     @default(0)
   isActive  Boolean @default(true)
 

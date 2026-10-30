@@ -608,7 +608,6 @@ async function main() {
           eyebrow: "The Cat-Eye Edit",
           heading: "Shapes that hold a room.",
           href: "/shop?shape=Cat+Eye",
-          afterProducts: 6,
           sortOrder: 1,
         },
         {
@@ -617,12 +616,19 @@ async function main() {
           eyebrow: "Everyday Metal",
           heading: "Built for the long look.",
           href: "/shop?material=Metal",
-          afterProducts: 12,
           sortOrder: 2,
+        },
+        {
+          imageUrl:
+            "https://images.unsplash.com/photo-1611824204322-24963b44d68b?w=1600&q=80&auto=format&fit=crop",
+          eyebrow: "Sun, Properly",
+          heading: "Light handled with care.",
+          href: "/shop?category=sunglasses",
+          sortOrder: 3,
         },
       ],
     });
-    console.log("   2 images");
+    console.log("   3 images");
   } else {
     console.log("   skipped — already configured");
   }
@@ -694,6 +700,7 @@ async function main() {
   await pick("homepage.instagram.url", "https://instagram.com/explore/tags/eyewear/");
   await pick("homepage.instagram.heading", "Follow Along");
   await pick("shop.whatsapp", "919810012345");
+  await pick("shop.editorial.everyRows", "3");
 
   // Brand-page copy. Only filled when blank, so a shop's own words survive.
   const BRAND_COPY: Record<string, string> = {

@@ -1,13 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
-export type Editorial = {
-  id: string;
-  imageUrl: string;
-  eyebrow: string | null;
-  heading: string | null;
-  href: string | null;
-};
+import type { Editorial } from "@/lib/shop-grid";
 
 /**
  * An editorial image occupying four product cells in the shop grid.

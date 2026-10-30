@@ -11,15 +11,40 @@ type Editorial = {
   eyebrow: string | null;
   heading: string | null;
   href: string | null;
-  afterProducts: number;
   sortOrder: number;
   isActive: boolean;
 };
 
-export function ShopEditorialManager({ initial }: { initial: Editorial[] }) {
+export function ShopEditorialManager({
+  initial,
+  everyRows,
+  settingKey,
+}: {
+  initial: Editorial[];
+  everyRows: string;
+  settingKey: string;
+}) {
   const router = useRouter();
   const [items, setItems] = useState(initial);
   const [uploading, setUploading] = useState(false);
+  const [rows, setRows] = useState(everyRows || "3");
+  const [savingRows, setSavingRows] = useState(false);
+
+  const saveRows = async (value: string) => {
+    setSavingRows(true);
+    const res = await fetch("/api/admin/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ [settingKey]: value }),
+    });
+    setSavingRows(false);
+    if (!res.ok) {
+      toast.error("Could not save.");
+      return;
+    }
+    toast.success("Spacing saved");
+    router.refresh();
+  };
 
   const patch = async (id: string, data: Partial<Editorial>) => {
     setItems((prev) => prev.map((e) => (e.id === id ? { ...e, ...data } : e)));
@@ -51,7 +76,7 @@ export function ShopEditorialManager({ initial }: { initial: Editorial[] }) {
       const res = await fetch("/api/admin/shop-editorial", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl: data.url, afterProducts: (items.length + 1) * 6 }),
+        body: JSON.stringify({ imageUrl: data.url }),
       });
       const created = await res.json().catch(() => ({}));
       if (res.ok) setItems((prev) => [...prev, created.editorial]);
@@ -69,6 +94,30 @@ export function ShopEditorialManager({ initial }: { initial: Editorial[] }) {
 
   return (
     <div className="space-y-5">
+      <div className="flex flex-wrap items-end gap-4 border border-line bg-paper-raised p-5">
+        <label className="block">
+          <span className="label text-ink-muted">Rows of product between images</span>
+          <select
+            value={rows}
+            onChange={(e) => {
+              setRows(e.target.value);
+              void saveRows(e.target.value);
+            }}
+            disabled={savingRows}
+            className="field-box mt-1.5 w-28"
+          >
+            <option value="2">Every 2</option>
+            <option value="3">Every 3</option>
+            <option value="4">Every 4</option>
+            <option value="5">Every 5</option>
+          </select>
+        </label>
+        <p className="flex-1 text-xs leading-relaxed text-ink-muted">
+          Images are placed in list order and alternate sides down the page — first left, then
+          right, then left. Each one is two columns wide and two rows tall.
+        </p>
+      </div>
+
       {items.length > 0 && (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((e) => (
@@ -112,24 +161,7 @@ export function ShopEditorialManager({ initial }: { initial: Editorial[] }) {
                   className="field-box !text-xs"
                 />
 
-                <div className="flex items-end justify-between gap-3 border-t border-line pt-3">
-                  <label className="block">
-                    <span className="label text-[0.55rem] text-ink-muted">After N products</span>
-                    <input
-                      type="number"
-                      min="1"
-                      max="60"
-                      defaultValue={e.afterProducts}
-                      onBlur={(ev) => {
-                        const n = Number(ev.target.value);
-                        if (n >= 1 && n <= 60 && n !== e.afterProducts) {
-                          void patch(e.id, { afterProducts: n });
-                        }
-                      }}
-                      className="field-box mt-1 w-20 !text-xs"
-                    />
-                  </label>
-
+                <div className="flex items-center justify-end gap-3 border-t border-line pt-3">
                   <div className="flex gap-1">
                     <button
                       onClick={() => void patch(e.id, { isActive: !e.isActive })}
