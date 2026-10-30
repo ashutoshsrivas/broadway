@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { rateLimit, callerIp } from "@/lib/rate-limit";
 import { nextOrderNumber, priceCart, deductStock } from "@/lib/order";
 import { isRazorpayConfigured, razorpay } from "@/lib/razorpay";
+import { checkPromo } from "@/lib/promo";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Name is required").max(200),
@@ -25,6 +26,7 @@ const schema = z.object({
     .refine((v) => /^\d{6}$/.test(v), "Enter a valid 6-digit PIN code"),
   paymentMethod: z.enum(["COD", "RAZORPAY"]),
   notes: z.string().trim().max(1000).optional(),
+  promoCode: z.string().trim().max(40).optional(),
   // Only ids and quantities are accepted. Prices are always derived server-side.
   items: z
     .array(
@@ -81,6 +83,26 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // The discount is re-derived here from the configured offer, never taken
+  // from the browser. The same check ran at /api/promo/validate, but that
+  // answer was only ever advisory — this is the one that sets the price.
+  let discount = 0;
+  let discountCode: string | null = null;
+
+  if (data.promoCode) {
+    const promo = await checkPromo(data.promoCode, data.email, priced.subtotal);
+    if (promo.ok) {
+      discount = promo.amount;
+      discountCode = promo.code;
+    } else {
+      // A code that no longer applies fails the order rather than silently
+      // charging full price — the shopper agreed to a total that included it.
+      return NextResponse.json({ error: promo.reason }, { status: 400 });
+    }
+  }
+
+  const total = Math.max(0, priced.subtotal - discount) + priced.shipping;
+
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
@@ -108,7 +130,9 @@ export async function POST(req: NextRequest) {
           paymentStatus: "PENDING",
           subtotal: priced.subtotal,
           shipping: priced.shipping,
-          total: priced.total,
+          discount,
+          discountCode,
+          total,
           notes: data.notes || null,
           items: { create: priced.lines },
         },

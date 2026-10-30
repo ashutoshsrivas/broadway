@@ -461,9 +461,14 @@ model Order {
   /// retried payment callback can never deduct the same order twice.
   stockDeducted Boolean @default(false)
 
-  subtotal Float
-  shipping Float @default(0)
-  total    Float
+  subtotal     Float
+  shipping     Float   @default(0)
+  /// Money off the subtotal, in rupees. Always computed server-side from the
+  /// configured percentage — never taken from the browser.
+  discount     Float   @default(0)
+  /// The code that earned it, kept so the shop can see what was redeemed.
+  discountCode String?
+  total        Float
 
   notes String? @db.Text
 

@@ -5,6 +5,7 @@ import { HomepagePicks } from "@/components/admin/HomepagePicks";
 import { InstagramManager } from "@/components/admin/InstagramManager";
 import { ShopEditorialManager } from "@/components/admin/ShopEditorialManager";
 import { ExclusiveSettings } from "@/components/admin/ExclusiveSettings";
+import { PromoSettings } from "@/components/admin/PromoSettings";
 import { EXCLUSIVE_WHERE } from "@/lib/exclusive";
 import { SETTING_KEYS, getSettings } from "@/lib/settings";
 
@@ -119,6 +120,16 @@ export default async function BannersPage() {
         </p>
         <hr className="rule-deco mt-5 mb-6" />
         <ExclusiveSettings settings={settings} keys={SETTING_KEYS} count={exclusiveCount} />
+      </section>
+
+      <section className="mt-16">
+        <h2 className="label-lg">Welcome Offer</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          A one-time pop-up for first-time visitors, offering a flat percentage off their first
+          order. A cookie remembers who has seen it, so nobody is shown it twice.
+        </p>
+        <hr className="rule-deco mt-5 mb-6" />
+        <PromoSettings settings={settings} keys={SETTING_KEYS} />
       </section>
     </>
   );

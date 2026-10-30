@@ -22,6 +22,12 @@ export const SETTING_KEYS = {
   exclusiveMessage: "exclusive.message",
   exclusiveCtaLabel: "exclusive.ctaLabel",
   exclusiveCtaHref: "exclusive.ctaHref",
+  promoEnabled: "promo.enabled",
+  promoPercent: "promo.percent",
+  promoCode: "promo.code",
+  promoHeading: "promo.heading",
+  promoMessage: "promo.message",
+  promoDelay: "promo.delaySeconds",
 } as const;
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];

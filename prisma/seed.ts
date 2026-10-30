@@ -564,6 +564,13 @@ async function main() {
       "Held exclusively by Broadway Opticals. Numbers are limited and every piece is fitted in store by our own opticians \u2014 talk to us before you buy and we'll make sure it sits right on your face.",
     "exclusive.ctaLabel": "Talk to an optician",
     "exclusive.ctaHref": "/contact",
+    "promo.enabled": "1",
+    "promo.percent": "10",
+    "promo.code": "WELCOME10",
+    "promo.heading": "Welcome to Broadway",
+    "promo.message":
+      "Take {percent}% off your first order. Use the code below at checkout \u2014 our opticians will still fit whatever you choose.",
+    "promo.delaySeconds": "6",
   })) {
     const existing = await db.storeSetting.findUnique({ where: { key } });
     if (!existing) await db.storeSetting.create({ data: { key, value } });

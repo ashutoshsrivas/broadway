@@ -40,6 +40,11 @@ export function CheckoutForm({
   const [method, setMethod] = useState<"RAZORPAY" | "COD">(
     onlinePaymentAvailable ? "RAZORPAY" : "COD"
   );
+  const [promoCode, setPromoCode] = useState("");
+  const [promo, setPromo] = useState<{ amount: number; percent: number; code: string } | null>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [checkingPromo, setCheckingPromo] = useState(false);
+  const [email, setEmail] = useState(prefill.email);
 
   // An empty bag has nothing to check out — send them back rather than showing
   // a ₹0 form. Waits for hydration so a restored cart isn't mistaken for empty.
@@ -51,7 +56,41 @@ export function CheckoutForm({
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const shipping = shippingFor(subtotal);
-  const total = subtotal + shipping;
+  const discount = promo?.amount ?? 0;
+  const total = Math.max(0, subtotal - discount) + shipping;
+
+  /** Ask the server whether this code applies. The answer is advisory —
+   *  /api/orders re-checks it when the order is actually created. */
+  const applyPromo = async () => {
+    const code = promoCode.trim();
+    if (!code) return;
+    if (!email.trim()) {
+      setPromoError("Enter your email first — the offer is for first orders.");
+      return;
+    }
+
+    setCheckingPromo(true);
+    setPromoError(null);
+
+    const res = await fetch("/api/promo/validate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        code,
+        email: email.trim(),
+        items: items.map((i) => ({ variantId: i.variantId, quantity: i.quantity })),
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setCheckingPromo(false);
+
+    if (!data.ok) {
+      setPromo(null);
+      setPromoError(data.reason ?? "That code isn't recognised.");
+      return;
+    }
+    setPromo({ amount: data.amount, percent: data.percent, code: data.code });
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -70,6 +109,7 @@ export function CheckoutForm({
       pincode: String(form.get("pincode") ?? ""),
       notes: String(form.get("notes") ?? ""),
       paymentMethod: method,
+      promoCode: promo?.code,
       // Only ids and quantities go over the wire; the server prices the bag.
       items: items.map((i) => ({ variantId: i.variantId, quantity: i.quantity })),
     };
@@ -170,7 +210,17 @@ export function CheckoutForm({
               <Field name="name" label="Full name" defaultValue={prefill.name} required />
               <Field name="phone" label="Phone" type="tel" defaultValue={prefill.phone} required />
               <div className="sm:col-span-2">
-                <Field name="email" label="Email" type="email" defaultValue={prefill.email} required />
+                <label className="block">
+                  <span className="label text-ink-muted">Email</span>
+                  <input
+                    name="email"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="field mt-1.5"
+                  />
+                </label>
               </div>
             </div>
           </section>
@@ -253,11 +303,66 @@ export function CheckoutForm({
               ))}
             </ul>
 
-            <dl className="space-y-2.5 border-t border-line pt-5 text-sm">
+            {/* ── Offer code ── */}
+            <div className="border-t border-line pt-5">
+              {promo ? (
+                <div className="flex items-center justify-between gap-3">
+                  <p className="label text-brass">
+                    ◆ {promo.code} — {promo.percent}% off
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPromo(null);
+                      setPromoCode("");
+                    }}
+                    className="label text-ink-muted hover:text-clay"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="flex gap-2">
+                    <input
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => {
+                        // Enter here applies the code; it must not submit the
+                        // whole order before the discount has been applied.
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          void applyPromo();
+                        }
+                      }}
+                      placeholder="Offer code"
+                      className="field-box flex-1 uppercase"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => void applyPromo()}
+                      disabled={checkingPromo || !promoCode.trim()}
+                      className="btn-outline label shrink-0 px-5"
+                    >
+                      {checkingPromo ? "…" : "Apply"}
+                    </button>
+                  </div>
+                  {promoError && <p className="mt-2 text-xs text-clay">{promoError}</p>}
+                </>
+              )}
+            </div>
+
+            <dl className="mt-5 space-y-2.5 border-t border-line pt-5 text-sm">
               <div className="flex justify-between">
                 <dt className="text-ink-soft">Subtotal</dt>
                 <dd>{formatPrice(subtotal)}</dd>
               </div>
+              {discount > 0 && (
+                <div className="flex justify-between text-clay">
+                  <dt>Offer ({promo?.percent}%)</dt>
+                  <dd>−{formatPrice(discount)}</dd>
+                </div>
+              )}
               <div className="flex justify-between">
                 <dt className="text-ink-soft">Shipping</dt>
                 <dd>
