@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Upload, Trash2, Plus, Eye, EyeOff, Film } from "lucide-react";
+import { NumberField } from "@/components/admin/NumberField";
 
 type Panel = {
   id: string;
@@ -73,15 +74,14 @@ export function DiscoverManager({ initial }: { initial: Panel[] }) {
                 <div className="mt-4 flex items-end justify-between gap-3">
                   <label className="block">
                     <span className="label text-[0.55rem] text-ink-muted">Overlay %</span>
-                    <input
-                      type="number"
-                      min="0"
-                      max="80"
-                      step="5"
-                      defaultValue={panel.overlay}
-                      onBlur={(e) => {
-                        const v = Number(e.target.value);
-                        if (v >= 0 && v <= 80 && v !== panel.overlay) void patch(panel.id, { overlay: v });
+                    <NumberField
+                      value={String(panel.overlay)}
+                      decimals={false}
+                      min={0}
+                      max={80}
+                      onCommit={(val) => {
+                        const n = Number(val);
+                        if (Number.isFinite(n) && n !== panel.overlay) void patch(panel.id, { overlay: n });
                       }}
                       className="field-box mt-1 w-20"
                     />

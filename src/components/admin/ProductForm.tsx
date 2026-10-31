@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Plus, Trash2, Upload, X } from "lucide-react";
 import { titleCase } from "@/lib/utils";
+import { NumberField } from "@/components/admin/NumberField";
 
 const FRAME_TYPES = ["FULL_RIM", "HALF_RIM", "RIMLESS"];
 const STATUSES = ["DRAFT", "ACTIVE", "ARCHIVED"];
@@ -234,26 +235,10 @@ export function ProductForm({
       <Section title="Pricing">
         <div className="grid gap-5 sm:grid-cols-2">
           <Label text="MRP (₹)" hint="The printed list price">
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={values.mrp}
-              onChange={(e) => set("mrp", e.target.value)}
-              required
-              className="field-box"
-            />
+            <NumberField value={values.mrp} onChange={(v) => set("mrp", v)} min={0} />
           </Label>
           <Label text="Selling price (₹)" hint="Below MRP shows a SAVE % badge">
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={values.price}
-              onChange={(e) => set("price", e.target.value)}
-              required
-              className="field-box"
-            />
+            <NumberField value={values.price} onChange={(v) => set("price", v)} min={0} />
           </Label>
         </div>
       </Section>
@@ -333,18 +318,39 @@ export function ProductForm({
       </Section>
 
       {/* ── Images ── */}
-      <Section title="Images" note="The first image is the one used on the shop grid.">
+      <Section title="Images" note="The header image is what shows on the shop grid and at the top of the product page. Hover any other image to promote it.">
         {values.images.length > 0 && (
           <ul className="mb-5 grid grid-cols-3 gap-3 sm:grid-cols-5">
             {values.images.map((url, i) => (
-              <li key={url} className="group relative aspect-square overflow-hidden bg-paper-sunk">
+              <li
+                key={url}
+                className={`group relative aspect-square overflow-hidden bg-paper-sunk ${
+                  i === 0 ? "ring-2 ring-brass" : ""
+                }`}
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={url} alt="" className="h-full w-full object-cover" />
-                {i === 0 && (
-                  <span className="label absolute left-1.5 top-1.5 bg-ink px-2 py-1 text-[0.5rem] text-paper">
-                    Main
+
+                {i === 0 ? (
+                  <span className="label absolute left-1.5 top-1.5 bg-brass px-2 py-1 text-[0.5rem] text-ink">
+                    Header
                   </span>
+                ) : (
+                  // The header is simply the first image, so choosing one is
+                  // moving it to the front — the storefront needs no extra
+                  // field to read, and the order stays the single source.
+                  <button
+                    type="button"
+                    onClick={() =>
+                      set("images", [url, ...values.images.filter((_, index) => index !== i)])
+                    }
+                    title="Use as header image"
+                    className="label absolute inset-x-1.5 bottom-1.5 bg-ink/85 py-1.5 text-[0.5rem] text-paper opacity-0 transition-opacity group-hover:opacity-100"
+                  >
+                    Set as header
+                  </button>
                 )}
+
                 <button
                   type="button"
                   onClick={() =>
@@ -412,24 +418,19 @@ export function ProductForm({
                 </Label>
 
                 <Label text="Stock">
-                  <input
-                    type="number"
-                    min="0"
+                  <NumberField
                     value={variant.stock}
-                    onChange={(e) => setVariant(i, { stock: e.target.value })}
-                    required
-                    className="field-box"
+                    onChange={(v) => setVariant(i, { stock: v })}
+                    decimals={false}
+                    min={0}
                   />
                 </Label>
 
                 <Label text="Price override" hint="Blank = product price">
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
+                  <NumberField
                     value={variant.priceOverride}
-                    onChange={(e) => setVariant(i, { priceOverride: e.target.value })}
-                    className="field-box"
+                    onChange={(v) => setVariant(i, { priceOverride: v })}
+                    min={0}
                   />
                 </Label>
 

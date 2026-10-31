@@ -7,6 +7,7 @@ import { Upload, X, Sparkles, Check } from "lucide-react";
 import { AttributeCombobox } from "@/components/admin/AttributeCombobox";
 import type { Candidate, Kind } from "@/lib/attributes";
 import { formatPrice, discountPct } from "@/lib/utils";
+import { NumberField } from "@/components/admin/NumberField";
 
 type Vocab = Record<Kind, Candidate[]>;
 
@@ -302,25 +303,15 @@ export function UploadForm({
             <span className="label text-ink-muted">
               MRP (₹) <span className="ml-1 text-clay">*</span>
             </span>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={v.mrp}
-              onChange={(e) => set("mrp", e.target.value)}
-              required
-              className="field-box mt-1.5"
-            />
+            <NumberField value={v.mrp} onChange={(x) => set("mrp", x)} min={0} className="field-box mt-1.5" />
           </label>
 
           <label className="block">
             <span className="label text-ink-muted">Selling price (₹)</span>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
+            <NumberField
               value={v.price}
-              onChange={(e) => set("price", e.target.value)}
+              onChange={(x) => set("price", x)}
+              min={0}
               placeholder={v.mrp || "same as MRP"}
               className="field-box mt-1.5"
             />
@@ -333,11 +324,11 @@ export function UploadForm({
 
           <label className="block">
             <span className="label text-ink-muted">Stock</span>
-            <input
-              type="number"
-              min="0"
+            <NumberField
               value={v.stock}
-              onChange={(e) => set("stock", e.target.value)}
+              onChange={(x) => set("stock", x)}
+              decimals={false}
+              min={0}
               className="field-box mt-1.5"
             />
           </label>
@@ -363,13 +354,27 @@ export function UploadForm({
         {v.images.length > 0 && (
           <ul className="mb-5 grid grid-cols-3 gap-3 sm:grid-cols-6">
             {v.images.map((url, i) => (
-              <li key={url} className="group relative aspect-square overflow-hidden bg-paper-sunk">
+              <li
+                key={url}
+                className={`group relative aspect-square overflow-hidden bg-paper-sunk ${
+                  i === 0 ? "ring-2 ring-brass" : ""
+                }`}
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={url} alt="" className="h-full w-full object-cover" />
-                {i === 0 && (
-                  <span className="label absolute left-1.5 top-1.5 bg-ink px-2 py-1 text-[0.5rem] text-paper">
-                    Main
+                {i === 0 ? (
+                  <span className="label absolute left-1.5 top-1.5 bg-brass px-2 py-1 text-[0.5rem] text-ink">
+                    Header
                   </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => set("images", [url, ...v.images.filter((_, n) => n !== i)])}
+                    title="Use as header image"
+                    className="label absolute inset-x-1.5 bottom-1.5 bg-ink/85 py-1.5 text-[0.5rem] text-paper opacity-0 transition-opacity group-hover:opacity-100"
+                  >
+                    Set as header
+                  </button>
                 )}
                 <button
                   type="button"

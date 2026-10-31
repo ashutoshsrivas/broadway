@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Upload, Trash2, Plus, ChevronUp, ChevronDown, Eye, EyeOff, Film, Image as ImageIcon } from "lucide-react";
+import { NumberField } from "@/components/admin/NumberField";
 
 type Banner = {
   id: string;
@@ -154,14 +155,12 @@ export function BannerManager({ initial }: { initial: Banner[] }) {
                   <div className="mt-4 flex flex-wrap items-end gap-5">
                     <label className="block">
                       <span className="label text-[0.55rem] text-ink-muted">Seconds</span>
-                      <input
-                        type="number"
-                        step="0.5"
-                        min="1"
-                        max="30"
-                        defaultValue={banner.durationMs / 1000}
-                        onBlur={(e) => {
-                          const ms = Math.round(Number(e.target.value) * 1000);
+                      <NumberField
+                        value={String(banner.durationMs / 1000)}
+                        min={1}
+                        max={30}
+                        onCommit={(val) => {
+                          const ms = Math.round(Number(val) * 1000);
                           if (ms >= 1000 && ms <= 30000 && ms !== banner.durationMs) {
                             void patch(banner.id, { durationMs: ms });
                           }
@@ -172,16 +171,15 @@ export function BannerManager({ initial }: { initial: Banner[] }) {
 
                     <label className="block">
                       <span className="label text-[0.55rem] text-ink-muted">Overlay %</span>
-                      <input
-                        type="number"
-                        min="0"
-                        max="80"
-                        step="5"
-                        defaultValue={banner.overlay}
-                        onBlur={(e) => {
-                          const v = Number(e.target.value);
-                          if (v >= 0 && v <= 80 && v !== banner.overlay) {
-                            void patch(banner.id, { overlay: v });
+                      <NumberField
+                        value={String(banner.overlay)}
+                        decimals={false}
+                        min={0}
+                        max={80}
+                        onCommit={(val) => {
+                          const n = Number(val);
+                          if (Number.isFinite(n) && n !== banner.overlay) {
+                            void patch(banner.id, { overlay: n });
                           }
                         }}
                         className="field-box mt-1 w-20"
@@ -422,13 +420,11 @@ function NewBanner({
 
           <label className="block">
             <span className="label text-ink-muted">Seconds on screen</span>
-            <input
-              type="number"
-              step="0.5"
-              min="1"
-              max="30"
-              value={v.durationMs / 1000}
-              onChange={(e) => set("durationMs", Math.round(Number(e.target.value) * 1000))}
+            <NumberField
+              value={String(v.durationMs / 1000)}
+              min={1}
+              max={30}
+              onChange={(val) => set("durationMs", Math.round(Number(val || 0) * 1000))}
               className="field-box mt-1.5"
             />
           </label>

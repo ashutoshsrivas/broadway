@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { NumberField } from "@/components/admin/NumberField";
 
 /** The first-visit welcome offer: whether it runs, how much, and the wording. */
 export function PromoSettings({
@@ -81,12 +82,12 @@ export function PromoSettings({
       <div className="grid gap-5 sm:grid-cols-3">
         <label className="block">
           <span className="label text-ink-muted">Discount %</span>
-          <input
-            type="number"
-            min="0"
-            max="50"
+          <NumberField
             value={v.percent}
-            onChange={(e) => setV({ ...v, percent: e.target.value })}
+            onChange={(x) => setV({ ...v, percent: x })}
+            decimals={false}
+            min={0}
+            max={50}
             className="field-box mt-1.5"
           />
           <span className="mt-1.5 block text-[11px] text-ink-muted">Capped at 50%.</span>
@@ -104,12 +105,12 @@ export function PromoSettings({
 
         <label className="block">
           <span className="label text-ink-muted">Show after (seconds)</span>
-          <input
-            type="number"
-            min="0"
-            max="60"
+          <NumberField
             value={v.delay}
-            onChange={(e) => setV({ ...v, delay: e.target.value })}
+            onChange={(x) => setV({ ...v, delay: x })}
+            decimals={false}
+            min={0}
+            max={60}
             className="field-box mt-1.5"
           />
         </label>
