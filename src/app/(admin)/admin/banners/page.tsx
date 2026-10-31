@@ -6,13 +6,15 @@ import { InstagramManager } from "@/components/admin/InstagramManager";
 import { ShopEditorialManager } from "@/components/admin/ShopEditorialManager";
 import { ExclusiveSettings } from "@/components/admin/ExclusiveSettings";
 import { PromoSettings } from "@/components/admin/PromoSettings";
+import { NavManager } from "@/components/admin/NavManager";
+import { getNavLinks } from "@/lib/nav";
 import { EXCLUSIVE_WHERE } from "@/lib/exclusive";
 import { SETTING_KEYS, getSettings } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
 export default async function BannersPage() {
-  const [banners, panels, settings, products, brands, instaPosts, editorials, exclusiveCount] = await Promise.all([
+  const [banners, panels, settings, products, brands, instaPosts, editorials, exclusiveCount, navLinks] = await Promise.all([
     db.banner.findMany({ orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] }),
     db.discoverPanel.findMany({ orderBy: { sortOrder: "asc" } }),
     getSettings(),
@@ -28,6 +30,7 @@ export default async function BannersPage() {
     db.instagramPost.findMany({ orderBy: { sortOrder: "asc" } }),
     db.shopEditorial.findMany({ orderBy: { sortOrder: "asc" } }),
     db.product.count({ where: { status: "ACTIVE", ...EXCLUSIVE_WHERE } }),
+    getNavLinks().then(() => db.navLink.findMany({ orderBy: { sortOrder: "asc" } })),
   ]);
 
   const totalMs = banners
@@ -49,6 +52,17 @@ export default async function BannersPage() {
         )}
       </p>
       <hr className="rule-deco mt-6 mb-8" />
+
+      <section className="mb-16">
+        <h2 className="label-lg">Navbar</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          The row of links under the wordmark, in order. Seeded from your departments on first
+          run — after that this is the authority, so adding a category no longer adds a link by
+          itself.
+        </p>
+        <hr className="rule-deco mt-5 mb-6" />
+        <NavManager initial={navLinks} />
+      </section>
 
       <h2 className="label-lg mb-5">Hero Banners</h2>
       <BannerManager initial={banners} />

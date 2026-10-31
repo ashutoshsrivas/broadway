@@ -338,7 +338,10 @@ input[type="number"] {
 .animate-marquee {
   animation: marquee var(--marquee-duration, 40s) linear infinite;
 }
-.marquee-host:hover .animate-marquee {
+/* Pause only when the pointer is actually over a tile, not merely somewhere
+   in the band. Hovering the heading or the gap between cards used to stop the
+   whole strip, which read as the animation stuttering. */
+.marquee-host:has(.marquee-item:hover) .animate-marquee {
   animation-play-state: paused;
 }
 

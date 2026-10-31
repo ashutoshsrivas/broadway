@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { findProducts, shopFacets } from "@/lib/catalog";
 import { ProductCard } from "@/components/store/ProductCard";
 import { ShopFilters } from "@/components/store/ShopFilters";
+import { ShopLayout } from "@/components/store/ShopLayout";
 import { SortSelect } from "@/components/store/SortSelect";
 import { Pagination } from "@/components/store/Pagination";
 import { ShopEditorialTile } from "@/components/store/ShopEditorialTile";
@@ -75,6 +76,14 @@ export default async function ShopPage({
     ? `Results for “${query}”`
     : activeCategory?.name ?? "All Eyewear";
 
+  const activeFilterCount =
+    ["brand", "gender", "shape", "material", "frameType"].reduce(
+      (sum, key) => sum + asList(sp[key]).length,
+      0
+    ) +
+    (category ? 1 : 0) +
+    (sp.minPrice ? 1 : 0);
+
   // Rebuilt from the resolved params so pagination links carry every filter.
   const urlParams = new URLSearchParams();
   for (const [key, value] of Object.entries(sp)) {
@@ -99,28 +108,16 @@ export default async function ShopPage({
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="lg:hidden">
-            <Suspense fallback={null}>
-              <ShopFilters facets={facets} variant="bar" />
-            </Suspense>
-          </div>
-          <Suspense fallback={null}>
-            <SortSelect />
-          </Suspense>
-        </div>
+        <Suspense fallback={null}>
+          <SortSelect />
+        </Suspense>
       </header>
 
-      <div className="grid gap-10 pt-9 lg:grid-cols-[230px_1fr] lg:gap-14">
-        {/* Same filter component as the mobile drawer above, in its always-open
-            desktop presentation. */}
-        <div className="hidden lg:block">
-          <Suspense fallback={null}>
-            <ShopFilters facets={facets} variant="sidebar" />
-          </Suspense>
-        </div>
-
-        <div>
+      <Suspense fallback={null}>
+        <ShopLayout
+          activeCount={activeFilterCount}
+          filters={<ShopFilters facets={facets} variant="sidebar" />}
+        >
           {products.length === 0 ? (
             <div className="flex flex-col items-center py-24 text-center">
               <p className="display text-3xl">Nothing here — yet.</p>
@@ -148,8 +145,8 @@ export default async function ShopPage({
               <Pagination page={page} pageCount={pageCount} searchParams={urlParams} />
             </>
           )}
-        </div>
-      </div>
+        </ShopLayout>
+      </Suspense>
     </div>
   );
 }

@@ -326,6 +326,30 @@ model StoreSetting {
   updatedAt DateTime @updatedAt
 }
 
+/// A link in the header's category rail.
+///
+/// Seeded from the departments on first run, then owned by the admin — the
+/// rail stops being a mirror of the category table and becomes something the
+/// shop arranges, which is what a navbar is for.
+model NavLink {
+  id    String @id @default(cuid())
+  label String
+  href  String
+
+  /// Picks the link out in brass — for a sale, a drop, anything temporary.
+  highlight Boolean @default(false)
+  /// Opens in a new tab. For anything off this site.
+  newTab    Boolean @default(false)
+
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
 /// An editorial image dropped into the shop grid between products.
 ///
 /// Breaks up a long run of frames-on-white with something worn on a face.

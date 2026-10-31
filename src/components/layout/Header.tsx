@@ -9,7 +9,7 @@ import { LogoMark } from "@/components/Logo";
 import { SearchOverlay } from "@/components/layout/SearchOverlay";
 import { BagButton } from "@/components/store/BagButton";
 
-type NavCategory = { name: string; slug: string };
+import type { NavItem } from "@/lib/nav";
 
 function subscribeToScroll(onChange: () => void) {
   window.addEventListener("scroll", onChange, { passive: true });
@@ -22,7 +22,7 @@ const AUDIENCES = [
   { label: "Kids", href: "/shop?gender=KIDS" },
 ];
 
-export function Header({ categories }: { categories: NavCategory[] }) {
+export function Header({ navLinks }: { navLinks: NavItem[] }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [drawerRoute, setDrawerRoute] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -127,28 +127,20 @@ export function Header({ categories }: { categories: NavCategory[] }) {
         {/* Category rail — the actual shopping nav, kept on its own rule so the
             brand row stays uncluttered. */}
         <div className="hidden border-b border-line bg-paper-raised/95 backdrop-blur-sm lg:block">
-          <nav className="mx-auto flex max-w-[1500px] items-center justify-center gap-10 px-10 py-2.5">
-            {categories.map((category) => (
+          <nav className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-center gap-x-9 gap-y-2 px-10 py-2.5">
+            {navLinks.map((link) => (
               <Link
-                key={category.slug}
-                href={`/shop?category=${category.slug}`}
-                className="label link-rule text-ink-soft transition-colors hover:text-ink"
+                key={link.id}
+                href={link.href}
+                target={link.newTab ? "_blank" : undefined}
+                rel={link.newTab ? "noopener noreferrer" : undefined}
+                className={`label link-rule transition-colors ${
+                  link.highlight ? "text-brass" : "text-ink-soft hover:text-ink"
+                }`}
               >
-                {category.name}
+                {link.label}
               </Link>
             ))}
-            <Link
-              href="/brands"
-              className="label link-rule text-ink-soft transition-colors hover:text-ink"
-            >
-              Brands
-            </Link>
-            <Link href="/bo-exclusive" className="label link-rule text-brass">
-              BO Exclusive
-            </Link>
-            <Link href="/shop?sale=1" className="label link-rule text-clay">
-              Sale
-            </Link>
           </nav>
         </div>
       </header>
@@ -173,13 +165,17 @@ export function Header({ categories }: { categories: NavCategory[] }) {
             <div className="flex-1 overflow-y-auto px-5 py-6">
               <p className="label mb-4 text-ink-muted">Shop by</p>
               <ul className="mb-8 space-y-1">
-                {categories.map((category) => (
-                  <li key={category.slug}>
+                {navLinks.map((link) => (
+                  <li key={link.id}>
                     <Link
-                      href={`/shop?category=${category.slug}`}
-                      className="flex items-center justify-between border-b border-line/60 py-3.5 font-display text-xl"
+                      href={link.href}
+                      target={link.newTab ? "_blank" : undefined}
+                      rel={link.newTab ? "noopener noreferrer" : undefined}
+                      className={`flex items-center justify-between border-b border-line/60 py-3.5 font-display text-xl ${
+                        link.highlight ? "text-brass" : ""
+                      }`}
                     >
-                      {category.name}
+                      {link.label}
                       <ChevronRight className="h-4 w-4 text-brass" strokeWidth={1.5} />
                     </Link>
                   </li>

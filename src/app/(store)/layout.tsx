@@ -2,8 +2,8 @@ import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CartDrawer } from "@/components/store/CartDrawer";
-import { db } from "@/lib/db";
 import { getPromo } from "@/lib/promo";
+import { getNavLinks } from "@/lib/nav";
 import { WelcomeOffer } from "@/components/store/WelcomeOffer";
 
 // The catalogue changes from the admin panel, so the storefront renders per
@@ -13,19 +13,12 @@ export const dynamic = "force-dynamic";
 export default async function StoreLayout({ children }: { children: React.ReactNode }) {
   // Fetched once here and handed to the client header, so the nav needs no
   // round-trip of its own.
-  const [categories, promo] = await Promise.all([
-    db.category.findMany({
-      where: { isActive: true },
-      orderBy: { sortOrder: "asc" },
-      select: { name: true, slug: true },
-    }),
-    getPromo(),
-  ]);
+  const [navLinks, promo] = await Promise.all([getNavLinks(), getPromo()]);
 
   return (
     <>
       <AnnouncementBar />
-      <Header categories={categories} />
+      <Header navLinks={navLinks} />
       <main className="flex-1">{children}</main>
       <Footer />
       <CartDrawer />

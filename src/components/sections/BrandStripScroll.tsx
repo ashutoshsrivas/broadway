@@ -48,7 +48,7 @@ function StripRun({ brands, ariaHidden = false }: { brands: StripBrand[]; ariaHi
   return (
     <ul className="flex shrink-0 items-stretch gap-1.5 animate-marquee" aria-hidden={ariaHidden || undefined}>
       {brands.map((brand, i) => (
-        <li key={`${brand.id}-${i}`} className="w-[52vw] shrink-0 sm:w-[34vw] lg:w-[20.5vw]">
+        <li key={`${brand.id}-${i}`} className="marquee-item w-[52vw] shrink-0 sm:w-[34vw] lg:w-[20.5vw]">
           <Link
             href={`/shop?brand=${brand.slug}`}
             tabIndex={ariaHidden ? -1 : undefined}

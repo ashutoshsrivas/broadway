@@ -53,9 +53,15 @@ export function InstagramBand({
           </p>
         </div>
 
-        <ul className="mt-12 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6 lg:gap-3">
+        {/* Three across, scrolling sideways rather than a wall of twelve. Snap
+            points mean it always settles on a whole tile, and the native
+            scroller keeps touch, trackpad and keyboard working. */}
+        <ul className="no-scrollbar -mx-5 mt-12 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 lg:mx-0 lg:px-0">
           {posts.map((post) => (
-            <li key={post.id}>
+            <li
+              key={post.id}
+              className="w-[72vw] shrink-0 snap-start sm:w-[44vw] lg:w-[calc((100%-1.5rem)/3)]"
+            >
               <a
                 href={post.href || profileUrl}
                 target="_blank"

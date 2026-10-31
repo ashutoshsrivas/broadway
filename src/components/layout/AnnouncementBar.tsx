@@ -14,7 +14,7 @@ export function AnnouncementBar() {
   const track = (
     <ul className="flex shrink-0 items-center animate-marquee">
       {NOTICES.map((notice) => (
-        <li key={notice} className="label flex items-center whitespace-nowrap px-8 py-2.5 text-paper/80">
+        <li key={notice} className="marquee-item label flex items-center whitespace-nowrap px-8 py-2.5 text-paper/80">
           <span className="mr-8 text-brass">◆</span>
           {notice}
         </li>
