@@ -153,6 +153,9 @@ model Brand {
   /// Appears in the scrolling brand strip. Needs tileUrl to be worth showing,
   /// so the storefront filters on both.
   showInBrandStrip  Boolean @default(false)
+  /// Stocked in store only. The frames are listed and browsable but carry no
+  /// price and cannot be added to a bag — buying goes through WhatsApp.
+  isStoreExclusive  Boolean @default(false)
   sortOrder         Int     @default(0)
 
   createdAt DateTime @default(now())
@@ -208,6 +211,10 @@ model Product {
   /// set OR its category is — see `isExclusive` in lib/exclusive.ts, which is
   /// the only place that rule should live.
   isBoExclusive    Boolean       @default(false)
+  /// When every colourway last hit zero stock. Set by the stock logic, not by
+  /// hand. Drives the "Sold Out" badge for a while and then the automatic
+  /// delisting — null means the product has stock.
+  soldOutAt        DateTime?
   sortOrder        Int           @default(0)
 
   createdAt DateTime @default(now())

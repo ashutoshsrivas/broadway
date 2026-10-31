@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatPrice, discountPct } from "@/lib/utils";
 import { isExclusive } from "@/lib/exclusive";
+import { isNew, isSoldOut, isPriceHidden } from "@/lib/product-status";
 import type { ProductCardData } from "@/lib/catalog";
 
 /**
@@ -11,9 +12,12 @@ import type { ProductCardData } from "@/lib/catalog";
  * frames that is almost always the angled shot, which is the view that sells.
  */
 export function ProductCard({ product, priority = false }: { product: ProductCardData; priority?: boolean }) {
-  const save = discountPct(product.mrp, product.price);
+  const priceHiddenEarly = isPriceHidden(product);
+  const save = priceHiddenEarly ? 0 : discountPct(product.mrp, product.price);
   const exclusive = isExclusive(product);
-  const inStock = product.variants.some((v) => v.stock > 0);
+  const fresh = isNew(product);
+  const soldOut = isSoldOut(product);
+  const priceHidden = priceHiddenEarly;
   const [primary, secondary] = product.images;
   const colours = product.variants.filter((v) => v.colorHex).slice(0, 4);
 
@@ -57,14 +61,14 @@ export function ProductCard({ product, priority = false }: { product: ProductCar
             {save > 0 && (
               <span className="label bg-clay px-2.5 py-1.5 text-paper">Save {save}%</span>
             )}
-            {product.isNewArrival && save === 0 && !exclusive && (
+            {fresh && (
               <span className="label bg-ink px-2.5 py-1.5 text-paper">New</span>
             )}
           </div>
 
-          {!inStock && (
+          {soldOut && (
             <div className="absolute inset-0 flex items-center justify-center bg-paper/70">
-              <span className="label border border-ink px-4 py-2">Sold Out</span>
+              <span className="label border border-ink bg-paper px-4 py-2">Sold Out</span>
             </div>
           )}
         </div>
@@ -87,14 +91,20 @@ export function ProductCard({ product, priority = false }: { product: ProductCar
           </Link>
         </h3>
 
-        <div className="mt-2 flex items-baseline gap-2.5">
-          <span className={`text-sm font-medium ${save > 0 ? "text-clay" : ""}`}>
-            {formatPrice(product.price)}
-          </span>
-          {save > 0 && (
-            <span className="text-xs text-ink-muted line-through">{formatPrice(product.mrp)}</span>
-          )}
-        </div>
+        {/* A store-exclusive house is listed without a price — the frames are
+            browsable but only sold across the counter. */}
+        {priceHidden ? (
+          <p className="label mt-2.5 text-brass">Price in store · Enquire</p>
+        ) : (
+          <div className="mt-2 flex items-baseline gap-2.5">
+            <span className={`text-sm font-medium ${save > 0 ? "text-clay" : ""}`}>
+              {formatPrice(product.price)}
+            </span>
+            {save > 0 && (
+              <span className="text-xs text-ink-muted line-through">{formatPrice(product.mrp)}</span>
+            )}
+          </div>
+        )}
 
         {colours.length > 1 && (
           <ul className="mt-3 flex items-center gap-1.5" aria-label="Available colours">

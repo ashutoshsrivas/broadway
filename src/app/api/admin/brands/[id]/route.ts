@@ -12,6 +12,7 @@ const schema = z.object({
   isFeatured: z.boolean().optional(),
   showInNewArrivals: z.boolean().optional(),
   showInBrandStrip: z.boolean().optional(),
+  isStoreExclusive: z.boolean().optional(),
   sortOrder: z.number().int().min(0).max(999).optional(),
 });
 

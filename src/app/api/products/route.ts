@@ -22,6 +22,8 @@ export async function GET(req: NextRequest) {
       frameType: list("frameType"),
       minPrice: num("minPrice"),
       maxPrice: num("maxPrice"),
+      exclusive: sp.get("exclusive") === "1",
+      sale: sp.get("sale") === "1",
       sort: sp.get("sort") || undefined,
       page: num("page"),
     });

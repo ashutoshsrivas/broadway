@@ -7,13 +7,13 @@ import { ProductDetail } from "@/components/store/ProductDetail";
 import { ProductRail } from "@/components/sections/ProductRail";
 import { ExclusiveNotice } from "@/components/store/ExclusiveNotice";
 import { isExclusive, exclusiveCopy } from "@/lib/exclusive";
-import { getSettings } from "@/lib/settings";
+import { SETTING_KEYS, getSettings } from "@/lib/settings";
 
 async function getProduct(slug: string) {
   return db.product.findFirst({
     where: { slug, status: "ACTIVE" },
     include: {
-      brand: { select: { name: true } },
+      brand: { select: { name: true, isStoreExclusive: true } },
       category: { select: { name: true, slug: true, isBoExclusive: true } },
       images: { orderBy: { sortOrder: "asc" } },
       variants: { orderBy: { createdAt: "asc" } },
@@ -45,8 +45,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const product = await getProduct(slug);
   if (!product) notFound();
 
+  const settings = await getSettings();
   const exclusive = isExclusive(product);
-  const copy = exclusive ? exclusiveCopy(await getSettings()) : null;
+  const copy = exclusive ? exclusiveCopy(settings) : null;
 
   // Same department, different frame — the only "related" rule worth having
   // without a recommendation engine.
@@ -72,7 +73,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <span className="truncate text-ink">{product.name}</span>
         </nav>
 
-        <ProductDetail product={product} />
+        <ProductDetail
+          product={product}
+          whatsappNumber={settings[SETTING_KEYS.whatsappNumber]}
+        />
 
         {copy && (
           <div className="mt-14 lg:ml-auto lg:w-[calc((100%-4rem)*0.4762)]">

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-guard";
+import { syncSoldOut } from "@/lib/stock-status";
 
 const schema = z.object({
   status: z.enum(["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"]).optional(),
@@ -29,7 +30,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (parsed.data.status === "CANCELLED" && order.stockDeducted) {
       const items = await tx.orderItem.findMany({
         where: { orderId: id },
-        select: { variantId: true, quantity: true },
+        select: { variantId: true, quantity: true, productId: true },
       });
       for (const item of items) {
         await tx.productVariant.update({
@@ -37,6 +38,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           data: { stock: { increment: item.quantity } },
         });
       }
+      await syncSoldOut(tx, items.map((i) => i.productId));
       await tx.order.update({ where: { id }, data: { stockDeducted: false } });
     }
   });

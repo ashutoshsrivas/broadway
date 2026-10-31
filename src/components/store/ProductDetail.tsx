@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { Minus, Plus, ShoppingBag, Check, Truck, ShieldCheck, RefreshCw } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import { formatPrice, discountPct, titleCase } from "@/lib/utils";
+import { brandEnquiryLink } from "@/lib/whatsapp";
 
 type Variant = {
   id: string;
@@ -32,12 +33,21 @@ type Product = {
   isLimitedEdition: boolean;
   isBoExclusive: boolean;
   category: { name: string; isBoExclusive?: boolean | null };
-  brand: { name: string } | null;
+  brand: { name: string; isStoreExclusive?: boolean | null } | null;
   images: { url: string; alt: string | null }[];
   variants: Variant[];
 };
 
-export function ProductDetail({ product }: { product: Product }) {
+export function ProductDetail({
+  product,
+  whatsappNumber,
+}: {
+  product: Product;
+  whatsappNumber?: string | null;
+}) {
+  // A store-exclusive house is browsable but not priced online — buying it
+  // goes through WhatsApp rather than the bag.
+  const priceHidden = Boolean(product.brand?.isStoreExclusive);
   // Open on the first colourway that can actually be bought, so the default
   // view isn't a sold-out one.
   const [variant, setVariant] = useState<Variant>(
@@ -49,7 +59,7 @@ export function ProductDetail({ product }: { product: Product }) {
   const setCartOpen = useCartStore((s) => s.setIsOpen);
 
   const price = variant?.priceOverride ?? product.price;
-  const save = discountPct(product.mrp, price);
+  const save = priceHidden ? 0 : discountPct(product.mrp, price);
   const inStock = (variant?.stock ?? 0) > 0;
 
   const specs = [
@@ -148,15 +158,29 @@ export function ProductDetail({ product }: { product: Product }) {
         <h1 className="display mt-3 text-[clamp(1.9rem,4.5vw,3rem)]">{product.name}</h1>
         <p className="label mt-3 text-ink-muted">{product.category.name}</p>
 
-        <div className="mt-6 flex items-baseline gap-3">
-          <span className={`font-display text-3xl ${save > 0 ? "text-clay" : ""}`}>
-            {formatPrice(price)}
-          </span>
-          {save > 0 && (
-            <span className="text-base text-ink-muted line-through">{formatPrice(product.mrp)}</span>
-          )}
-        </div>
-        <p className="mt-1.5 text-xs text-ink-muted">Inclusive of all taxes</p>
+        {priceHidden ? (
+          <>
+            <p className="display mt-6 text-2xl text-brass">Available in store</p>
+            <p className="mt-2 max-w-sm text-sm leading-relaxed text-ink-soft">
+              {product.brand?.name} is stocked at our counters only. Message us and we&rsquo;ll
+              confirm the price, the colourways we have, and put one aside for you to try.
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="mt-6 flex items-baseline gap-3">
+              <span className={`font-display text-3xl ${save > 0 ? "text-clay" : ""}`}>
+                {formatPrice(price)}
+              </span>
+              {save > 0 && (
+                <span className="text-base text-ink-muted line-through">
+                  {formatPrice(product.mrp)}
+                </span>
+              )}
+            </div>
+            <p className="mt-1.5 text-xs text-ink-muted">Inclusive of all taxes</p>
+          </>
+        )}
 
         <hr className="rule-deco my-8" />
 
@@ -208,7 +232,19 @@ export function ProductDetail({ product }: { product: Product }) {
           </div>
         )}
 
-        {/* Quantity + add */}
+        {priceHidden ? (
+          <a
+            href={brandEnquiryLink(
+              `${product.brand?.name ?? "Broadway"} ${product.name}`,
+              whatsappNumber
+            )}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-ink label mt-8 flex w-full items-center justify-center gap-2.5 py-4"
+          >
+            Enquire on WhatsApp
+          </a>
+        ) : (
         <div className="mt-8 flex flex-wrap items-stretch gap-3">
           <div className="flex items-center border border-line">
             <button
@@ -238,6 +274,7 @@ export function ProductDetail({ product }: { product: Product }) {
             {inStock ? "Add to Bag" : "Sold Out"}
           </button>
         </div>
+        )}
 
         {inStock && variant.stock <= 3 && (
           <p className="label mt-4 text-clay">

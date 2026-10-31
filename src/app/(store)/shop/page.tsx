@@ -50,6 +50,8 @@ export default async function ShopPage({
       frameType: asList(sp.frameType),
       minPrice: asNumber(sp.minPrice),
       maxPrice: asNumber(sp.maxPrice),
+      exclusive: asList(sp.exclusive).length > 0,
+      sale: asList(sp.sale).length > 0,
       sort: Array.isArray(sp.sort) ? sp.sort[0] : sp.sort,
       page: asNumber(sp.page),
     }),

@@ -51,6 +51,7 @@ export default async function AdminCategoriesPage() {
             isFeatured: b.isFeatured,
             showInNewArrivals: b.showInNewArrivals,
             showInBrandStrip: b.showInBrandStrip,
+            isStoreExclusive: b.isStoreExclusive,
             productCount: b._count.products,
           }))}
         />

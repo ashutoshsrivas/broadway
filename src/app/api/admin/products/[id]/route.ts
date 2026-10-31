@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/admin-guard";
 import { productSchema } from "../route";
 import { slugify } from "@/lib/utils";
 import { resolveValue } from "@/lib/attributes";
+import { syncSoldOut } from "@/lib/stock-status";
 
 async function uniqueSlug(name: string, excludeId: string): Promise<string> {
   const base = slugify(name) || "frame";
@@ -84,6 +85,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
           await tx.productVariant.create({ data: { ...data, productId: id } });
         }
       }
+
+      await syncSoldOut(tx, [id]);
     });
 
     return NextResponse.json({ ok: true });

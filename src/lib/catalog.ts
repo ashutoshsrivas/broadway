@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { EXCLUSIVE_WHERE } from "@/lib/exclusive";
+import { listableWhere } from "@/lib/product-status";
 
 export const PAGE_SIZE = 24;
 
@@ -15,6 +16,7 @@ export type ShopFilters = {
   maxPrice?: number;
   q?: string;
   exclusive?: boolean;
+  sale?: boolean;
   sort?: string;
   page?: number;
 };
@@ -30,7 +32,9 @@ export const productCardSelect = {
   shape: true,
   isNewArrival: true,
   isBoExclusive: true,
-  brand: { select: { name: true, slug: true } },
+  createdAt: true,
+  soldOutAt: true,
+  brand: { select: { name: true, slug: true, isStoreExclusive: true } },
   category: { select: { name: true, slug: true, isBoExclusive: true } },
   images: { orderBy: { sortOrder: "asc" }, take: 2, select: { url: true, alt: true } },
   variants: { select: { id: true, stock: true, colorHex: true, colorName: true } },
@@ -53,10 +57,16 @@ function orderBy(sort?: string): Prisma.ProductOrderByWithRelationInput[] {
 
 /** Build the `where` once so the grid and its result count can never disagree. */
 function buildWhere(f: ShopFilters): Prisma.ProductWhereInput {
-  const where: Prisma.ProductWhereInput = { status: "ACTIVE" };
+  // Sold-out frames drop off the shop on their own once the grace period is
+  // up, so every listing shares one definition of "listable".
+  const where: Prisma.ProductWhereInput = { status: "ACTIVE", ...listableWhere() };
 
   if (f.category) where.category = { slug: f.category };
-  if (f.exclusive) where.AND = [EXCLUSIVE_WHERE];
+  const and: Prisma.ProductWhereInput[] = [];
+  if (f.exclusive) and.push(EXCLUSIVE_WHERE);
+  // "Save" means the selling price actually undercuts the printed MRP.
+  if (f.sale) and.push({ price: { lt: db.product.fields.mrp } });
+  if (and.length) where.AND = and;
   if (f.brand?.length) where.brand = { slug: { in: f.brand } };
   if (f.gender?.length) where.gender = { in: f.gender };
   if (f.shape?.length) where.shape = { in: f.shape };

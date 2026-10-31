@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { shippingFor } from "@/lib/shipping";
+import { syncSoldOut } from "@/lib/stock-status";
 
 /**
  * Next human-facing order reference, "BO-2026-0001".
@@ -111,7 +112,7 @@ export async function deductStock(orderId: string): Promise<void> {
 
     const items = await tx.orderItem.findMany({
       where: { orderId },
-      select: { variantId: true, quantity: true },
+      select: { variantId: true, quantity: true, productId: true },
     });
 
     for (const item of items) {
@@ -120,5 +121,7 @@ export async function deductStock(orderId: string): Promise<void> {
         data: { stock: { decrement: item.quantity } },
       });
     }
+
+    await syncSoldOut(tx, items.map((i) => i.productId));
   });
 }

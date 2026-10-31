@@ -16,6 +16,7 @@ export type BrandRow = {
   isFeatured: boolean;
   showInNewArrivals: boolean;
   showInBrandStrip: boolean;
+  isStoreExclusive: boolean;
   productCount: number;
 };
 
@@ -161,6 +162,12 @@ export function BrandManager({ initial }: { initial: BrandRow[] }) {
                 label="Arrivals deck"
                 checked={brand.showInNewArrivals}
                 onChange={(v) => void patch(brand.id, { showInNewArrivals: v })}
+              />
+              <Toggle
+                label="Store exclusive"
+                hint="Price hidden, WhatsApp to buy"
+                checked={brand.isStoreExclusive}
+                onChange={(v) => void patch(brand.id, { isStoreExclusive: v })}
               />
               <Toggle
                 label="Featured roll-call"
