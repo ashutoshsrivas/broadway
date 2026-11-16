@@ -6,9 +6,12 @@ import { useCartStore } from "@/lib/store";
 import { formatPrice, discountPct } from "@/lib/utils";
 import { shippingFor, FREE_SHIPPING_ABOVE } from "@/lib/shipping";
 import { useHydrated } from "@/lib/use-hydrated";
+import { useCartPricing } from "@/lib/use-cart-pricing";
 
 export function CartView() {
   const { items, updateQuantity, removeItem } = useCartStore();
+  const { priced, stale } = useCartPricing();
+  const lineFor = (variantId: string) => priced?.lines.find((l) => l.variantId === variantId);
   // The bag comes out of localStorage, so nothing cart-shaped can be rendered
   // until the client has hydrated without causing a mismatch.
   const hydrated = useHydrated();
@@ -29,15 +32,20 @@ export function CartView() {
     );
   }
 
-  const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const savings = items.reduce((sum, i) => sum + Math.max(0, i.mrp - i.price) * i.quantity, 0);
-  const shipping = shippingFor(subtotal);
+  // Every figure below is the server's, so the cart total matches the order.
+  const subtotal = priced?.subtotal ?? 0;
+  const savings =
+    priced?.lines
+      .filter((l) => l.available)
+      .reduce((sum, l) => sum + Math.max(0, l.mrp - l.unitPrice) * l.quantity, 0) ?? 0;
+  const shipping = priced?.shipping ?? shippingFor(subtotal);
 
   return (
     <div className="grid gap-12 lg:grid-cols-[1.6fr_1fr] lg:gap-16">
       <ul className="divide-y divide-line border-t border-line">
         {items.map((item) => {
-          const save = discountPct(item.mrp, item.price);
+          const line = lineFor(item.variantId);
+          const save = line ? discountPct(line.mrp, line.unitPrice) : 0;
           return (
             <li key={item.variantId} className="flex gap-5 py-6">
               <Link
@@ -92,14 +100,20 @@ export function CartView() {
                     </button>
                   </div>
 
-                  <div className="text-right">
-                    <p className={`font-medium ${save > 0 ? "text-clay" : ""}`}>
-                      {formatPrice(item.price * item.quantity)}
-                    </p>
-                    {save > 0 && (
-                      <p className="text-xs text-ink-muted line-through">
-                        {formatPrice(item.mrp * item.quantity)}
-                      </p>
+                  <div className={`text-right ${stale ? "opacity-50" : ""}`}>
+                    {line && !line.available ? (
+                      <p className="label text-clay">{line.issue}</p>
+                    ) : (
+                      <>
+                        <p className={`font-medium ${save > 0 ? "text-clay" : ""}`}>
+                          {line ? formatPrice(line.totalPrice) : "…"}
+                        </p>
+                        {save > 0 && line && (
+                          <p className="text-xs text-ink-muted line-through">
+                            {formatPrice(line.mrp * line.quantity)}
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>

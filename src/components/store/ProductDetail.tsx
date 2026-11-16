@@ -276,12 +276,6 @@ export function ProductDetail({
         </div>
         )}
 
-        {inStock && variant.stock <= 3 && (
-          <p className="label mt-4 text-clay">
-            ◆ Only {variant.stock} left in {variant.colorName}
-          </p>
-        )}
-
         {/* Reassurance */}
         <ul className="mt-9 space-y-3.5 border-t border-line pt-7">
           {[

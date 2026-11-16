@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-guard";
-import { productSchema } from "../route";
+import { productSchema, skuFor } from "../route";
 import { slugify } from "@/lib/utils";
 import { resolveValue } from "@/lib/attributes";
 import { syncSoldOut } from "@/lib/stock-status";
@@ -71,9 +71,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         where: { productId: id, id: { notIn: keepIds.length ? keepIds : ["__none__"] } },
       });
 
-      for (const v of variants) {
+      for (const [index, v] of variants.entries()) {
         const data = {
-          sku: v.sku,
+          sku: v.sku?.trim() || skuFor(fields.name, v.colorName, index),
           colorName: v.colorName,
           colorHex: v.colorHex || null,
           priceOverride: v.priceOverride ?? null,

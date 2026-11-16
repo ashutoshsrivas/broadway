@@ -7,7 +7,9 @@ import { resolveValue } from "@/lib/attributes";
 
 const variantSchema = z.object({
   id: z.string().optional(),
-  sku: z.string().trim().min(1, "SKU is required").max(60),
+  // Blank is fine — one is generated below. Requiring it here was why a
+  // product would not save until someone invented a code.
+  sku: z.string().trim().max(60).optional(),
   colorName: z.string().trim().min(1, "Colour name is required").max(80),
   colorHex: z.string().trim().max(9).optional(),
   priceOverride: z.number().nonnegative().nullable().optional(),
@@ -39,6 +41,16 @@ export const productSchema = z.object({
   images: z.array(z.string().trim().min(1)).max(8),
   variants: z.array(variantSchema).min(1, "Add at least one colour"),
 });
+
+/**
+ * A readable SKU from the product and colour, for when none is given.
+ * The index keeps two colourways of the same frame apart.
+ */
+export function skuFor(name: string, colour: string, index: number): string {
+  const part = (v: string, n: number) =>
+    v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, n) || "X";
+  return `${part(name, 12)}-${part(colour, 6)}${index > 0 ? `-${index + 1}` : ""}`;
+}
 
 /** A product's slug must be unique; append -2, -3… until it is. */
 async function uniqueSlug(name: string, excludeId?: string): Promise<string> {
@@ -103,8 +115,8 @@ export async function POST(req: NextRequest) {
         slug: await uniqueSlug(fields.name),
         images: { create: images.map((url, i) => ({ url, sortOrder: i })) },
         variants: {
-          create: variants.map((v) => ({
-            sku: v.sku,
+          create: variants.map((v, i) => ({
+            sku: v.sku?.trim() || skuFor(fields.name, v.colorName, i),
             colorName: v.colorName,
             colorHex: v.colorHex || null,
             priceOverride: v.priceOverride ?? null,

@@ -4,13 +4,20 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { X, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { useCartStore } from "@/lib/store";
+import { useCartPricing } from "@/lib/use-cart-pricing";
 import { formatPrice } from "@/lib/utils";
 import { FREE_SHIPPING_ABOVE, shippingFor } from "@/lib/shipping";
 
 export function CartDrawer() {
   const { items, isOpen, setIsOpen, updateQuantity, removeItem } = useCartStore();
-  const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const shipping = shippingFor(subtotal);
+
+  // Prices come from the server, never from the stored bag — see
+  // lib/use-cart-pricing.
+  const { priced, stale } = useCartPricing();
+  const lineFor = (variantId: string) => priced?.lines.find((l) => l.variantId === variantId);
+
+  const subtotal = priced?.subtotal ?? 0;
+  const shipping = priced?.shipping ?? shippingFor(subtotal);
   const toFreeShipping = Math.max(0, FREE_SHIPPING_ABOVE - subtotal);
 
   useEffect(() => {
@@ -104,6 +111,9 @@ export function CartDrawer() {
                       {item.name}
                     </Link>
                     <p className="mt-0.5 text-xs text-ink-muted">{item.colorName}</p>
+                    {lineFor(item.variantId)?.issue && (
+                      <p className="label mt-1.5 text-clay">{lineFor(item.variantId)!.issue}</p>
+                    )}
 
                     <div className="mt-auto flex items-center justify-between pt-3">
                       <div className="flex items-center border border-line">
@@ -124,9 +134,18 @@ export function CartDrawer() {
                           <Plus className="h-3 w-3" strokeWidth={2} />
                         </button>
                       </div>
-                      <span className="text-sm font-medium">
-                        {formatPrice(item.price * item.quantity)}
-                      </span>
+                      {(() => {
+                        const line = lineFor(item.variantId);
+                        if (!line) return <span className="text-sm text-ink-muted">…</span>;
+                        if (!line.available) {
+                          return <span className="label text-clay">{line.issue}</span>;
+                        }
+                        return (
+                          <span className={`text-sm font-medium ${stale ? "opacity-50" : ""}`}>
+                            {formatPrice(line.totalPrice)}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
 
@@ -145,7 +164,7 @@ export function CartDrawer() {
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <dt className="text-ink-soft">Subtotal</dt>
-                  <dd>{formatPrice(subtotal)}</dd>
+                  <dd className={stale ? "opacity-50" : ""}>{formatPrice(subtotal)}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-ink-soft">Shipping</dt>
@@ -154,7 +173,7 @@ export function CartDrawer() {
                 <hr className="rule-deco !my-3" />
                 <div className="flex justify-between font-display text-xl">
                   <dt>Total</dt>
-                  <dd>{formatPrice(subtotal + shipping)}</dd>
+                  <dd className={stale ? "opacity-50" : ""}>{formatPrice(subtotal + shipping)}</dd>
                 </div>
               </dl>
 

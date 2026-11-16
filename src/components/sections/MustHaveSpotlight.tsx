@@ -139,10 +139,6 @@ export function MustHaveSpotlight({
             >
               View product details
             </Link>
-
-            {inStock && variant.stock <= 3 && (
-              <p className="label mt-5 text-clay">◆ Only {variant.stock} left</p>
-            )}
           </div>
         </div>
       </div>

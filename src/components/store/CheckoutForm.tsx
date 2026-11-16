@@ -7,6 +7,7 @@ import Script from "next/script";
 import toast from "react-hot-toast";
 import { Lock, Banknote, CreditCard } from "lucide-react";
 import { useCartStore } from "@/lib/store";
+import { useCartPricing } from "@/lib/use-cart-pricing";
 import { formatPrice } from "@/lib/utils";
 import { shippingFor } from "@/lib/shipping";
 import { useHydrated } from "@/lib/use-hydrated";
@@ -34,6 +35,7 @@ export function CheckoutForm({
 }) {
   const router = useRouter();
   const { items, clearCart } = useCartStore();
+  const { priced, stale } = useCartPricing();
   const hydrated = useHydrated();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,8 +56,11 @@ export function CheckoutForm({
 
   if (!hydrated || items.length === 0) return <div className="h-96" />;
 
-  const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const shipping = shippingFor(subtotal);
+  // Server prices, so the figure the shopper agrees to is the figure the
+  // gateway is asked for.
+  const subtotal = priced?.subtotal ?? 0;
+  const shipping = priced?.shipping ?? shippingFor(subtotal);
+  const unavailable = priced?.lines.filter((l) => !l.available) ?? [];
   const discount = promo?.amount ?? 0;
   const total = Math.max(0, subtotal - discount) + shipping;
 
@@ -298,7 +303,18 @@ export function CheckoutForm({
                     <p className="truncate font-display text-sm">{item.name}</p>
                     <p className="text-xs text-ink-muted">{item.colorName}</p>
                   </div>
-                  <span className="shrink-0 text-sm">{formatPrice(item.price * item.quantity)}</span>
+                  {(() => {
+                    const line = priced?.lines.find((l) => l.variantId === item.variantId);
+                    if (!line) return <span className="shrink-0 text-sm text-ink-muted">…</span>;
+                    if (!line.available) {
+                      return <span className="label shrink-0 text-clay">{line.issue}</span>;
+                    }
+                    return (
+                      <span className={`shrink-0 text-sm ${stale ? "opacity-50" : ""}`}>
+                        {formatPrice(line.totalPrice)}
+                      </span>
+                    );
+                  })()}
                 </li>
               ))}
             </ul>
@@ -377,6 +393,13 @@ export function CheckoutForm({
               <span className="font-display text-2xl">{formatPrice(total)}</span>
             </div>
 
+            {unavailable.length > 0 && (
+              <p className="mt-5 border border-clay/40 bg-clay/5 px-4 py-3 text-sm text-clay">
+                Remove {unavailable.length === 1 ? "the item" : "the items"} marked above before
+                checking out.
+              </p>
+            )}
+
             {error && (
               <p className="mt-5 border border-clay/40 bg-clay/5 px-4 py-3 text-sm text-clay">
                 {error}
@@ -385,7 +408,7 @@ export function CheckoutForm({
 
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || unavailable.length > 0 || !priced}
               className="btn-ink label mt-6 flex w-full items-center justify-center gap-2.5 py-4"
             >
               <Lock className="h-3.5 w-3.5" strokeWidth={2} />

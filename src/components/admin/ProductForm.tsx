@@ -388,12 +388,11 @@ export function ProductForm({
           {values.variants.map((variant, i) => (
             <li key={i} className="border border-line bg-paper p-5">
               <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto_1fr_1fr_auto] sm:items-end">
-                <Label text="SKU">
+                <Label text="SKU" hint="Generated if blank">
                   <input
                     value={variant.sku}
                     onChange={(e) => setVariant(i, { sku: e.target.value })}
-                    required
-                    placeholder="RB3025-GLD"
+                    placeholder="auto"
                     className="field-box"
                   />
                 </Label>

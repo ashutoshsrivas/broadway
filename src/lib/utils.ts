@@ -5,13 +5,25 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/** ₹1,23,456 — Indian digit grouping, no paise unless the amount has them. */
+/**
+ * Money, to the rupee, always rounded up.
+ *
+ * The shop does not deal in paise, and rounding up rather than to-nearest
+ * means a displayed price is never below what is actually charged. Applied
+ * here AND in the pricing on the server, so the two cannot drift: formatting
+ * alone would show ₹20,001 while the gateway took ₹20,000.50.
+ */
+export function toRupees(amount: number): number {
+  return Math.ceil(amount);
+}
+
+/** ₹1,23,456 — Indian digit grouping, whole rupees. */
 export function formatPrice(amount: number): string {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-    maximumFractionDigits: amount % 1 === 0 ? 0 : 2,
-  }).format(amount);
+    maximumFractionDigits: 0,
+  }).format(toRupees(amount));
 }
 
 /** Whole-percent saving of `price` against `mrp`. 0 when there is no saving. */

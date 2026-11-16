@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { shippingFor } from "@/lib/shipping";
+import { toRupees } from "@/lib/utils";
 import { syncSoldOut } from "@/lib/stock-status";
 
 /**
@@ -36,20 +37,42 @@ export type PricedLine = {
   totalPrice: number;
 };
 
+/** A priced line plus everything the bag needs to render and explain itself. */
+export type CartLine = PricedLine & {
+  slug: string;
+  name: string;
+  brand: string | null;
+  mrp: number;
+  stock: number;
+  available: boolean;
+  /** Why this line cannot be bought right now, in words for the shopper. */
+  issue: string | null;
+};
+
+export type Repriced = {
+  lines: CartLine[];
+  subtotal: number;
+  shipping: number;
+  total: number;
+  hasIssues: boolean;
+};
+
 /**
- * Turn `[{ variantId, quantity }]` from the browser into priced lines.
+ * Price a bag from the database.
  *
- * Every price comes from the database. A `price` in the request body is
- * ignored outright: trusting it would let a buyer order a ₹40,000 frame for
- * ₹1, and since the payment check only compares the paid amount against the
- * stored order total, that ₹1 payment would then verify cleanly.
+ * This is the only place a price is derived, and it is derived from the
+ * product row every time. The browser sends ids and quantities; anything it
+ * believes about price is ignored. That matters twice over — it stops a
+ * tampered cart setting its own price, and it stops a cart that has sat in
+ * someone's browser for a week from showing last month's price next to this
+ * month's charge.
  *
- * Stock is checked here too, so an out-of-stock line fails before an order row
- * or a payment ever exists.
+ * Problems are reported per line rather than thrown, so the bag can say which
+ * item is the trouble instead of failing whole.
  */
-export async function priceCart(
+export async function repriceCart(
   input: { variantId: string; quantity: number }[]
-): Promise<{ lines: PricedLine[]; subtotal: number; shipping: number; total: number }> {
+): Promise<Repriced> {
   const variants = await db.productVariant.findMany({
     where: { id: { in: input.map((i) => i.variantId) } },
     include: {
@@ -62,37 +85,98 @@ export async function priceCart(
     },
   });
 
-  const lines: PricedLine[] = input.map((requested) => {
+  const lines: CartLine[] = input.map((requested) => {
     const variant = variants.find((v) => v.id === requested.variantId);
-    if (!variant) throw new Error("One of the items is no longer available.");
-    if (variant.product.status !== "ACTIVE") {
-      throw new Error(`"${variant.product.name}" is no longer available.`);
-    }
-    if (variant.stock < requested.quantity) {
-      throw new Error(
-        `Only ${variant.stock} left of "${variant.product.name}" in ${variant.colorName}.`
-      );
+
+    if (!variant) {
+      return {
+        productId: "",
+        variantId: requested.variantId,
+        productName: "This item",
+        variantLabel: "",
+        sku: "",
+        imageUrl: null,
+        quantity: requested.quantity,
+        unitPrice: 0,
+        totalPrice: 0,
+        slug: "",
+        name: "This item",
+        brand: null,
+        mrp: 0,
+        stock: 0,
+        available: false,
+        issue: "No longer available.",
+      };
     }
 
-    const unitPrice = variant.priceOverride ?? variant.product.price;
-    const brand = variant.product.brand?.name;
+    const product = variant.product;
+    const brand = product.brand?.name ?? null;
+    const unitPrice = toRupees(variant.priceOverride ?? product.price);
+
+    let issue: string | null = null;
+    if (product.status !== "ACTIVE") issue = "No longer available.";
+    else if (variant.stock === 0) issue = "Sold out.";
+    else if (variant.stock < requested.quantity) {
+      issue = `Only ${variant.stock} left.`;
+    }
 
     return {
       productId: variant.productId,
       variantId: variant.id,
-      productName: brand ? `${brand} ${variant.product.name}` : variant.product.name,
+      productName: brand ? `${brand} ${product.name}` : product.name,
       variantLabel: variant.colorName,
       sku: variant.sku,
-      imageUrl: variant.product.images[0]?.url ?? null,
+      imageUrl: product.images[0]?.url ?? null,
       quantity: requested.quantity,
       unitPrice,
       totalPrice: unitPrice * requested.quantity,
+      slug: product.slug,
+      name: product.name,
+      brand,
+      mrp: toRupees(product.mrp),
+      stock: variant.stock,
+      available: issue === null,
+      issue,
     };
   });
 
-  const subtotal = lines.reduce((sum, l) => sum + l.totalPrice, 0);
+  // Only buyable lines count toward the total, so an unavailable item cannot
+  // inflate what the shopper is quoted.
+  const subtotal = lines
+    .filter((l) => l.available)
+    .reduce((sum, l) => sum + l.totalPrice, 0);
   const shipping = shippingFor(subtotal);
-  return { lines, subtotal, shipping, total: subtotal + shipping };
+
+  return {
+    lines,
+    subtotal,
+    shipping,
+    total: subtotal + shipping,
+    hasIssues: lines.some((l) => !l.available),
+  };
+}
+
+/**
+ * The same pricing, for order creation, where a problem must stop the order
+ * rather than be displayed.
+ */
+export async function priceCart(
+  input: { variantId: string; quantity: number }[]
+): Promise<{ lines: PricedLine[]; subtotal: number; shipping: number; total: number }> {
+  const priced = await repriceCart(input);
+
+  const bad = priced.lines.find((l) => !l.available);
+  if (bad) throw new Error(`${bad.productName}: ${bad.issue}`);
+
+  return {
+    lines: priced.lines.map(({ slug, name, brand, mrp, stock, available, issue, ...line }) => {
+      void slug; void name; void brand; void mrp; void stock; void available; void issue;
+      return line;
+    }),
+    subtotal: priced.subtotal,
+    shipping: priced.shipping,
+    total: priced.total,
+  };
 }
 
 /**
