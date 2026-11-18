@@ -3,7 +3,6 @@ import Link from "next/link";
 const AUDIENCES = [
   { label: "Men", href: "/shop?gender=MEN" },
   { label: "Women", href: "/shop?gender=WOMEN" },
-  { label: "Kids", href: "/shop?gender=KIDS" },
 ];
 
 /**

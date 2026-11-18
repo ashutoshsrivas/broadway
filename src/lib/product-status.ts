@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 
 /** A frame is "new" for this long after it is uploaded. */
-export const NEW_FOR_DAYS = 20;
+export const NEW_FOR_DAYS = 15;
 
 /** A sold-out frame stays listed this long, then delists itself. */
 export const SOLD_OUT_GRACE_DAYS = 10;
