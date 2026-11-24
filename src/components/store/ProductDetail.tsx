@@ -43,7 +43,7 @@ type Product = {
   lensType: string | null;
   isLimitedEdition: boolean;
   isBoExclusive: boolean;
-  category: { name: string; isBoExclusive?: boolean | null };
+  category: { name: string; gstPercent?: number | null; isBoExclusive?: boolean | null };
   brand: { name: string; slug?: string; description?: string | null; isStoreExclusive?: boolean | null } | null;
   images: { url: string; alt: string | null }[];
   variants: Variant[];
@@ -220,7 +220,11 @@ export function ProductDetail({
                 </span>
               )}
             </div>
-            <p className="mt-1.5 text-xs text-ink-muted">Inclusive of all taxes</p>
+            <p className="mt-1.5 text-xs text-ink-muted">
+              {product.category.gstPercent
+                ? `Inclusive of GST at ${product.category.gstPercent}%`
+                : "Inclusive of all taxes"}
+            </p>
           </>
         )}
 

@@ -1,7 +1,8 @@
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { findProducts, shopFacets } from "@/lib/catalog";
+import { fallbackShuffleSeed, findProducts, shopFacets } from "@/lib/catalog";
 import { ProductCard } from "@/components/store/ProductCard";
 import { ShopFilters } from "@/components/store/ShopFilters";
 import { ShopLayout } from "@/components/store/ShopLayout";
@@ -9,7 +10,8 @@ import { SortSelect } from "@/components/store/SortSelect";
 import { Pagination } from "@/components/store/Pagination";
 import { ShopEditorialTile } from "@/components/store/ShopEditorialTile";
 import { buildShopGrid, DEFAULT_ROWS_BETWEEN } from "@/lib/shop-grid";
-import { SETTING_KEYS, getSettings } from "@/lib/settings";
+import { SETTING_KEYS, getSettings, settingOn } from "@/lib/settings";
+import { ShuffleSeed } from "@/components/store/ShuffleSeed";
 import { db } from "@/lib/db";
 
 export const metadata: Metadata = {
@@ -40,6 +42,20 @@ export default async function ShopPage({
   const category = Array.isArray(sp.category) ? sp.category[0] : sp.category;
   const query = (Array.isArray(sp.q) ? sp.q[0] : sp.q)?.trim();
 
+  // Settings are needed before the query, because whether the grid shuffles
+  // changes what the query is.
+  const settings = await getSettings();
+
+  // The seed is this visit's, from a session cookie. Before the cookie
+  // exists — the very first page of a visit — a time bucket stands in, so
+  // the first page is still mixed rather than alphabetical by accident.
+  const cookieSeed = Number((await cookies()).get("bw_shuffle")?.value);
+  const shuffleSeed = settingOn(settings, SETTING_KEYS.shopShuffle)
+    ? Number.isFinite(cookieSeed) && cookieSeed > 0
+      ? cookieSeed
+      : fallbackShuffleSeed()
+    : undefined;
+
   const [{ products, total, page, pageCount }, facets, editorials] = await Promise.all([
     findProducts({
       category,
@@ -48,6 +64,7 @@ export default async function ShopPage({
       gender: asList(sp.gender),
       shape: asList(sp.shape),
       material: asList(sp.material),
+      colour: asList(sp.colour),
       frameType: asList(sp.frameType),
       minPrice: asNumber(sp.minPrice),
       maxPrice: asNumber(sp.maxPrice),
@@ -55,6 +72,7 @@ export default async function ShopPage({
       sale: asList(sp.sale).length > 0,
       sort: Array.isArray(sp.sort) ? sp.sort[0] : sp.sort,
       page: asNumber(sp.page),
+      shuffleSeed,
     }),
     shopFacets(),
     db.shopEditorial.findMany({
@@ -67,7 +85,6 @@ export default async function ShopPage({
   // Interleave the editorial images into the run of products: one every few
   // rows, alternating sides. Only the first page is interleaved — on page four
   // the same handful of images would reappear in the same positions.
-  const settings = await getSettings();
   const rowsBetween = Number(settings[SETTING_KEYS.editorialEveryRows]) || DEFAULT_ROWS_BETWEEN;
   const cells = buildShopGrid(products, page === 1 ? editorials : [], rowsBetween);
 
@@ -77,7 +94,7 @@ export default async function ShopPage({
     : activeCategory?.name ?? "All Eyewear";
 
   const activeFilterCount =
-    ["brand", "gender", "shape", "material", "frameType"].reduce(
+    ["brand", "gender", "shape", "material", "colour", "frameType"].reduce(
       (sum, key) => sum + asList(sp[key]).length,
       0
     ) +
@@ -92,6 +109,8 @@ export default async function ShopPage({
 
   return (
     <div className="mx-auto max-w-[1500px] px-5 py-10 lg:px-10 lg:py-14">
+      <ShuffleSeed />
+
       <nav className="label mb-7 flex items-center gap-2 text-ink-muted" aria-label="Breadcrumb">
         <Link href="/" className="hover:text-ink">
           Home

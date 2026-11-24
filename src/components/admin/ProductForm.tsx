@@ -64,7 +64,7 @@ export const BLANK_PRODUCT: ProductFormValues = {
   isLimitedEdition: false,
   isBoExclusive: false,
   images: [],
-  variants: [{ sku: "", colorName: "", colorCode: "", colorHex: "#2A1F17", priceOverride: "", stock: "0" }],
+  variants: [{ sku: "", colorName: "", colorCode: "", colorHex: "#2A1F17", priceOverride: "", stock: "1" }],
 };
 
 export function ProductForm({
@@ -235,10 +235,38 @@ export function ProductForm({
 
       {/* ── Pricing ── */}
       <Section title="Pricing">
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-3">
           <Label text="MRP (₹)" hint="The printed list price">
             <NumberField value={values.mrp} onChange={(v) => set("mrp", v)} min={0} />
           </Label>
+          <Label text="Discount (%)" hint="Writes the selling price below">
+            {/* The shop thinks in "20% off", not in rupees. This computes the
+                price; the price is still what gets stored and charged, so a
+                rounded figure typed by hand is never overwritten by a
+                percentage nobody re-entered. */}
+            <NumberField
+              value={
+                Number(values.mrp) > 0 && Number(values.price) > 0
+                  ? String(
+                      Math.round(
+                        ((Number(values.mrp) - Number(values.price)) / Number(values.mrp)) * 100
+                      )
+                    )
+                  : ""
+              }
+              onCommit={(v) => {
+                const mrp = Number(values.mrp);
+                const pct = Number(v);
+                if (!Number.isFinite(mrp) || mrp <= 0) return;
+                if (!Number.isFinite(pct) || pct < 0 || pct > 95) return;
+                set("price", String(Math.ceil(mrp - (mrp * pct) / 100)));
+              }}
+              decimals={false}
+              min={0}
+              max={95}
+            />
+          </Label>
+
           <Label text="Selling price (₹)" hint="Below MRP shows a SAVE % badge">
             <NumberField value={values.price} onChange={(v) => set("price", v)} min={0} />
           </Label>
@@ -428,12 +456,31 @@ export function ProductForm({
                 </Label>
 
                 <Label text="Stock">
-                  <NumberField
-                    value={variant.stock}
-                    onChange={(v) => setVariant(i, { stock: v })}
-                    decimals={false}
-                    min={0}
-                  />
+                  <span className="flex items-center gap-2.5">
+                    <NumberField
+                      value={variant.stock}
+                      onChange={(v) => setVariant(i, { stock: v })}
+                      decimals={false}
+                      min={0}
+                    />
+                    {/* The tick is the quick way to say "we have it" or "we
+                        don't" without thinking in numbers. Unticking keeps
+                        nothing in reserve: zero is what delists it. */}
+                    <label
+                      className="label flex shrink-0 cursor-pointer items-center gap-1.5 text-[0.55rem] text-ink-muted"
+                      title="In stock"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={Number(variant.stock) > 0}
+                        onChange={(e) =>
+                          setVariant(i, { stock: e.target.checked ? "1" : "0" })
+                        }
+                        className="h-3.5 w-3.5 accent-[#B08D4F]"
+                      />
+                      In stock
+                    </label>
+                  </span>
                 </Label>
 
                 <Label text="Price override" hint="Blank = product price">
@@ -465,7 +512,7 @@ export function ProductForm({
           onClick={() =>
             set("variants", [
               ...values.variants,
-              { sku: "", colorName: "", colorCode: "", colorHex: "#2A1F17", priceOverride: "", stock: "0" },
+              { sku: "", colorName: "", colorCode: "", colorHex: "#2A1F17", priceOverride: "", stock: "1" },
             ])
           }
           className="label mt-4 flex items-center gap-2 text-brass"

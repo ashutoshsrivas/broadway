@@ -58,6 +58,9 @@ export const SETTING_KEYS = {
   productAfterSales: "product.afterSales",
   productAssistHeading: "product.assist.heading",
   productAssistNote: "product.assist.note",
+
+  /** Mix the shop grid so one house does not lead every page. */
+  shopShuffle: "shop.shuffle",
 } as const;
 
 /**
@@ -69,6 +72,7 @@ export const SETTING_DEFAULTS: Partial<Record<SettingKey, string>> = {
   "homepage.categoryBoxes.mode": "hidden",
   "homepage.mobileGridCount": "6",
   "announcement.enabled": "1",
+  "shop.shuffle": "1",
 };
 
 /** A whole number from settings, falling back to the default then to `or`. */

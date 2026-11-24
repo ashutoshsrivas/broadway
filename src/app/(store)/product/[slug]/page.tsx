@@ -17,7 +17,7 @@ async function getProduct(slug: string) {
     where: { slug, status: "ACTIVE" },
     include: {
       brand: { select: { name: true, slug: true, description: true, isStoreExclusive: true } },
-      category: { select: { name: true, slug: true, isBoExclusive: true } },
+      category: { select: { name: true, slug: true, gstPercent: true, isBoExclusive: true } },
       images: { orderBy: { sortOrder: "asc" } },
       variants: { orderBy: { createdAt: "asc" } },
     },

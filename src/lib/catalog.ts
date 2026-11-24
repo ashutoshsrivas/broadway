@@ -11,6 +11,7 @@ export type ShopFilters = {
   gender?: string[];
   shape?: string[];
   material?: string[];
+  colour?: string[];
   frameType?: string[];
   minPrice?: number;
   maxPrice?: number;
@@ -19,6 +20,8 @@ export type ShopFilters = {
   sale?: boolean;
   sort?: string;
   page?: number;
+  /** Set to shuffle the default order. Held for a visit so paging is stable. */
+  shuffleSeed?: number;
 };
 
 /** Product shape every grid on the site renders from. */
@@ -71,6 +74,9 @@ function buildWhere(f: ShopFilters): Prisma.ProductWhereInput {
   if (f.gender?.length) where.gender = { in: f.gender };
   if (f.shape?.length) where.shape = { in: f.shape };
   if (f.material?.length) where.material = { in: f.material };
+  // Colour lives on the colourway, not the product, so a colour filter asks
+  // for products that have at least one variant in that colour.
+  if (f.colour?.length) where.variants = { some: { colorName: { in: f.colour } } };
   if (f.frameType?.length) where.frameType = { in: f.frameType as never };
 
   if (f.minPrice != null || f.maxPrice != null) {
@@ -97,9 +103,77 @@ function buildWhere(f: ShopFilters): Prisma.ProductWhereInput {
   return where;
 }
 
+/**
+ * A small deterministic shuffle.
+ *
+ * Seeded so that paging through a shuffled shop stays consistent for the
+ * length of a visit — without a seed, page two would re-roll the order and
+ * show frames the shopper already scrolled past on page one.
+ */
+function shuffled<T>(items: T[], seed: number): T[] {
+  const out = [...items];
+  let state = seed || 1;
+  for (let i = out.length - 1; i > 0; i--) {
+    // xorshift32: cheap, no dependency, and good enough to mix brands.
+    state ^= state << 13;
+    state ^= state >>> 17;
+    state ^= state << 5;
+    const j = Math.abs(state) % (i + 1);
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+/**
+ * A stand-in seed for the first page of a visit, before the session cookie
+ * exists. Bucketed to fifteen minutes so the order does not change between
+ * the grid and its own pagination links.
+ *
+ * In a function rather than inline in a page: reading the clock during
+ * render is a purity violation, and the lint rule that catches it is right.
+ */
+export function fallbackShuffleSeed(): number {
+  return Math.floor(Date.now() / 900_000);
+}
+
 export async function findProducts(f: ShopFilters) {
   const where = buildWhere(f);
   const page = Math.max(1, f.page ?? 1);
+
+  // The shop asked for the grid to mix brands rather than run Acuvue first
+  // every single time. Only the default order shuffles — asking for "price,
+  // low to high" and getting something else would be a bug, not a feature.
+  const shuffle = f.shuffleSeed != null && !f.sort;
+
+  if (shuffle) {
+    // Ids only, so the whole matching set can be ordered before paging. A
+    // catalogue this size is a few hundred rows; the alternative is MySQL's
+    // RAND() and a hand-written copy of the filter clause.
+    const ids = await db.product.findMany({
+      where,
+      orderBy: orderBy(undefined),
+      select: { id: true },
+    });
+
+    const order = shuffled(ids.map((r) => r.id), f.shuffleSeed!);
+    const slice = order.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+    const rows = await db.product.findMany({
+      where: { id: { in: slice } },
+      select: productCardSelect,
+    });
+
+    // `in` comes back in the database's order, not ours.
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    const products = slice.map((id) => byId.get(id)!).filter(Boolean);
+
+    return {
+      products,
+      total: order.length,
+      page,
+      pageCount: Math.max(1, Math.ceil(order.length / PAGE_SIZE)),
+    };
+  }
 
   const [products, total] = await Promise.all([
     db.product.findMany({
@@ -122,7 +196,7 @@ export async function findProducts(f: ShopFilters) {
  * a shape coined in Uploads becomes a filter the moment a product uses it.
  */
 export async function shopFacets() {
-  const [categories, brands, vocabulary] = await Promise.all([
+  const [categories, brands, vocabulary, colourRows] = await Promise.all([
     db.category.findMany({
       where: { isActive: true },
       orderBy: { sortOrder: "asc" },
@@ -137,6 +211,14 @@ export async function shopFacets() {
       orderBy: [{ usageCount: "desc" }, { label: "asc" }],
       select: { kind: true, label: true },
     }),
+    // Colour comes from the colourways on the shelf rather than the
+    // vocabulary: a colour nobody stocks is a filter that returns nothing.
+    db.productVariant.findMany({
+      where: { product: { status: "ACTIVE" } },
+      distinct: ["colorName"],
+      orderBy: { colorName: "asc" },
+      select: { colorName: true },
+    }),
   ]);
 
   const of = (kind: string) =>
@@ -148,5 +230,6 @@ export async function shopFacets() {
     genders: of("GENDER"),
     shapes: of("SHAPE"),
     materials: of("MATERIAL"),
+    colours: colourRows.map((c) => c.colorName).filter(Boolean),
   };
 }

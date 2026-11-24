@@ -14,6 +14,7 @@ type Facets = {
   genders: string[];
   shapes: string[];
   materials: string[];
+  colours: string[];
 };
 
 const FRAME_TYPES = ["FULL_RIM", "HALF_RIM", "RIMLESS"];
@@ -184,6 +185,19 @@ export function ShopFilters({
               label={material}
               checked={params.getAll("material").includes(material)}
               onChange={() => toggle("material", material)}
+            />
+          ))}
+        </Group>
+      )}
+
+      {facets.colours.length > 0 && (
+        <Group title="Colour">
+          {facets.colours.map((colour) => (
+            <Option
+              key={colour}
+              label={colour}
+              checked={params.getAll("colour").includes(colour)}
+              onChange={() => toggle("colour", colour)}
             />
           ))}
         </Group>
