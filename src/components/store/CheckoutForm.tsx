@@ -83,7 +83,11 @@ export function CheckoutForm({
       body: JSON.stringify({
         code,
         email: email.trim(),
-        items: items.map((i) => ({ variantId: i.variantId, quantity: i.quantity })),
+        items: items.map((i) => ({
+          variantId: i.variantId,
+          quantity: i.quantity,
+          lensOption: i.lensOption,
+        })),
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -116,7 +120,11 @@ export function CheckoutForm({
       paymentMethod: method,
       promoCode: promo?.code,
       // Only ids and quantities go over the wire; the server prices the bag.
-      items: items.map((i) => ({ variantId: i.variantId, quantity: i.quantity })),
+      items: items.map((i) => ({
+        variantId: i.variantId,
+        quantity: i.quantity,
+        lensOption: i.lensOption,
+      })),
     };
 
     try {
@@ -301,7 +309,10 @@ export function CheckoutForm({
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-display text-sm">{item.name}</p>
-                    <p className="text-xs text-ink-muted">{item.colorName}</p>
+                    <p className="text-xs text-ink-muted">
+                      {item.colorName}
+                      {item.lensOption && <> · {item.lensOption}</>}
+                    </p>
                   </div>
                   {(() => {
                     const line = priced?.lines.find((l) => l.variantId === item.variantId);

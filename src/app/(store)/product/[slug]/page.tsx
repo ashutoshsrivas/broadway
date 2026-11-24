@@ -8,12 +8,15 @@ import { ProductRail } from "@/components/sections/ProductRail";
 import { ExclusiveNotice } from "@/components/store/ExclusiveNotice";
 import { isExclusive, exclusiveCopy } from "@/lib/exclusive";
 import { SETTING_KEYS, getSettings } from "@/lib/settings";
+import { productBlocks } from "@/lib/product-copy";
+import { getTrustBoxes } from "@/lib/trust";
+import { ServiceRail } from "@/components/sections/ServiceRail";
 
 async function getProduct(slug: string) {
   return db.product.findFirst({
     where: { slug, status: "ACTIVE" },
     include: {
-      brand: { select: { name: true, isStoreExclusive: true } },
+      brand: { select: { name: true, slug: true, description: true, isStoreExclusive: true } },
       category: { select: { name: true, slug: true, isBoExclusive: true } },
       images: { orderBy: { sortOrder: "asc" } },
       variants: { orderBy: { createdAt: "asc" } },
@@ -49,18 +52,44 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const exclusive = isExclusive(product);
   const copy = exclusive ? exclusiveCopy(settings) : null;
 
-  // Same department, different frame — the only "related" rule worth having
-  // without a recommendation engine.
-  const related = await db.product.findMany({
-    where: { status: "ACTIVE", categoryId: product.categoryId, id: { not: product.id } },
-    orderBy: { sortOrder: "asc" },
-    take: 4,
-    select: productCardSelect,
-  });
+  // The same house first, then the rest of the department. Someone looking at
+  // a Persol is far more likely to want another Persol than another oval
+  // frame, so the brand leads and the category fills in behind it.
+  const RELATED_TAKE = 8;
+
+  const [sameBrand, trustBoxes] = await Promise.all([
+    product.brandId
+      ? db.product.findMany({
+          where: { status: "ACTIVE", brandId: product.brandId, id: { not: product.id } },
+          orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+          take: RELATED_TAKE,
+          select: productCardSelect,
+        })
+      : Promise.resolve([]),
+    getTrustBoxes(),
+  ]);
+
+  const sameCategory =
+    sameBrand.length >= RELATED_TAKE
+      ? []
+      : await db.product.findMany({
+          where: {
+            status: "ACTIVE",
+            categoryId: product.categoryId,
+            id: { notIn: [product.id, ...sameBrand.map((p) => p.id)] },
+          },
+          orderBy: { sortOrder: "asc" },
+          take: RELATED_TAKE - sameBrand.length,
+          select: productCardSelect,
+        });
+
+  const related = [...sameBrand, ...sameCategory];
 
   return (
     <>
-      <div className="mx-auto max-w-[1500px] px-5 py-10 lg:px-10 lg:py-14">
+      {/* The phone buy bar is fixed over the foot of the screen, so the
+          column needs room underneath it. */}
+      <div className="mx-auto max-w-[1500px] px-5 pb-24 pt-10 lg:px-10 lg:pb-14 lg:pt-14">
         <nav className="label mb-9 flex flex-wrap items-center gap-2 text-ink-muted" aria-label="Breadcrumb">
           <Link href="/" className="hover:text-ink">
             Home
@@ -76,6 +105,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <ProductDetail
           product={product}
           whatsappNumber={settings[SETTING_KEYS.whatsappNumber]}
+          blocks={productBlocks(settings)}
+          assistHeading={settings[SETTING_KEYS.productAssistHeading]}
+          assistNote={settings[SETTING_KEYS.productAssistNote]}
         />
 
         {copy && (
@@ -85,14 +117,28 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         )}
       </div>
 
+      {/* 5 — the four promises, as a strip rather than a list in the column. */}
+      <ServiceRail boxes={trustBoxes} />
+
+      {/* 6 — the same house first. */}
       <ProductRail
         eyebrow="You May Also Like"
         title={
-          <>
-            More from <em>{product.category.name}</em>
-          </>
+          sameBrand.length > 0 && product.brand ? (
+            <>
+              More from <em>{product.brand.name}</em>
+            </>
+          ) : (
+            <>
+              More from <em>{product.category.name}</em>
+            </>
+          )
         }
-        href={`/shop?category=${product.category.slug}`}
+        href={
+          sameBrand.length > 0 && product.brand
+            ? `/shop?brand=${product.brand.slug}`
+            : `/shop?category=${product.category.slug}`
+        }
         products={related}
         tone="raised"
       />

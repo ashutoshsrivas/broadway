@@ -14,6 +14,7 @@ type VariantDraft = {
   id?: string;
   sku: string;
   colorName: string;
+  colorCode: string;
   colorHex: string;
   priceOverride: string;
   stock: string;
@@ -63,7 +64,7 @@ export const BLANK_PRODUCT: ProductFormValues = {
   isLimitedEdition: false,
   isBoExclusive: false,
   images: [],
-  variants: [{ sku: "", colorName: "", colorHex: "#2A1F17", priceOverride: "", stock: "0" }],
+  variants: [{ sku: "", colorName: "", colorCode: "", colorHex: "#2A1F17", priceOverride: "", stock: "0" }],
 };
 
 export function ProductForm({
@@ -142,6 +143,7 @@ export function ProductForm({
         id: v.id,
         sku: v.sku.trim(),
         colorName: v.colorName.trim(),
+        colorCode: v.colorCode.trim() || undefined,
         colorHex: v.colorHex || undefined,
         priceOverride: v.priceOverride ? Number(v.priceOverride) : null,
         stock: Number(v.stock || 0),
@@ -387,7 +389,7 @@ export function ProductForm({
         <ul className="space-y-4">
           {values.variants.map((variant, i) => (
             <li key={i} className="border border-line bg-paper p-5">
-              <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto_1fr_1fr_auto] sm:items-end">
+              <div className="grid gap-4 sm:grid-cols-[1fr_1fr_1fr_auto_1fr_1fr_auto] sm:items-end">
                 <Label text="SKU" hint="Generated if blank">
                   <input
                     value={variant.sku}
@@ -403,6 +405,15 @@ export function ProductForm({
                     onChange={(e) => setVariant(i, { colorName: e.target.value })}
                     required
                     placeholder="Gold / Green"
+                    className="field-box"
+                  />
+                </Label>
+
+                <Label text="Colour code" hint="As printed on the arm">
+                  <input
+                    value={variant.colorCode}
+                    onChange={(e) => setVariant(i, { colorCode: e.target.value })}
+                    placeholder="L0205"
                     className="field-box"
                   />
                 </Label>
@@ -454,7 +465,7 @@ export function ProductForm({
           onClick={() =>
             set("variants", [
               ...values.variants,
-              { sku: "", colorName: "", colorHex: "#2A1F17", priceOverride: "", stock: "0" },
+              { sku: "", colorName: "", colorCode: "", colorHex: "#2A1F17", priceOverride: "", stock: "0" },
             ])
           }
           className="label mt-4 flex items-center gap-2 text-brass"

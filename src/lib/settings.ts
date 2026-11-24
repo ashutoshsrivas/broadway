@@ -50,6 +50,14 @@ export const SETTING_KEYS = {
   homeServiceImage: "homeService.imageUrl",
   homeServicePhone: "homeService.phone",
   homeServiceBody: "homeService.body",
+
+  // ── The collapsible blocks on every product page ──
+  productAuthenticity: "product.authenticity",
+  productWarranty: "product.warranty",
+  productShipping: "product.shipping",
+  productAfterSales: "product.afterSales",
+  productAssistHeading: "product.assist.heading",
+  productAssistNote: "product.assist.note",
 } as const;
 
 /**

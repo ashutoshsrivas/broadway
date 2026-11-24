@@ -68,7 +68,10 @@ export function CartView() {
                     >
                       {item.name}
                     </Link>
-                    <p className="mt-1 text-xs text-ink-muted">{item.colorName}</p>
+                    <p className="mt-1 text-xs text-ink-muted">
+                      {item.colorName}
+                      {item.lensOption && <> · {item.lensOption}</>}
+                    </p>
                   </div>
 
                   <button

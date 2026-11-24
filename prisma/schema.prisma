@@ -286,6 +286,9 @@ model ProductVariant {
 
   sku           String  @unique
   colorName     String
+  /// The house's own code for this colourway, as printed on the arm —
+  /// "L0205", "col. 086". Shoppers quote it; our SKU means nothing to them.
+  colorCode     String?
   colorHex      String?
   /// Overrides Product.price for this colourway only. Null = use the product price.
   priceOverride Float?
@@ -619,6 +622,10 @@ model OrderItem {
   quantity   Int
   unitPrice  Float
   totalPrice Float
+  /// "With prescription" or "Glasses only", as chosen on the product page.
+  /// Recorded rather than priced: the lens is quoted after the prescription
+  /// is seen, which is how the counter already works.
+  lensOption String?
 
   @@index([orderId])
 }

@@ -75,6 +75,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         const data = {
           sku: v.sku?.trim() || skuFor(fields.name, v.colorName, index),
           colorName: v.colorName,
+          colorCode: v.colorCode || null,
           colorHex: v.colorHex || null,
           priceOverride: v.priceOverride ?? null,
           stock: v.stock,

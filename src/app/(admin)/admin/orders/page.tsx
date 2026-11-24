@@ -8,7 +8,16 @@ export default async function AdminOrdersPage() {
     orderBy: { createdAt: "desc" },
     take: 100,
     include: {
-      items: { select: { id: true, productName: true, variantLabel: true, quantity: true, totalPrice: true } },
+      items: {
+        select: {
+          id: true,
+          productName: true,
+          variantLabel: true,
+          lensOption: true,
+          quantity: true,
+          totalPrice: true,
+        },
+      },
     },
   });
 
@@ -64,7 +73,8 @@ export default async function AdminOrdersPage() {
                         <span className="min-w-0">
                           <span className="block truncate">{item.productName}</span>
                           <span className="text-xs text-ink-muted">
-                            {item.variantLabel} · Qty {item.quantity}
+                            {item.variantLabel}
+                            {item.lensOption && ` · ${item.lensOption}`} · Qty {item.quantity}
                           </span>
                         </span>
                         <span className="shrink-0">{formatPrice(item.totalPrice)}</span>

@@ -1,16 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import { Minus, Plus, ShoppingBag, Check, Truck, ShieldCheck, RefreshCw } from "lucide-react";
+import Link from "next/link";
+import { Minus, Plus, ShoppingBag, Check, MessageCircle } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import { formatPrice, discountPct, titleCase } from "@/lib/utils";
 import { brandEnquiryLink } from "@/lib/whatsapp";
+import { Collapsible } from "@/components/store/Collapsible";
+import type { ProductBlock } from "@/lib/product-copy";
+
+/** The two ways a frame leaves the shop. Recorded, not priced — the lens is
+    quoted once an optician has seen the prescription. */
+const LENS_OPTIONS = [
+  { value: "With prescription", note: "We'll call to take your prescription and quote the lenses." },
+  { value: "Glasses only", note: "The frame as shown, with its demo lenses." },
+] as const;
 
 type Variant = {
   id: string;
   sku: string;
   colorName: string;
+  colorCode: string | null;
   colorHex: string | null;
   priceOverride: number | null;
   stock: number;
@@ -33,7 +44,7 @@ type Product = {
   isLimitedEdition: boolean;
   isBoExclusive: boolean;
   category: { name: string; isBoExclusive?: boolean | null };
-  brand: { name: string; isStoreExclusive?: boolean | null } | null;
+  brand: { name: string; slug?: string; description?: string | null; isStoreExclusive?: boolean | null } | null;
   images: { url: string; alt: string | null }[];
   variants: Variant[];
 };
@@ -41,9 +52,16 @@ type Product = {
 export function ProductDetail({
   product,
   whatsappNumber,
+  blocks,
+  assistHeading,
+  assistNote,
 }: {
   product: Product;
   whatsappNumber?: string | null;
+  /** Authenticity, warranty, shipping, after-sales — written in the admin. */
+  blocks: ProductBlock[];
+  assistHeading?: string | null;
+  assistNote?: string | null;
 }) {
   // A store-exclusive house is browsable but not priced online — buying it
   // goes through WhatsApp rather than the bag.
@@ -55,6 +73,28 @@ export function ProductDetail({
   );
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
+  const [lensOption, setLensOption] = useState<string>(LENS_OPTIONS[0].value);
+  // The phone bar appears once the real buy row has scrolled past. Driven by
+  // an observer rather than a scroll handler so it costs nothing while the
+  // button is on screen, which is most of the time.
+  const buyRowRef = useRef<HTMLDivElement>(null);
+  const [showBar, setShowBar] = useState(false);
+
+  useEffect(() => {
+    const node = buyRowRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // Only once the real button has gone *up* past the top of the screen.
+        // "Not on screen" alone would show the bar before the shopper has
+        // even reached the button, repeating the price they can already see.
+        setShowBar(!entry.isIntersecting && entry.boundingClientRect.top < 0);
+      },
+      { rootMargin: "-72px 0px 0px 0px" }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
   const addItem = useCartStore((s) => s.addItem);
   const setCartOpen = useCartStore((s) => s.setIsOpen);
 
@@ -71,6 +111,7 @@ export function ProductDetail({
     ["Best for", product.gender],
     ["Country of origin", product.countryOfOrigin],
     ["Colour", variant?.colorName],
+    ["Colour code", variant?.colorCode],
     ["SKU", variant?.sku],
   ].filter(([, value]) => Boolean(value)) as [string, string][];
 
@@ -84,6 +125,7 @@ export function ProductDetail({
         name: product.name,
         brand: product.brand?.name ?? null,
         colorName: variant.colorName,
+        lensOption,
         price,
         mrp: product.mrp,
         imageUrl: product.images[0]?.url ?? null,
@@ -187,9 +229,16 @@ export function ProductDetail({
         {/* Colour picker */}
         {product.variants.length > 0 && (
           <div>
-            <div className="flex items-baseline justify-between">
+            <div className="flex items-baseline justify-between gap-4">
               <p className="label">Colour</p>
-              <p className="text-sm text-ink-soft">{variant?.colorName}</p>
+              <p className="text-right text-sm text-ink-soft">
+                {variant?.colorName}
+                {variant?.colorCode && (
+                  <span className="label ml-2.5 text-[0.6rem] text-ink-muted">
+                    {variant.colorCode}
+                  </span>
+                )}
+              </p>
             </div>
 
             <ul className="mt-4 flex flex-wrap gap-2.5">
@@ -232,6 +281,73 @@ export function ProductDetail({
           </div>
         )}
 
+        {/* 2 — Need assistance. Before the buy row on purpose: the shop would
+            rather talk to someone unsure about a ₹30,000 frame than lose
+            them to a silent page. */}
+        <div className="mt-8 border border-line bg-paper-raised p-5">
+          <p className="label">{assistHeading?.trim() || "Need assistance?"}</p>
+          <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+            {assistNote?.trim() ||
+              "An optician can tell you how this frame sits, what lenses suit it and whether we have it in another colour."}
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2.5">
+            <a
+              href={brandEnquiryLink(
+                `${product.brand?.name ?? "Broadway"} ${product.name}`,
+                whatsappNumber
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="label flex items-center gap-2 border border-ink px-5 py-3 transition-colors hover:bg-ink hover:text-paper"
+            >
+              <MessageCircle className="h-3.5 w-3.5" strokeWidth={1.5} />
+              Chat with us
+            </a>
+            <Link
+              href="/contact"
+              className="label border border-line px-5 py-3 text-ink-soft transition-colors hover:border-ink hover:text-ink"
+            >
+              Get in touch
+            </Link>
+          </div>
+        </div>
+
+        {/* 3 — With prescription, or the frame on its own. */}
+        {!priceHidden && (
+          <fieldset className="mt-8">
+            <legend className="label">How would you like it?</legend>
+            <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+              {LENS_OPTIONS.map((option) => {
+                const selected = lensOption === option.value;
+                return (
+                  <label
+                    key={option.value}
+                    className={`cursor-pointer border p-4 transition-colors ${
+                      selected ? "border-ink bg-paper-raised" : "border-line hover:border-ink-muted"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <input
+                        type="radio"
+                        name="lensOption"
+                        value={option.value}
+                        checked={selected}
+                        onChange={() => setLensOption(option.value)}
+                        className="h-3.5 w-3.5 accent-[#2A1F17]"
+                      />
+                      <span className="label">{option.value}</span>
+                    </span>
+                    <span className="mt-2 block text-xs leading-relaxed text-ink-muted">
+                      {option.note}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+        )}
+
+        <div ref={buyRowRef}>
         {priceHidden ? (
           <a
             href={brandEnquiryLink(
@@ -275,42 +391,111 @@ export function ProductDetail({
           </button>
         </div>
         )}
+        </div>
 
-        {/* Reassurance */}
-        <ul className="mt-9 space-y-3.5 border-t border-line pt-7">
-          {[
-            { icon: Truck, text: "Complimentary shipping on orders above ₹2,000" },
-            { icon: ShieldCheck, text: "100% authentic, with full brand warranty" },
-            { icon: RefreshCw, text: "14-day returns on unworn frames" },
-          ].map(({ icon: Icon, text }) => (
-            <li key={text} className="flex items-center gap-3 text-sm text-ink-soft">
-              <Icon className="h-4 w-4 shrink-0 text-brass" strokeWidth={1.5} />
-              {text}
-            </li>
+        {/* 4 — Everything else, folded away. Specifications open, because
+            that is the one block a shopper came for. */}
+        <div className="mt-10 border-t border-line">
+          {specs.length > 0 && (
+            <Collapsible title="Product specifications" defaultOpen>
+              <dl className="grid gap-x-8 sm:grid-cols-2">
+                {specs.map(([term, value]) => (
+                  <div
+                    key={term}
+                    className="flex justify-between gap-4 border-b border-line/60 py-2.5 text-sm"
+                  >
+                    <dt className="text-ink-muted">{term}</dt>
+                    <dd className="text-right">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </Collapsible>
+          )}
+
+          {product.description && (
+            <Collapsible title="Description">
+              <p className="whitespace-pre-line text-[0.95rem] leading-relaxed text-ink-soft">
+                {product.description}
+              </p>
+            </Collapsible>
+          )}
+
+          {product.brand?.description && (
+            <Collapsible title={`About ${product.brand.name}`}>
+              <p className="whitespace-pre-line text-[0.95rem] leading-relaxed text-ink-soft">
+                {product.brand.description}
+              </p>
+              {product.brand.slug && (
+                <Link
+                  href={`/brands/${product.brand.slug}`}
+                  className="label link-rule mt-4 inline-block text-ink-soft"
+                >
+                  Visit {product.brand.name} →
+                </Link>
+              )}
+            </Collapsible>
+          )}
+
+          {blocks.map((block) => (
+            <Collapsible key={block.title} title={block.title}>
+              <p className="whitespace-pre-line text-[0.95rem] leading-relaxed text-ink-soft">
+                {block.body}
+              </p>
+            </Collapsible>
           ))}
-        </ul>
-
-        {product.description && (
-          <div className="mt-9 border-t border-line pt-7">
-            <h2 className="label">The Details</h2>
-            <p className="mt-4 whitespace-pre-line text-[0.95rem] leading-relaxed text-ink-soft">
-              {product.description}
-            </p>
-          </div>
-        )}
-
-        <div className="mt-9 border-t border-line pt-7">
-          <h2 className="label">Specification</h2>
-          <dl className="mt-4 grid grid-cols-2 gap-x-6">
-            {specs.map(([term, value]) => (
-              <div key={term} className="flex justify-between border-b border-line/60 py-2.5 text-sm">
-                <dt className="text-ink-muted">{term}</dt>
-                <dd className="text-right">{value}</dd>
-              </div>
-            ))}
-          </dl>
         </div>
       </div>
+
+      {/* The phone bar: name, price and the one button, kept in reach however
+          far down the page the shopper has read. Hidden from `lg`, where the
+          buy column is sticky already. */}
+      {showBar && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper/95 backdrop-blur-sm lg:hidden">
+          <div className="flex items-center gap-3 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-display">{product.name}</p>
+              <p className="mt-0.5 text-xs">
+                {priceHidden ? (
+                  <span className="text-brass">Price in store</span>
+                ) : (
+                  <>
+                    <span className={save > 0 ? "text-clay" : "text-ink-soft"}>
+                      {formatPrice(price)}
+                    </span>
+                    {save > 0 && (
+                      <span className="ml-2 text-ink-muted line-through">
+                        {formatPrice(product.mrp)}
+                      </span>
+                    )}
+                  </>
+                )}
+              </p>
+            </div>
+
+            {priceHidden ? (
+              <a
+                href={brandEnquiryLink(
+                  `${product.brand?.name ?? "Broadway"} ${product.name}`,
+                  whatsappNumber
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-ink label shrink-0 px-6 py-3.5"
+              >
+                Enquire
+              </a>
+            ) : (
+              <button
+                onClick={handleAdd}
+                disabled={!inStock}
+                className="btn-ink label shrink-0 px-6 py-3.5"
+              >
+                {inStock ? "Add to Bag" : "Sold Out"}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -32,6 +32,7 @@ const schema = z.object({
     .array(
       z.object({
         variantId: z.string().min(1),
+        lensOption: z.string().trim().max(40).optional(),
         quantity: z.number().int().positive().max(20),
       })
     )
@@ -134,7 +135,15 @@ export async function POST(req: NextRequest) {
           discountCode,
           total,
           notes: data.notes || null,
-          items: { create: priced.lines },
+          // The lens choice is not priced, so it never passes through
+          // priceCart — it is merged back on by colourway here.
+          items: {
+            create: priced.lines.map((line) => ({
+              ...line,
+              lensOption:
+                data.items.find((i) => i.variantId === line.variantId)?.lensOption ?? null,
+            })),
+          },
         },
       });
       break;

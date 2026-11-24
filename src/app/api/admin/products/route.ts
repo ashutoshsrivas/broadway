@@ -11,6 +11,7 @@ const variantSchema = z.object({
   // product would not save until someone invented a code.
   sku: z.string().trim().max(60).optional(),
   colorName: z.string().trim().min(1, "Colour name is required").max(80),
+  colorCode: z.string().trim().max(40).optional(),
   colorHex: z.string().trim().max(9).optional(),
   priceOverride: z.number().nonnegative().nullable().optional(),
   stock: z.number().int().min(0),
@@ -118,6 +119,7 @@ export async function POST(req: NextRequest) {
           create: variants.map((v, i) => ({
             sku: v.sku?.trim() || skuFor(fields.name, v.colorName, i),
             colorName: v.colorName,
+            colorCode: v.colorCode || null,
             colorHex: v.colorHex || null,
             priceOverride: v.priceOverride ?? null,
             stock: v.stock,

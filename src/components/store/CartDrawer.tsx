@@ -110,7 +110,10 @@ export function CartDrawer() {
                     >
                       {item.name}
                     </Link>
-                    <p className="mt-0.5 text-xs text-ink-muted">{item.colorName}</p>
+                    <p className="mt-0.5 text-xs text-ink-muted">
+                      {item.colorName}
+                      {item.lensOption && <> · {item.lensOption}</>}
+                    </p>
                     {lineFor(item.variantId)?.issue && (
                       <p className="label mt-1.5 text-clay">{lineFor(item.variantId)!.issue}</p>
                     )}

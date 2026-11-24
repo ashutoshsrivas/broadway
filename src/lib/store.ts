@@ -17,6 +17,8 @@ export type CartItem = {
   name: string;
   brand: string | null;
   colorName: string;
+  /** "With prescription" or "Glasses only". Recorded, never priced here. */
+  lensOption?: string;
   price: number;
   mrp: number;
   imageUrl: string | null;
@@ -47,10 +49,19 @@ export const useCartStore = create<CartStore>()(
           const existing = state.items.find((i) => i.variantId === item.variantId);
           const ceiling = item.stock || 99;
           if (existing) {
+            // The bag stays keyed by colourway. Adding the same frame again
+            // with the other lens choice updates the line rather than
+            // splitting it — the prescription is taken by an optician after
+            // the order either way, so two lines would be a distinction the
+            // shop never acts on.
             return {
               items: state.items.map((i) =>
                 i.variantId === item.variantId
-                  ? { ...i, quantity: Math.min(i.quantity + quantity, ceiling) }
+                  ? {
+                      ...i,
+                      lensOption: item.lensOption ?? i.lensOption,
+                      quantity: Math.min(i.quantity + quantity, ceiling),
+                    }
                   : i
               ),
             };

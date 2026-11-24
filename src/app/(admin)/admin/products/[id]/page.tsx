@@ -55,6 +55,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
             id: variant.id,
             sku: variant.sku,
             colorName: variant.colorName,
+            colorCode: variant.colorCode ?? "",
             colorHex: variant.colorHex ?? "#2A1F17",
             priceOverride: variant.priceOverride ? String(variant.priceOverride) : "",
             stock: String(variant.stock),
