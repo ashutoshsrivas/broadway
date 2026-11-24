@@ -11,6 +11,7 @@ const schema = z.object({
   isActive: z.boolean().optional(),
   isBoExclusive: z.boolean().optional(),
   showOnHome: z.boolean().optional(),
+  showInMenu: z.boolean().optional(),
   /// GST percentage for this department. Null means "use the store default".
   gstPercent: z.number().min(0).max(50).nullable().optional(),
 });

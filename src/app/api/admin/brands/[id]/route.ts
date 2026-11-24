@@ -13,6 +13,8 @@ const schema = z.object({
   showInNewArrivals: z.boolean().optional(),
   showInBrandStrip: z.boolean().optional(),
   isStoreExclusive: z.boolean().optional(),
+  showInMenuTop: z.boolean().optional(),
+  showInMenuLuxury: z.boolean().optional(),
   /// Hex with the hash, or empty to clear. Validated so a typo cannot end up
   /// as an inline style the browser silently ignores.
   accentHex: z

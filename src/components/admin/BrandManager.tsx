@@ -18,6 +18,8 @@ export type BrandRow = {
   showInBrandStrip: boolean;
   isStoreExclusive: boolean;
   accentHex: string | null;
+  showInMenuTop: boolean;
+  showInMenuLuxury: boolean;
   productCount: number;
 };
 
@@ -69,6 +71,8 @@ export function BrandManager({ initial }: { initial: BrandRow[] }) {
         showInBrandStrip: false,
         showInNewArrivals: false,
         accentHex: null,
+        showInMenuTop: false,
+        showInMenuLuxury: false,
         productCount: 0,
       },
     ]);
@@ -210,6 +214,18 @@ export function BrandManager({ initial }: { initial: BrandRow[] }) {
                 label="Featured roll-call"
                 checked={brand.isFeatured}
                 onChange={(v) => void patch(brand.id, { isFeatured: v })}
+              />
+              <Toggle
+                label="Menu · top brands"
+                hint="Six to eight"
+                checked={brand.showInMenuTop}
+                onChange={(v) => void patch(brand.id, { showInMenuTop: v })}
+              />
+              <Toggle
+                label="Menu · exclusive luxury"
+                hint="Three or four"
+                checked={brand.showInMenuLuxury}
+                onChange={(v) => void patch(brand.id, { showInMenuLuxury: v })}
               />
             </div>
           </li>

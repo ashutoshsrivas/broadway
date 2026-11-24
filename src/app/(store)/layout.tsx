@@ -3,7 +3,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CartDrawer } from "@/components/store/CartDrawer";
 import { getPromo } from "@/lib/promo";
-import { getNavLinks } from "@/lib/nav";
+import { getMenu } from "@/lib/menu";
 import { SETTING_KEYS, getSettings, settingOn } from "@/lib/settings";
 import { WelcomeOffer } from "@/components/store/WelcomeOffer";
 
@@ -15,7 +15,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
   // Fetched once here and handed to the client header, so the nav needs no
   // round-trip of its own.
   const [navLinks, promo, settings] = await Promise.all([
-    getNavLinks(),
+    getMenu(),
     getPromo(),
     getSettings(),
   ]);

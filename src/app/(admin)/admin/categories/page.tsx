@@ -28,6 +28,7 @@ export default async function AdminCategoriesPage() {
           isActive: c.isActive,
           isBoExclusive: c.isBoExclusive,
           showOnHome: c.showOnHome,
+          showInMenu: c.showInMenu,
           gstPercent: c.gstPercent,
           productCount: c._count.products,
         }))}
@@ -55,6 +56,8 @@ export default async function AdminCategoriesPage() {
             showInBrandStrip: b.showInBrandStrip,
             isStoreExclusive: b.isStoreExclusive,
             accentHex: b.accentHex,
+            showInMenuTop: b.showInMenuTop,
+            showInMenuLuxury: b.showInMenuLuxury,
             productCount: b._count.products,
           }))}
         />

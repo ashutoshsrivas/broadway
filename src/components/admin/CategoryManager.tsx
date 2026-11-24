@@ -13,6 +13,7 @@ export type CategoryRow = {
   isActive: boolean;
   isBoExclusive: boolean;
   showOnHome: boolean;
+  showInMenu: boolean;
   gstPercent: number | null;
   productCount: number;
 };
@@ -116,6 +117,16 @@ export function CategoryManager({ categories }: { categories: CategoryRow[] }) {
                     aria-label={`GST percentage for ${row.name}`}
                   />
                   <span>%</span>
+                </label>
+
+                <label className="label flex cursor-pointer items-center gap-2 text-ink-muted">
+                  <input
+                    type="checkbox"
+                    checked={row.showInMenu}
+                    onChange={(e) => void patch(row.id, { showInMenu: e.target.checked })}
+                    className="h-3.5 w-3.5 accent-[#B08D4F]"
+                  />
+                  Menu dropdown
                 </label>
 
                 <label className="label flex cursor-pointer items-center gap-2 text-ink-muted">

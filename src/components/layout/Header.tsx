@@ -3,29 +3,35 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
-import { Search, User, Menu, X, ChevronRight } from "lucide-react";
+import { Search, User, Menu, X, ChevronRight, ChevronDown } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { LogoMark } from "@/components/Logo";
 import { SearchOverlay } from "@/components/layout/SearchOverlay";
 import { BagButton } from "@/components/store/BagButton";
 
-import type { NavItem } from "@/lib/nav";
+import type { MenuItem, MenuPanel } from "@/lib/menu";
 
 function subscribeToScroll(onChange: () => void) {
   window.addEventListener("scroll", onChange, { passive: true });
   return () => window.removeEventListener("scroll", onChange);
 }
 
+// Gender is stored as the shop writes it — "Men", not "MEN" — so the links
+// carry the same casing the filters match on.
 const AUDIENCES = [
-  { label: "Men", href: "/shop?gender=MEN" },
-  { label: "Women", href: "/shop?gender=WOMEN" },
-  { label: "Kids", href: "/shop?gender=KIDS" },
+  { label: "Men", href: "/shop?gender=Men" },
+  { label: "Women", href: "/shop?gender=Women" },
+  { label: "Kids", href: "/shop?gender=Kids" },
 ];
 
-export function Header({ navLinks }: { navLinks: NavItem[] }) {
+export function Header({ navLinks }: { navLinks: MenuItem[] }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [drawerRoute, setDrawerRoute] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  // Which department's panel is dropped, on desktop and in the drawer. One at
+  // a time: two open mega-panels would overlap each other.
+  const [openPanel, setOpenPanel] = useState<string | null>(null);
+  const [openDrawerPanel, setOpenDrawerPanel] = useState<string | null>(null);
   const { data: session } = useSession();
   const pathname = usePathname();
 
@@ -46,6 +52,7 @@ export function Header({ navLinks }: { navLinks: NavItem[] }) {
   if (mobileOpen && drawerRoute !== null && drawerRoute !== pathname) {
     setMobileOpen(false);
     setDrawerRoute(null);
+    setOpenDrawerPanel(null);
   }
 
   return (
@@ -126,22 +133,47 @@ export function Header({ navLinks }: { navLinks: NavItem[] }) {
 
         {/* Category rail — the actual shopping nav, kept on its own rule so the
             brand row stays uncluttered. */}
-        <div className="hidden border-b border-line bg-paper-raised/95 backdrop-blur-sm lg:block">
+        <div
+          className="relative hidden border-b border-line bg-paper-raised/95 backdrop-blur-sm lg:block"
+          onMouseLeave={() => setOpenPanel(null)}
+        >
           <nav className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-center gap-x-9 gap-y-2 px-10 py-2.5">
             {navLinks.map((link) => (
-              <Link
+              <div
                 key={link.id}
-                href={link.href}
-                target={link.newTab ? "_blank" : undefined}
-                rel={link.newTab ? "noopener noreferrer" : undefined}
-                className={`label link-rule transition-colors ${
-                  link.highlight ? "text-brass" : "text-ink-soft hover:text-ink"
-                }`}
+                onMouseEnter={() => setOpenPanel(link.panel ? link.id : null)}
               >
-                {link.label}
-              </Link>
+                <Link
+                  href={link.href}
+                  target={link.newTab ? "_blank" : undefined}
+                  rel={link.newTab ? "noopener noreferrer" : undefined}
+                  // Focus opens the panel too, so the menu is reachable from
+                  // the keyboard and not only from a mouse.
+                  onFocus={() => setOpenPanel(link.panel ? link.id : null)}
+                  aria-expanded={link.panel ? openPanel === link.id : undefined}
+                  className={`label link-rule flex items-center gap-1.5 transition-colors ${
+                    link.highlight ? "text-brass" : "text-ink-soft hover:text-ink"
+                  }`}
+                >
+                  {link.label}
+                  {link.panel && (
+                    <ChevronDown
+                      className={`h-3 w-3 transition-transform ${
+                        openPanel === link.id ? "rotate-180" : ""
+                      }`}
+                      strokeWidth={1.8}
+                    />
+                  )}
+                </Link>
+              </div>
             ))}
           </nav>
+
+          {navLinks.map((link) =>
+            link.panel && openPanel === link.id ? (
+              <DesktopPanel key={link.id} panel={link.panel} />
+            ) : null
+          )}
         </div>
       </header>
 
@@ -163,21 +195,49 @@ export function Header({ navLinks }: { navLinks: NavItem[] }) {
             </div>
 
             <div className="flex-1 overflow-y-auto px-5 py-6">
-              <p className="label mb-4 text-ink-muted">Shop by</p>
+              <p className="label mb-4 text-ink-muted">Shop</p>
               <ul className="mb-8 space-y-1">
                 {navLinks.map((link) => (
                   <li key={link.id}>
-                    <Link
-                      href={link.href}
-                      target={link.newTab ? "_blank" : undefined}
-                      rel={link.newTab ? "noopener noreferrer" : undefined}
-                      className={`flex items-center justify-between border-b border-line/60 py-3.5 font-display text-xl ${
-                        link.highlight ? "text-brass" : ""
-                      }`}
-                    >
-                      {link.label}
-                      <ChevronRight className="h-4 w-4 text-brass" strokeWidth={1.5} />
-                    </Link>
+                    {link.panel ? (
+                      <>
+                        {/* The row is a button, not a link: on a phone the
+                            department opens its own list rather than jumping
+                            straight to an unfiltered grid. The list itself
+                            ends with "Shop all". */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setOpenDrawerPanel((cur) => (cur === link.id ? null : link.id))
+                          }
+                          aria-expanded={openDrawerPanel === link.id}
+                          className={`flex w-full items-center justify-between border-b border-line/60 py-3.5 text-left font-display text-xl ${
+                            link.highlight ? "text-brass" : ""
+                          }`}
+                        >
+                          {link.label}
+                          <ChevronDown
+                            className={`h-4 w-4 text-brass transition-transform ${
+                              openDrawerPanel === link.id ? "rotate-180" : ""
+                            }`}
+                            strokeWidth={1.5}
+                          />
+                        </button>
+                        {openDrawerPanel === link.id && <DrawerPanel panel={link.panel} />}
+                      </>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        target={link.newTab ? "_blank" : undefined}
+                        rel={link.newTab ? "noopener noreferrer" : undefined}
+                        className={`flex items-center justify-between border-b border-line/60 py-3.5 font-display text-xl ${
+                          link.highlight ? "text-brass" : ""
+                        }`}
+                      >
+                        {link.label}
+                        <ChevronRight className="h-4 w-4 text-brass" strokeWidth={1.5} />
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -215,6 +275,11 @@ export function Header({ navLinks }: { navLinks: NavItem[] }) {
                   </Link>
                 </li>
                 <li>
+                  <Link href="/shop-by-brand" className="label-lg text-ink-soft">
+                    Shop by Brand
+                  </Link>
+                </li>
+                <li>
                   <Link href="/brands" className="label-lg text-ink-soft">
                     Our Brands
                   </Link>
@@ -245,5 +310,113 @@ export function Header({ navLinks }: { navLinks: NavItem[] }) {
         </div>
       )}
     </>
+  );
+}
+
+/**
+ * The mega-panel that drops out of a department on desktop.
+ *
+ * Four columns, in the order the shop asked for: who it is for, the shapes we
+ * actually stock, the houses worth naming and the few that are not for
+ * everyone. A column with nothing in it is left out rather than printed as an
+ * empty heading.
+ */
+function DesktopPanel({ panel }: { panel: MenuPanel }) {
+  const columns: { title: string; links: { label: string; href: string }[] }[] = [
+    { title: "Shop for", links: panel.genders },
+    { title: "Shape", links: panel.shapes },
+    {
+      title: "Top brands",
+      links: panel.topBrands.map((b) => ({ label: b.name, href: `/brands/${b.slug}` })),
+    },
+    {
+      title: "Exclusive luxury",
+      links: panel.luxuryBrands.map((b) => ({ label: b.name, href: `/brands/${b.slug}` })),
+    },
+  ].filter((c) => c.links.length > 0);
+
+  return (
+    <div className="absolute inset-x-0 top-full z-50 border-b border-line bg-paper shadow-[0_18px_40px_-28px_rgba(42,31,23,0.5)]">
+      <div className="mx-auto max-w-[1500px] px-10 py-9">
+        <div
+          className="grid gap-x-10 gap-y-8"
+          style={{ gridTemplateColumns: `repeat(${Math.max(columns.length, 1)}, minmax(0, 1fr))` }}
+        >
+          {columns.map((column) => (
+            <div key={column.title}>
+              <p className="label text-brass">{column.title}</p>
+              <ul className="mt-4 space-y-2.5">
+                {column.links.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="label text-[0.68rem] text-ink-soft transition-colors hover:text-ink"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-8 border-t border-line pt-5">
+          <Link href={panel.allHref} className="label link-rule text-ink">
+            Shop all {panel.categoryName.toLowerCase()} →
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The same panel inside the phone drawer, stacked rather than columned.
+ *
+ * Shapes and brands are laid out as tappable chips: a phone menu of forty
+ * underlined links is a scroll nobody finishes.
+ */
+function DrawerPanel({ panel }: { panel: MenuPanel }) {
+  const groups: { title: string; links: { label: string; href: string }[] }[] = [
+    { title: "Shop for", links: panel.genders },
+    { title: "Shape", links: panel.shapes },
+    {
+      title: "Top brands",
+      links: panel.topBrands.map((b) => ({ label: b.name, href: `/brands/${b.slug}` })),
+    },
+    {
+      title: "Exclusive luxury",
+      links: panel.luxuryBrands.map((b) => ({ label: b.name, href: `/brands/${b.slug}` })),
+    },
+  ].filter((g) => g.links.length > 0);
+
+  return (
+    <div className="border-b border-line/60 bg-paper-raised px-4 py-5">
+      {groups.map((group) => (
+        <div key={group.title} className="mb-5 last:mb-0">
+          <p className="label text-[0.55rem] text-brass">{group.title}</p>
+          <ul className="mt-2.5 flex flex-wrap gap-2">
+            {group.links.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className="label block border border-line bg-paper px-3.5 py-2 text-[0.6rem] text-ink-soft"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+
+      <Link
+        href={panel.allHref}
+        className="label mt-5 block border-t border-line pt-4 text-brass"
+      >
+        Shop all {panel.categoryName.toLowerCase()} →
+      </Link>
+    </div>
   );
 }

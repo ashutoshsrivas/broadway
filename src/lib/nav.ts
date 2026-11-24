@@ -8,6 +8,13 @@ export type NavItem = {
   newTab: boolean;
 };
 
+/** Sunglasses and optical frames lead the row; everything else keeps its order. */
+function rank(slug: string): number {
+  if (/sun/.test(slug)) return 0;
+  if (/optical|eyeglass|spectacle/.test(slug)) return 1;
+  return 2;
+}
+
 /**
  * The header's category rail.
  *
@@ -32,16 +39,26 @@ export async function getNavLinks(): Promise<NavItem[]> {
     select: { name: true, slug: true },
   });
 
+  // The structure the shop asked for. Departments first, in the order they
+  // are filed, then the standing pages. Sunglasses and Optical Frames pick up
+  // their dropdowns automatically — see lib/menu.ts — by being categories
+  // flagged for one, so this list stays a plain row of links the shop can
+  // rearrange without knowing that.
+  const ordered = [...categories].sort((a, b) => rank(a.slug) - rank(b.slug));
+
   const seed = [
-    ...categories.map((c, i) => ({
+    ...ordered.map((c, i) => ({
       label: c.name,
       href: `/shop?category=${c.slug}`,
       sortOrder: i + 1,
       highlight: false,
     })),
-    { label: "Brands", href: "/brands", sortOrder: 90, highlight: false },
-    { label: "BO Exclusive", href: "/bo-exclusive", sortOrder: 91, highlight: true },
-    { label: "Sale", href: "/shop?sale=1", sortOrder: 92, highlight: true },
+    { label: "Shop by Brand", href: "/shop-by-brand", sortOrder: 88, highlight: false },
+    { label: "Sale", href: "/shop?sale=1", sortOrder: 89, highlight: true },
+    { label: "Kids", href: "/shop?gender=Kids", sortOrder: 90, highlight: false },
+    { label: "About Us", href: "/about", sortOrder: 91, highlight: false },
+    { label: "Our Brands", href: "/brands", sortOrder: 92, highlight: false },
+    { label: "BO Exclusive", href: "/bo-exclusive", sortOrder: 93, highlight: true },
   ];
 
   await db.navLink.createMany({ data: seed });
