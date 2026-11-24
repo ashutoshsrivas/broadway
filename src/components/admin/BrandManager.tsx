@@ -20,6 +20,10 @@ export type BrandRow = {
   accentHex: string | null;
   showInMenuTop: boolean;
   showInMenuLuxury: boolean;
+  posterHasLogo: boolean;
+  isPremium: boolean;
+  story: string | null;
+  storyImageUrl: string | null;
   productCount: number;
 };
 
@@ -73,6 +77,10 @@ export function BrandManager({ initial }: { initial: BrandRow[] }) {
         accentHex: null,
         showInMenuTop: false,
         showInMenuLuxury: false,
+        posterHasLogo: false,
+        isPremium: false,
+        story: null,
+        storyImageUrl: null,
         productCount: 0,
       },
     ]);
@@ -227,7 +235,45 @@ export function BrandManager({ initial }: { initial: BrandRow[] }) {
                 checked={brand.showInMenuLuxury}
                 onChange={(v) => void patch(brand.id, { showInMenuLuxury: v })}
               />
+              <Toggle
+                label="Poster already has the logo"
+                hint="Don't print ours over it"
+                checked={brand.posterHasLogo}
+                onChange={(v) => void patch(brand.id, { posterHasLogo: v })}
+              />
+              <Toggle
+                label="Premium house"
+                hint="Adds the long story section"
+                checked={brand.isPremium}
+                onChange={(v) => void patch(brand.id, { isPremium: v })}
+              />
             </div>
+
+            {brand.isPremium && (
+              <div className="mt-4 space-y-3 border-t border-line pt-4">
+                <label className="block">
+                  <span className="label text-ink-muted">The house&rsquo;s story</span>
+                  <textarea
+                    defaultValue={brand.story ?? ""}
+                    onBlur={(e) => {
+                      const story = e.target.value.trim();
+                      if (story !== (brand.story ?? "")) {
+                        void patch(brand.id, { story: story || null });
+                      }
+                    }}
+                    rows={5}
+                    placeholder="The long read. Blank lines start a new paragraph. Until this is filled in the page shows a labelled placeholder."
+                    className="field-box mt-1 resize-y !text-xs"
+                  />
+                </label>
+                <BrandImage
+                  label="Story photo"
+                  url={brand.storyImageUrl}
+                  hint="Portrait works best"
+                  onChange={(storyImageUrl) => void patch(brand.id, { storyImageUrl })}
+                />
+              </div>
+            )}
           </li>
         ))}
       </ul>

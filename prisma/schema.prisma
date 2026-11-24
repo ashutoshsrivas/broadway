@@ -151,8 +151,20 @@ model Brand {
   /// wrong there and a photo looks wrong on the logo wall, so these are two
   /// fields rather than one reused badly.
   tileUrl           String?
-  /// Hero image at the top of the brand's own page.
+  /// The brand's poster — the cover of its own page.
   bannerUrl         String?
+  /// The poster already has the house's logo printed on it, so the page must
+  /// not lay ours over the top of it. Posters supplied by a brand usually do;
+  /// a plain lifestyle photograph usually does not.
+  posterHasLogo     Boolean @default(false)
+  /// A house whose frames run ₹70,000 and up. Gets a longer, quieter detail
+  /// area on its page for the story and the making, rather than a paragraph
+  /// and a grid.
+  isPremium         Boolean @default(false)
+  /// The long-form story for a premium house. Blank lines start a paragraph.
+  story             String? @db.Text
+  /// A single photograph beside that story.
+  storyImageUrl     String?
   /// A paragraph or two about the house, shown under that banner.
   description       String? @db.Text
   /// Shown in the homepage brand strip.

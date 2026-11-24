@@ -58,6 +58,10 @@ export default async function AdminCategoriesPage() {
             accentHex: b.accentHex,
             showInMenuTop: b.showInMenuTop,
             showInMenuLuxury: b.showInMenuLuxury,
+            posterHasLogo: b.posterHasLogo,
+            isPremium: b.isPremium,
+            story: b.story,
+            storyImageUrl: b.storyImageUrl,
             productCount: b._count.products,
           }))}
         />

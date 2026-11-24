@@ -21,6 +21,11 @@ async function getBrand(slug: string) {
       bannerUrl: true,
       tileUrl: true,
       description: true,
+      accentHex: true,
+      posterHasLogo: true,
+      isPremium: true,
+      story: true,
+      storyImageUrl: true,
     },
   });
 }
@@ -72,22 +77,52 @@ export default async function BrandPage({ params }: { params: Promise<{ slug: st
     select: productCardSelect,
   });
 
-  const banner = brand.bannerUrl ?? brand.tileUrl;
+  // The cover, in the order the shop asked for: the house's own poster if
+  // there is one, otherwise its logo centred on its own colour. A poster that
+  // already carries the logo is left alone — printing ours over the top of
+  // theirs is the one thing a brand will notice.
+  const poster = brand.bannerUrl ?? brand.tileUrl;
+  const backdrop = brand.accentHex?.trim() || null;
+  const showLogoOverPoster = Boolean(brand.logoUrl) && !brand.posterHasLogo;
 
   return (
     <>
-      {/* ── Banner ── */}
-      <section className="relative isolate h-[46svh] min-h-[20rem] overflow-hidden bg-ink lg:h-[58svh]">
-        {banner && (
+      {/* ── Cover ── */}
+      <section
+        className="relative isolate h-[46svh] min-h-[20rem] overflow-hidden bg-ink lg:h-[58svh]"
+        style={!poster && backdrop ? { backgroundColor: backdrop } : undefined}
+      >
+        {poster && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={banner}
+            src={poster}
             alt=""
             fetchPriority="high"
             className="absolute inset-0 h-full w-full object-cover"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/35 to-ink/25" />
+
+        {/* The wash is for legibility over a photograph. On a flat brand
+            colour there is nothing to wash out, and darkening the shop's
+            chosen colour would be a different colour. */}
+        {poster && (
+          <div className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/35 to-ink/25" />
+        )}
+
+        {/* No poster: the logo sits centred on the house colour, large. */}
+        {!poster && brand.logoUrl && (
+          <div className="absolute inset-0 flex items-center justify-center px-8">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={brand.logoUrl}
+              alt={brand.name}
+              fetchPriority="high"
+              className={`max-h-24 w-auto max-w-[min(26rem,80vw)] object-contain lg:max-h-32 ${
+                backdrop ? "brightness-0 invert" : ""
+              }`}
+            />
+          </div>
+        )}
 
         <div className="relative mx-auto flex h-full max-w-[1500px] flex-col justify-end px-5 pb-12 lg:px-10 lg:pb-16">
           <nav className="label mb-auto pt-8 text-paper/60" aria-label="Breadcrumb">
@@ -102,15 +137,19 @@ export default async function BrandPage({ params }: { params: Promise<{ slug: st
             <span className="text-paper">{brand.name}</span>
           </nav>
 
-          {brand.logoUrl ? (
+          {poster && showLogoOverPoster ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={brand.logoUrl}
+              src={brand.logoUrl!}
               alt={brand.name}
               className="h-14 w-auto max-w-[16rem] object-contain object-left lg:h-20"
             />
-          ) : (
+          ) : poster || !brand.logoUrl ? (
             <h1 className="display text-[clamp(2.5rem,7vw,5rem)] text-paper">{brand.name}</h1>
+          ) : (
+            // The logo is already centred above; the name is still needed for
+            // the page's heading, just not shown twice.
+            <h1 className="sr-only">{brand.name}</h1>
           )}
         </div>
       </section>
@@ -123,6 +162,57 @@ export default async function BrandPage({ params }: { params: Promise<{ slug: st
             <p className="mt-6 whitespace-pre-line text-[1.05rem] leading-relaxed text-ink-soft">
               {brand.description}
             </p>
+          </div>
+        </section>
+      )}
+
+      {/* ── The long read, for the premium houses ── */}
+      {brand.isPremium && (
+        <section className="border-b border-line bg-ink text-paper grain">
+          <div className="mx-auto grid max-w-[1500px] gap-10 px-5 py-16 lg:grid-cols-2 lg:items-center lg:gap-16 lg:px-10 lg:py-24">
+            <div className="deco-frame relative aspect-[4/5] overflow-hidden bg-paper-sunk/10 lg:order-last">
+              {brand.storyImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={brand.storyImageUrl}
+                  alt=""
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="label absolute inset-0 flex items-center justify-center px-6 text-center text-[0.6rem] leading-relaxed text-paper/45">
+                  Placeholder — upload a photograph for this house under
+                  Categories &amp; Brands
+                </span>
+              )}
+            </div>
+
+            <div>
+              <p className="label-lg text-brass-soft">The House</p>
+              <h2 className="display mt-4 text-[clamp(1.8rem,4.5vw,3rem)] leading-[1.1]">
+                {brand.name}
+              </h2>
+
+              {brand.story ? (
+                <div className="mt-6 space-y-4 text-[0.95rem] leading-relaxed text-paper/75">
+                  {brand.story.split(/\n{2,}/).map((para, i) => (
+                    <p key={i}>{para}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="label mt-6 max-w-md border border-dashed border-paper/25 px-5 py-4 text-[0.55rem] leading-relaxed text-paper/55">
+                  Placeholder — the story for this house has not arrived yet.
+                  Paste it under Categories &amp; Brands and it appears here.
+                </p>
+              )}
+
+              <Link
+                href={`/shop?brand=${brand.slug}`}
+                className="label mt-9 inline-block border border-paper/60 px-10 py-4 text-paper transition-colors hover:bg-paper hover:text-ink"
+              >
+                Shop the Collection
+              </Link>
+            </div>
           </div>
         </section>
       )}
