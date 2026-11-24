@@ -10,6 +10,13 @@ export const panelSchema = z.object({
   posterUrl: z.string().trim().min(1, "Upload a thumbnail image").max(500),
   href: z.string().trim().min(1, "Where should it link to?").max(300),
   overlay: z.number().int().min(0).max(80).default(30),
+  /// Backdrop behind the photograph. Hex with the hash, or null to clear.
+  backdropHex: z
+    .string()
+    .trim()
+    .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, "Use a hex colour like #1F3A2E")
+    .nullable()
+    .optional(),
   sortOrder: z.number().int().min(0).max(99).default(0),
   isActive: z.boolean().default(true),
 });

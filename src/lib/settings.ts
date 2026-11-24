@@ -28,7 +28,60 @@ export const SETTING_KEYS = {
   promoHeading: "promo.heading",
   promoMessage: "promo.message",
   promoDelay: "promo.delaySeconds",
+
+  // ── Homepage behaviour ──
+  /** How long a frame stays in New on the Rack, in days. */
+  newArrivalsDays: "homepage.newArrivals.days",
+  /** "hidden" — no category boxes at all. "hover" — revealed on hover. */
+  categoryBoxesMode: "homepage.categoryBoxes.mode",
+  /** How many products a homepage grid shows on a phone before "See more". */
+  mobileGridCount: "homepage.mobileGridCount",
+
+  // ── The marquee strip above the header ──
+  announcementEnabled: "announcement.enabled",
+  announcementNotices: "announcement.notices",
+
+  // ── Home service (Dehradun, Rishikesh, Haridwar) ──
+  homeServiceEnabled: "homeService.enabled",
+  homeServiceEyebrow: "homeService.eyebrow",
+  homeServiceHeading: "homeService.heading",
+  homeServiceBlurb: "homeService.blurb",
+  homeServiceCities: "homeService.cities",
+  homeServiceImage: "homeService.imageUrl",
+  homeServicePhone: "homeService.phone",
+  homeServiceBody: "homeService.body",
 } as const;
+
+/**
+ * Defaults, so a store with an empty settings table behaves the way the shop
+ * asked for rather than the way the code happens to fall back.
+ */
+export const SETTING_DEFAULTS: Partial<Record<SettingKey, string>> = {
+  "homepage.newArrivals.days": "15",
+  "homepage.categoryBoxes.mode": "hidden",
+  "homepage.mobileGridCount": "6",
+  "announcement.enabled": "1",
+};
+
+/** A whole number from settings, falling back to the default then to `or`. */
+export function settingInt(
+  settings: Partial<Record<SettingKey, string>>,
+  key: SettingKey,
+  or: number
+): number {
+  const raw = settings[key] ?? SETTING_DEFAULTS[key];
+  const n = Number.parseInt(raw ?? "", 10);
+  return Number.isFinite(n) && n > 0 ? n : or;
+}
+
+/** A switch. Absent means "use the default", which may itself be on. */
+export function settingOn(
+  settings: Partial<Record<SettingKey, string>>,
+  key: SettingKey
+): boolean {
+  const raw = settings[key] ?? SETTING_DEFAULTS[key];
+  return raw === "1" || raw === "true";
+}
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
 

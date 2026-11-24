@@ -433,3 +433,21 @@ input[type="number"] {
   .no-print { display: none !important; }
   body { background: #fff; }
 }
+
+/* Category boxes, variant (b): chrome hidden until the box is pointed at.
+   A touch screen reports `hover: none`, and there it stays visible — a label
+   that only appears on hover is a label a phone never shows. */
+.reveal-on-hover {
+  opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .reveal-on-hover {
+    opacity: 0;
+  }
+
+  .group:hover .reveal-on-hover,
+  .group:focus-visible .reveal-on-hover {
+    opacity: 1;
+  }
+}

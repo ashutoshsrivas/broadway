@@ -13,6 +13,14 @@ const schema = z.object({
   showInNewArrivals: z.boolean().optional(),
   showInBrandStrip: z.boolean().optional(),
   isStoreExclusive: z.boolean().optional(),
+  /// Hex with the hash, or empty to clear. Validated so a typo cannot end up
+  /// as an inline style the browser silently ignores.
+  accentHex: z
+    .string()
+    .trim()
+    .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, "Use a hex colour like #8B1D24")
+    .nullable()
+    .optional(),
   sortOrder: z.number().int().min(0).max(999).optional(),
 });
 

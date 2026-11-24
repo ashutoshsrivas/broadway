@@ -1,11 +1,15 @@
 import { ProductCard } from "@/components/store/ProductCard";
 import { SectionHeading } from "@/components/sections/SectionHeading";
+import { RevealGrid } from "@/components/store/RevealGrid";
 import type { ProductCardData } from "@/lib/catalog";
 
 /**
- * A run of products under a heading. On phones it scrolls horizontally with
- * snap points; from `md` up it becomes a plain grid — a carousel on desktop
- * only hides stock the shopper could otherwise see at a glance.
+ * A run of products under a heading.
+ *
+ * A two-up grid on phones rather than a swipe rail: the shop asked for a
+ * fixed number of cards with a way to see the rest, and a horizontal
+ * scroller hides everything past the second card behind a gesture people
+ * routinely miss. `mobileLimit` is set in the admin panel.
  */
 export function ProductRail({
   eyebrow,
@@ -14,6 +18,8 @@ export function ProductRail({
   href,
   products,
   tone = "paper",
+  mobileLimit = 6,
+  newDays,
 }: {
   eyebrow: string;
   title: React.ReactNode;
@@ -21,6 +27,8 @@ export function ProductRail({
   href?: string;
   products: ProductCardData[];
   tone?: "paper" | "raised";
+  mobileLimit?: number;
+  newDays?: number;
 }) {
   if (products.length === 0) return null;
 
@@ -29,16 +37,11 @@ export function ProductRail({
       <div className="mx-auto max-w-[1500px] px-5 py-20 lg:px-10 lg:py-28">
         <SectionHeading eyebrow={eyebrow} title={title} blurb={blurb} href={href} />
 
-        <ul className="mt-12 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4 md:grid md:grid-cols-3 md:gap-x-6 md:gap-y-12 md:overflow-visible md:pb-0 lg:grid-cols-4">
+        <RevealGrid limit={mobileLimit}>
           {products.map((product, i) => (
-            <li
-              key={product.id}
-              className="w-[74vw] shrink-0 snap-start sm:w-[45vw] md:w-auto md:shrink"
-            >
-              <ProductCard product={product} priority={i < 4} />
-            </li>
+            <ProductCard key={product.id} product={product} priority={i < 4} newDays={newDays} />
           ))}
-        </ul>
+        </RevealGrid>
       </div>
     </section>
   );

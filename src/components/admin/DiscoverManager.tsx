@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { Upload, Trash2, Plus, Eye, EyeOff, Film } from "lucide-react";
+import { Upload, Trash2, Plus, Eye, EyeOff, Film, X } from "lucide-react";
 import { NumberField } from "@/components/admin/NumberField";
 
 type Panel = {
@@ -14,6 +14,7 @@ type Panel = {
   posterUrl: string;
   href: string;
   overlay: number;
+  backdropHex: string | null;
   sortOrder: number;
   isActive: boolean;
 };
@@ -85,6 +86,32 @@ export function DiscoverManager({ initial }: { initial: Panel[] }) {
                       }}
                       className="field-box mt-1 w-20"
                     />
+                  </label>
+
+                  {/* Backdrop — what shows through a cut-out portrait, and
+                      what carries the panel while the photograph is still a
+                      placeholder. */}
+                  <label className="block">
+                    <span className="label text-[0.55rem] text-ink-muted">Backdrop</span>
+                    <span className="mt-1 flex items-center gap-1.5">
+                      <input
+                        type="color"
+                        value={panel.backdropHex ?? "#1F3A2E"}
+                        onChange={(e) => void patch(panel.id, { backdropHex: e.target.value })}
+                        aria-label="Backdrop colour"
+                        className="h-9 w-11 cursor-pointer border border-line bg-paper p-0.5"
+                      />
+                      {panel.backdropHex && (
+                        <button
+                          type="button"
+                          onClick={() => void patch(panel.id, { backdropHex: null })}
+                          title="Clear the backdrop"
+                          className="p-1.5 text-ink-muted transition-colors hover:text-clay"
+                        >
+                          <X className="h-3.5 w-3.5" strokeWidth={1.5} />
+                        </button>
+                      )}
+                    </span>
                   </label>
 
                   <div className="flex gap-1">
@@ -203,6 +230,7 @@ function NewPanel({
     posterUrl: "",
     mediaUrl: "",
     overlay: 30,
+    backdropHex: null,
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

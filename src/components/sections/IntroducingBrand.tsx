@@ -31,8 +31,11 @@ export function IntroducingBrand({
   return (
     <section className="border-b border-line bg-paper">
       <div className="mx-auto max-w-[1500px] px-5 py-20 lg:px-10 lg:py-24">
-        <p className="label text-center text-ink-muted">{eyebrow}</p>
-        <h2 className="label-lg mt-4 text-center text-[1.6rem] tracking-[0.2em] text-ink">
+        <p className="label-lg text-center text-ink-muted">{eyebrow}</p>
+        {/* The house's name is the headline of this band, so it is set at
+            display size rather than as a label. Clamped so a long name still
+            fits a phone on one line. */}
+        <h2 className="label-lg mx-auto mt-5 max-w-4xl text-center text-[clamp(1.9rem,6vw,3.4rem)] leading-[1.1] tracking-[0.16em] text-ink">
           {brand.name}
         </h2>
 

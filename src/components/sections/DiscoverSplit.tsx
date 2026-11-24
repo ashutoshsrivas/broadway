@@ -12,14 +12,49 @@ export type Panel = {
   posterUrl: string;
   href: string;
   overlay: number;
+  backdropHex?: string | null;
+  /** Set on the stand-in panels, so the page says so rather than implying it. */
+  placeholder?: boolean;
 };
+
+/**
+ * What the band shows before the shop has uploaded its own photographs: one
+ * panel for him, one for her, both plainly marked. Better than an absent
+ * section, which reads as a page that has lost a piece.
+ */
+export const PLACEHOLDER_PANELS: Panel[] = [
+  {
+    id: "placeholder-him",
+    eyebrow: "For Him",
+    heading: "Shop men's frames",
+    mediaUrl: null,
+    posterUrl: "",
+    href: "/shop?gender=Men",
+    overlay: 0,
+    backdropHex: "#1F3A2E",
+    placeholder: true,
+  },
+  {
+    id: "placeholder-her",
+    eyebrow: "For Her",
+    heading: "Shop women's frames",
+    mediaUrl: null,
+    posterUrl: "",
+    href: "/shop?gender=Women",
+    overlay: 0,
+    backdropHex: "#9C4A2F",
+    placeholder: true,
+  },
+];
 
 /**
  * The split "Discover" band — two (or more) full-height panels, each a link
  * into its part of the shop.
  */
 export function DiscoverSplit({ panels }: { panels: Panel[] }) {
-  if (panels.length === 0) return null;
+  // An empty band is a hole in the page, so the stand-ins run until the shop
+  // uploads its own two photographs.
+  const shown = panels.length > 0 ? panels : PLACEHOLDER_PANELS;
 
   return (
     <section className="border-b border-line">
@@ -27,7 +62,7 @@ export function DiscoverSplit({ panels }: { panels: Panel[] }) {
       {/* Stacked on a phone, side by side from md. The panels share one grid
           so both halves are exactly the same height whatever the copy. */}
       <div className="grid grid-cols-1 md:grid-cols-2">
-        {panels.map((panel) => (
+        {shown.map((panel) => (
           <DiscoverPane key={panel.id} panel={panel} />
         ))}
       </div>
@@ -46,6 +81,10 @@ function DiscoverPane({ panel }: { panel: Panel }) {
   return (
     <Link
       href={panel.href}
+      // The backdrop is what shows through a cut-out portrait, and what
+      // carries the panel entirely while the photograph is still a
+      // placeholder.
+      style={panel.backdropHex ? { backgroundColor: panel.backdropHex } : undefined}
       className="group relative block h-[62svh] min-h-[26rem] overflow-hidden bg-paper-sunk md:h-[78svh]"
       onMouseEnter={() => {
         // Only nudge playback on hover for a video that has stalled; an
@@ -53,15 +92,21 @@ function DiscoverPane({ panel }: { panel: Panel }) {
         void videoRef.current?.play().catch(() => {});
       }}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={panel.posterUrl}
-        alt=""
-        loading="lazy"
-        className={`absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-105 ${
-          videoReady ? "opacity-0" : "opacity-100"
-        }`}
-      />
+      {panel.posterUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={panel.posterUrl}
+          alt=""
+          loading="lazy"
+          className={`absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-105 ${
+            videoReady ? "opacity-0" : "opacity-100"
+          }`}
+        />
+      ) : (
+        <span className="label absolute inset-x-0 top-1/2 -translate-y-1/2 px-8 text-center text-[0.6rem] leading-relaxed text-paper/60">
+          Placeholder — upload this photograph under Discover Panels
+        </span>
+      )}
 
       {panel.mediaUrl && (
         <video

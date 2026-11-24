@@ -120,6 +120,14 @@ model Category {
   /// Marks the whole department as BO Exclusive — every product inside it
   /// counts, without each needing its own flag.
   isBoExclusive Boolean @default(false)
+  /// GST charged on this department, as a percentage. Sunglasses are 18;
+  /// optical frames are seeded at 12 and should be confirmed with the
+  /// shop's accountant. Null means "use the store default".
+  gstPercent    Float?
+  /// Shown as a category box on the homepage. Which boxes appear, and
+  /// whether they appear at all, is the shop's call — see the
+  /// homepage.categoryBoxes.mode setting.
+  showOnHome    Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -156,12 +164,17 @@ model Brand {
   /// Stocked in store only. The frames are listed and browsable but carry no
   /// price and cannot be added to a bag — buying goes through WhatsApp.
   isStoreExclusive  Boolean @default(false)
+  /// Backdrop colour for the brand — used behind the logo on the brand page
+  /// when there is no poster, and behind a homepage brand block. Hex, with
+  /// the hash ("#8B1D24"). Null falls back to the house cream.
+  accentHex         String?
   sortOrder         Int     @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  products Product[]
+  products   Product[]
+  homeBlocks HomeBrandBlock[]
 
   @@index([slug])
 }
@@ -408,6 +421,9 @@ model DiscoverPanel {
   /// Where clicking the panel goes, e.g. /shop?gender=Men
   href      String
   overlay   Int     @default(30)
+  /// Backdrop behind the photograph — the colour that shows through where a
+  /// cut-out portrait does not cover the panel. Hex, with the hash.
+  backdropHex String?
 
   sortOrder Int     @default(0)
   isActive  Boolean @default(true)
@@ -454,6 +470,57 @@ model AttributeValue {
 
   @@unique([kind, slug])
   @@index([kind, usageCount])
+}
+
+/// A brand block on the homepage: the house's own logo on a backdrop, with a
+/// line of copy and a button into its frames.
+///
+/// A list rather than two fixed slots, because "add another brand block" is
+/// the single most likely thing to be asked for and should not need a
+/// migration. `placement` decides which part of the page a block lands in.
+model HomeBrandBlock {
+  id      String @id @default(cuid())
+  brandId String
+  brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  /// AFTER_RAILS — below the product rows, where "Shop the Brand" goes.
+  /// UNDER_NEW_ARRIVALS — directly under the New on the Rack deck.
+  placement String @default("AFTER_RAILS")
+
+  eyebrow  String?
+  heading  String?
+  blurb    String? @db.Text
+  ctaLabel String?
+
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, placement, sortOrder])
+}
+
+/// One of the four promises in the strip under the brand rail.
+///
+/// In the database rather than in the code because the shop changes what it
+/// promises — a returns window moves, free shipping gets a different floor —
+/// and that should not be a deploy.
+model TrustBox {
+  id    String  @id @default(cuid())
+  /// Key into the storefront's icon set: truck, shield, eye, returns,
+  /// home, clock, card, sparkle. An unknown key falls back to shield.
+  icon  String  @default("shield")
+  title String
+  note  String?
+
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
 }
 
 // ──────────────────────────────────────────────────────────────────────────────

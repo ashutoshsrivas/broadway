@@ -10,6 +10,9 @@ const schema = z.object({
   sortOrder: z.number().int().optional(),
   isActive: z.boolean().optional(),
   isBoExclusive: z.boolean().optional(),
+  showOnHome: z.boolean().optional(),
+  /// GST percentage for this department. Null means "use the store default".
+  gstPercent: z.number().min(0).max(50).nullable().optional(),
 });
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

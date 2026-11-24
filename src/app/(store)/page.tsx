@@ -12,14 +12,37 @@ import { BrandStripScroll } from "@/components/sections/BrandStripScroll";
 import { MustHaveSpotlight } from "@/components/sections/MustHaveSpotlight";
 import { IntroducingBrand } from "@/components/sections/IntroducingBrand";
 import { InstagramBand } from "@/components/sections/InstagramBand";
-import { SETTING_KEYS, getSettings } from "@/lib/settings";
+import { BrandBlocks } from "@/components/sections/BrandBlock";
+import { CategoryBoxes } from "@/components/sections/CategoryBoxes";
+import { HomeServiceBand } from "@/components/sections/HomeServiceBand";
+import { SETTING_KEYS, getSettings, settingInt } from "@/lib/settings";
+import { getBrandBlocks, PLACEMENTS } from "@/lib/home-blocks";
+import { getTrustBoxes } from "@/lib/trust";
+import { getHomeService } from "@/lib/home-service";
+import { NEW_FOR_DAYS, newArrivalCutoff } from "@/lib/product-status";
 
 export default async function HomePage() {
   // One round of parallel queries for the whole page — each section is a pure
   // renderer, so nothing below fetches on its own.
   const settings = await getSettings();
 
-  const [banners, featured, brands, discoverPanels, newArrivalBrands, instaPosts] = await Promise.all([
+  // How long a frame counts as new, and how many cards a phone shows: both
+  // set in the admin panel, both needed before the queries below.
+  const newDays = settingInt(settings, SETTING_KEYS.newArrivalsDays, NEW_FOR_DAYS);
+  const newCutoff = newArrivalCutoff(newDays);
+  const mobileLimit = settingInt(settings, SETTING_KEYS.mobileGridCount, 6);
+
+  const [
+    banners,
+    featured,
+    brands,
+    discoverPanels,
+    newArrivalBrands,
+    instaPosts,
+    brandBlocks,
+    trustBoxes,
+    homeCategories,
+  ] = await Promise.all([
     db.banner.findMany({
       where: { isActive: true },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
@@ -50,6 +73,7 @@ export default async function HomePage() {
       select: {
         id: true, eyebrow: true, heading: true,
         mediaUrl: true, posterUrl: true, href: true, overlay: true,
+        backdropHex: true,
       },
     }),
     // Brands tabbed in the arrivals deck, each with its own newest stock.
@@ -61,8 +85,11 @@ export default async function HomePage() {
         id: true,
         name: true,
         slug: true,
+        // "New on the rack" means exactly that: a frame shows here for the
+        // configured number of days and falls off the day after, with no
+        // flag for anyone to remember to clear.
         products: {
-          where: { status: "ACTIVE" },
+          where: { status: "ACTIVE", createdAt: { gte: newCutoff } },
           orderBy: { createdAt: "desc" },
           take: 6,
           select: productCardSelect,
@@ -75,7 +102,18 @@ export default async function HomePage() {
       take: 12,
       select: { id: true, imageUrl: true, href: true, caption: true },
     }),
+    getBrandBlocks(),
+    getTrustBoxes(),
+    db.category.findMany({
+      where: { isActive: true, showOnHome: true },
+      orderBy: { sortOrder: "asc" },
+      take: 8,
+      select: { id: true, name: true, slug: true, imageUrl: true },
+    }),
   ]);
+
+  const homeService = getHomeService(settings);
+  const categoryMode = settings[SETTING_KEYS.categoryBoxesMode] ?? "hidden";
 
   // The two admin-picked bands. Each is skipped entirely when nothing is
   // chosen, rather than falling back to an arbitrary product or brand — a
@@ -127,7 +165,15 @@ export default async function HomePage() {
           static hero stands in so the homepage never opens on a void. */}
       {banners.length > 0 ? <HeroSlider slides={banners} /> : <Hero />}
 
-      <NewArrivalsDeck brands={arrivalBrands} />
+      <NewArrivalsDeck brands={arrivalBrands} newDays={newDays} />
+
+      {/* A brand block directly under New on the Rack, chosen in the admin. */}
+      <BrandBlocks
+        blocks={brandBlocks[PLACEMENTS.underNewArrivals]}
+        whatsapp={settings[SETTING_KEYS.whatsappNumber]}
+      />
+
+      <CategoryBoxes mode={categoryMode} categories={homeCategories} />
 
       <DiscoverSplit panels={discoverPanels} />
 
@@ -142,7 +188,7 @@ export default async function HomePage() {
         brands={brands.map((b) => ({ ...b, tileUrl: b.tileUrl! }))}
       />
 
-      <ServiceRail />
+      <ServiceRail boxes={trustBoxes} />
 
       {introBrand && (
         <IntroducingBrand
@@ -169,7 +215,18 @@ export default async function HomePage() {
         blurb="The frames leaving our shelves fastest, chosen by the people who fit them."
         href="/shop"
         products={featured}
+        mobileLimit={mobileLimit}
+        newDays={newDays}
       />
+
+      {/* "Shop the Brand", then the second block below it — both are brands
+          the shop picks, shown as their own logo on their own colour. */}
+      <BrandBlocks
+        blocks={brandBlocks[PLACEMENTS.afterRails]}
+        whatsapp={settings[SETTING_KEYS.whatsappNumber]}
+      />
+
+      <HomeServiceBand content={homeService} />
 
 
       <LegacyBand />

@@ -4,75 +4,58 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Plus } from "lucide-react";
+import { NumberField } from "@/components/admin/NumberField";
 
-type Category = {
+export type CategoryRow = {
   id: string;
   name: string;
   slug: string;
   isActive: boolean;
   isBoExclusive: boolean;
+  showOnHome: boolean;
+  gstPercent: number | null;
   productCount: number;
 };
-export function CategoryManager({ categories }: { categories: Category[] }) {
-  return (
-    <div>
-      <Panel
-        title="Categories"
-        note="The departments in the header. A category with products cannot be deleted."
-        endpoint="/api/admin/categories"
-        placeholder="Sunglasses"
-        rows={categories.map((category) => ({
-          id: category.id,
-          name: category.name,
-          meta: `${category.slug} · ${category.productCount} product${
-            category.productCount === 1 ? "" : "s"
-          }`,
-          flag: category.isActive ? null : "Hidden",
-          toggle: { field: "isBoExclusive" as const, on: category.isBoExclusive },
-        }))}
-      />
 
-    </div>
-  );
-}
-
-function Panel({
-  title,
-  note,
-  endpoint,
-  placeholder,
-  rows,
-  featurable = false,
-}: {
-  title: string;
-  note: string;
-  endpoint: string;
-  placeholder: string;
-  rows: {
-    id: string;
-    name: string;
-    meta: string;
-    flag: string | null;
-    toggle?: { field: "showInNewArrivals" | "isBoExclusive"; on: boolean };
-  }[];
-  featurable?: boolean;
-}) {
+/**
+ * Departments, with the three things the shop changes about them: whether the
+ * whole department is BO Exclusive, whether it gets a box on the homepage,
+ * and the GST it is charged at.
+ *
+ * Each control saves on change rather than behind a form button — this screen
+ * is a set of switches, and a Save button on a screen of switches is one more
+ * thing to forget.
+ */
+export function CategoryManager({ categories }: { categories: CategoryRow[] }) {
   const router = useRouter();
+  const [rows, setRows] = useState(categories);
   const [name, setName] = useState("");
-  const [featured, setFeatured] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const handleCreate = async (event: React.FormEvent) => {
+  const patch = async (id: string, data: Partial<CategoryRow>) => {
+    setRows((prev) => prev.map((c) => (c.id === id ? { ...c, ...data } : c)));
+    const res = await fetch(`/api/admin/categories/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      toast.error("Could not save that change.");
+      router.refresh();
+      return;
+    }
+    router.refresh();
+  };
+
+  const create = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!name.trim()) return;
 
     setBusy(true);
-    const res = await fetch(endpoint, {
+    const res = await fetch("/api/admin/categories", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(
-        featurable ? { name: name.trim(), isFeatured: featured } : { name: name.trim() }
-      ),
+      body: JSON.stringify({ name: name.trim() }),
     });
     const data = await res.json().catch(() => ({}));
     setBusy(false);
@@ -83,15 +66,18 @@ function Panel({
     }
 
     setName("");
-    setFeatured(false);
-    toast.success(`${title.replace(/s$/, "")} added`);
+    toast.success("Category added");
     router.refresh();
   };
 
   return (
     <section className="border border-line bg-paper-raised p-6 lg:p-7">
-      <h2 className="label-lg">{title}</h2>
-      <p className="mt-2 text-xs leading-relaxed text-ink-muted">{note}</p>
+      <h2 className="label-lg">Categories</h2>
+      <p className="mt-2 max-w-2xl text-xs leading-relaxed text-ink-muted">
+        The departments products are filed under. A category with products cannot be deleted.
+        GST is charged per department — sunglasses are 18%; optical frames are seeded at 12% and
+        should be confirmed with your accountant. Leave it blank to charge nothing.
+      </p>
       <hr className="rule-deco mt-4 mb-6" />
 
       {rows.length === 0 ? (
@@ -99,70 +85,78 @@ function Panel({
       ) : (
         <ul className="divide-y divide-line border-y border-line">
           {rows.map((row) => (
-            <li key={row.id} className="flex items-center justify-between gap-4 py-3.5">
-              <div className="min-w-0">
-                <p className="truncate font-display text-base">{row.name}</p>
-                <p className="mt-0.5 truncate text-xs text-ink-muted">{row.meta}</p>
+            <li
+              key={row.id}
+              className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-display text-base">
+                  {row.name}
+                  {!row.isActive && <span className="label ml-3 text-brass">Hidden</span>}
+                </p>
+                <p className="mt-0.5 truncate text-xs text-ink-muted">
+                  {row.slug} · {row.productCount} product{row.productCount === 1 ? "" : "s"}
+                </p>
               </div>
 
-              <div className="flex shrink-0 items-center gap-3">
-                {row.flag && <span className="label text-brass">{row.flag}</span>}
-                {row.toggle && (
-                  <label className="label flex cursor-pointer items-center gap-2 text-ink-muted">
-                    <input
-                      type="checkbox"
-                      defaultChecked={row.toggle.on}
-                      onChange={async (e) => {
-                        const res = await fetch(`${endpoint}/${row.id}`, {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ [row.toggle!.field]: e.target.checked }),
-                        });
-                        if (!res.ok) {
-                          toast.error("Could not save that change.");
-                          e.target.checked = !e.target.checked;
-                          return;
-                        }
-                        router.refresh();
-                      }}
-                      className="h-3.5 w-3.5 accent-[#B08D4F]"
-                    />
-                    {row.toggle.field === "isBoExclusive" ? "BO Exclusive" : "Arrivals deck"}
-                  </label>
-                )}
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-3 sm:shrink-0">
+                <label className="label flex items-center gap-2 text-ink-muted">
+                  <span>GST</span>
+                  <NumberField
+                    value={row.gstPercent ?? ""}
+                    onCommit={(value) =>
+                      void patch(row.id, {
+                        gstPercent: value === "" ? null : Number(value),
+                      })
+                    }
+                    min={0}
+                    max={50}
+                    placeholder="—"
+                    className="field-box w-20 !text-xs"
+                    aria-label={`GST percentage for ${row.name}`}
+                  />
+                  <span>%</span>
+                </label>
+
+                <label className="label flex cursor-pointer items-center gap-2 text-ink-muted">
+                  <input
+                    type="checkbox"
+                    checked={row.showOnHome}
+                    onChange={(e) => void patch(row.id, { showOnHome: e.target.checked })}
+                    className="h-3.5 w-3.5 accent-[#B08D4F]"
+                  />
+                  Homepage box
+                </label>
+
+                <label className="label flex cursor-pointer items-center gap-2 text-ink-muted">
+                  <input
+                    type="checkbox"
+                    checked={row.isBoExclusive}
+                    onChange={(e) => void patch(row.id, { isBoExclusive: e.target.checked })}
+                    className="h-3.5 w-3.5 accent-[#B08D4F]"
+                  />
+                  BO Exclusive
+                </label>
               </div>
             </li>
           ))}
         </ul>
       )}
 
-      <form onSubmit={handleCreate} className="mt-6 space-y-4">
+      <form onSubmit={create} className="mt-6 flex flex-wrap items-end gap-3">
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder={placeholder}
-          className="field-box"
+          placeholder="Sunglasses"
+          className="field-box w-56"
         />
-
-        {featurable && (
-          <label className="flex items-center gap-3 text-sm text-ink-soft">
-            <input
-              type="checkbox"
-              checked={featured}
-              onChange={(e) => setFeatured(e.target.checked)}
-              className="h-4 w-4 accent-[#B08D4F]"
-            />
-            Feature on the homepage
-          </label>
-        )}
-
         <button
           type="submit"
           disabled={busy || !name.trim()}
           className="btn-ink label flex items-center gap-2 px-7 py-3.5"
         >
           <Plus className="h-3.5 w-3.5" strokeWidth={2} />
-          {busy ? "Adding…" : `Add ${title.replace(/s$/, "")}`}
+          {busy ? "Adding…" : "Add Category"}
         </button>
       </form>
     </section>

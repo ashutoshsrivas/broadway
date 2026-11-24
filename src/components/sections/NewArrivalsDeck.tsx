@@ -25,7 +25,14 @@ const STEP_MS = 2000;
  * scrollbar keep working — the timer just nudges the same scroll position the
  * finger would.
  */
-export function NewArrivalsDeck({ brands }: { brands: BrandDeck[] }) {
+export function NewArrivalsDeck({
+  brands,
+  newDays,
+}: {
+  brands: BrandDeck[];
+  /** How long a frame stays on this rack, from the admin panel. */
+  newDays?: number;
+}) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -166,7 +173,7 @@ export function NewArrivalsDeck({ brands }: { brands: BrandDeck[] }) {
               key={product.id}
               className="w-[78%] shrink-0 snap-start sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-3.5rem)/3)]"
             >
-              <ProductCard product={product} priority={i < 3} />
+              <ProductCard product={product} priority={i < 3} newDays={newDays} />
             </li>
           ))}
         </ul>

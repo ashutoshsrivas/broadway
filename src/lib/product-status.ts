@@ -19,12 +19,23 @@ function daysSince(date: Date): number {
  * turn off — a "New" badge that outlives its welcome is worse than none,
  * and nobody ever goes back to clear them by hand.
  */
-export function isNew(product: { createdAt: Date }): boolean {
-  return daysSince(product.createdAt) <= NEW_FOR_DAYS;
+export function isNew(product: { createdAt: Date }, days: number | undefined = NEW_FOR_DAYS): boolean {
+  return daysSince(product.createdAt) <= (days ?? NEW_FOR_DAYS);
 }
 
 export function isSoldOut(product: { soldOutAt?: Date | null }): boolean {
   return Boolean(product.soldOutAt);
+}
+
+/**
+ * The upload date a frame must beat to still count as new.
+ *
+ * Wrapped in a function rather than computed inline in a page: reading the
+ * clock in a component body is a render-purity violation, and the lint rule
+ * that catches it is right — the value would differ between renders.
+ */
+export function newArrivalCutoff(days: number = NEW_FOR_DAYS): Date {
+  return new Date(Date.now() - days * DAY_MS);
 }
 
 /**

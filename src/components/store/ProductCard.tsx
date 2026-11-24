@@ -11,11 +11,21 @@ import type { ProductCardData } from "@/lib/catalog";
  * The second product image (when there is one) cross-fades in on hover — for
  * frames that is almost always the angled shot, which is the view that sells.
  */
-export function ProductCard({ product, priority = false }: { product: ProductCardData; priority?: boolean }) {
+export function ProductCard({
+  product,
+  priority = false,
+  newDays,
+}: {
+  product: ProductCardData;
+  priority?: boolean;
+  /** How long a frame wears the New badge. Set in the admin panel; the
+      constant in product-status is only the fallback. */
+  newDays?: number;
+}) {
   const priceHiddenEarly = isPriceHidden(product);
   const save = priceHiddenEarly ? 0 : discountPct(product.mrp, product.price);
   const exclusive = isExclusive(product);
-  const fresh = isNew(product);
+  const fresh = isNew(product, newDays);
   const soldOut = isSoldOut(product);
   const priceHidden = priceHiddenEarly;
   const [primary, secondary] = product.images;

@@ -17,6 +17,7 @@ export type BrandRow = {
   showInNewArrivals: boolean;
   showInBrandStrip: boolean;
   isStoreExclusive: boolean;
+  accentHex: string | null;
   productCount: number;
 };
 
@@ -63,7 +64,13 @@ export function BrandManager({ initial }: { initial: BrandRow[] }) {
     }
     setBrands((prev) => [
       ...prev,
-      { ...data.brand, showInBrandStrip: false, showInNewArrivals: false, productCount: 0 },
+      {
+        ...data.brand,
+        showInBrandStrip: false,
+        showInNewArrivals: false,
+        accentHex: null,
+        productCount: 0,
+      },
     ]);
     setName("");
     toast.success(`${data.brand.name} added`);
@@ -148,6 +155,36 @@ export function BrandManager({ initial }: { initial: BrandRow[] }) {
                 placeholder="Shown under the banner on the brand page."
                 className="field-box mt-1 resize-none !text-xs"
               />
+            </label>
+
+            {/* The house colour. Used behind the logo on the brand page when
+                there is no poster, and behind a homepage brand block. */}
+            <label className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-4">
+              <span>
+                <span className="label text-ink-muted">Brand colour</span>
+                <span className="mt-1 block text-[0.65rem] leading-relaxed text-ink-muted">
+                  Backdrop when there is no poster
+                </span>
+              </span>
+              <span className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={brand.accentHex ?? "#1F3A2E"}
+                  onChange={(e) => void patch(brand.id, { accentHex: e.target.value })}
+                  aria-label={`${brand.name} brand colour`}
+                  className="h-9 w-12 cursor-pointer border border-line bg-paper p-0.5"
+                />
+                {brand.accentHex && (
+                  <button
+                    type="button"
+                    onClick={() => void patch(brand.id, { accentHex: null })}
+                    title="Clear the colour"
+                    className="p-1.5 text-ink-muted transition-colors hover:text-clay"
+                  >
+                    <X className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  </button>
+                )}
+              </span>
             </label>
 
             <div className="mt-4 space-y-2.5 border-t border-line pt-4">

@@ -7,6 +7,10 @@ import { ShopEditorialManager } from "@/components/admin/ShopEditorialManager";
 import { ExclusiveSettings } from "@/components/admin/ExclusiveSettings";
 import { PromoSettings } from "@/components/admin/PromoSettings";
 import { NavManager } from "@/components/admin/NavManager";
+import { BrandBlockManager } from "@/components/admin/BrandBlockManager";
+import { TrustBoxManager } from "@/components/admin/TrustBoxManager";
+import { HomepageControls } from "@/components/admin/HomepageControls";
+import { HomeServiceSettings } from "@/components/admin/HomeServiceSettings";
 import { getNavLinks } from "@/lib/nav";
 import { EXCLUSIVE_WHERE } from "@/lib/exclusive";
 import { SETTING_KEYS, getSettings } from "@/lib/settings";
@@ -14,7 +18,19 @@ import { SETTING_KEYS, getSettings } from "@/lib/settings";
 export const dynamic = "force-dynamic";
 
 export default async function BannersPage() {
-  const [banners, panels, settings, products, brands, instaPosts, editorials, exclusiveCount, navLinks] = await Promise.all([
+  const [
+    banners,
+    panels,
+    settings,
+    products,
+    brands,
+    instaPosts,
+    editorials,
+    exclusiveCount,
+    navLinks,
+    brandBlocks,
+    trustBoxes,
+  ] = await Promise.all([
     db.banner.findMany({ orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] }),
     db.discoverPanel.findMany({ orderBy: { sortOrder: "asc" } }),
     getSettings(),
@@ -25,12 +41,20 @@ export default async function BannersPage() {
     }),
     db.brand.findMany({
       orderBy: { name: "asc" },
-      select: { id: true, name: true, _count: { select: { products: true } } },
+      select: {
+        id: true,
+        name: true,
+        logoUrl: true,
+        accentHex: true,
+        _count: { select: { products: true } },
+      },
     }),
     db.instagramPost.findMany({ orderBy: { sortOrder: "asc" } }),
     db.shopEditorial.findMany({ orderBy: { sortOrder: "asc" } }),
     db.product.count({ where: { status: "ACTIVE", ...EXCLUSIVE_WHERE } }),
     getNavLinks().then(() => db.navLink.findMany({ orderBy: { sortOrder: "asc" } })),
+    db.homeBrandBlock.findMany({ orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] }),
+    db.trustBox.findMany({ orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] }),
   ]);
 
   const totalMs = banners
@@ -99,6 +123,56 @@ export default async function BannersPage() {
           settings={settings}
           keys={SETTING_KEYS}
         />
+      </section>
+
+      <section className="mt-16">
+        <h2 className="label-lg">Brand Blocks</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          A house&rsquo;s own logo on its own colour, with a button into its frames. One sits
+          under New on the Rack and the rest below the product rows — that is where &ldquo;Shop
+          the Brand&rdquo; goes. The logo and the colour come from the brand itself, under
+          Categories &amp; Brands, so adding a new house is one upload and one block.
+        </p>
+        <hr className="rule-deco mt-5 mb-6" />
+        <BrandBlockManager
+          initial={brandBlocks}
+          brands={brands.map((b) => ({
+            id: b.id,
+            name: b.name,
+            logoUrl: b.logoUrl,
+            accentHex: b.accentHex,
+          }))}
+        />
+      </section>
+
+      <section className="mt-16">
+        <h2 className="label-lg">Homepage Settings</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          The notice strip, how long a frame counts as new, the category boxes and how much the
+          homepage shows on a phone.
+        </p>
+        <hr className="rule-deco mt-5 mb-6" />
+        <HomepageControls settings={settings} />
+      </section>
+
+      <section className="mt-16">
+        <h2 className="label-lg">Trust Boxes</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          The strip of four promises under the brand rail, and the same strip on the home-service
+          page. All four are editable — wording, the line under it and the icon.
+        </p>
+        <hr className="rule-deco mt-5 mb-6" />
+        <TrustBoxManager initial={trustBoxes} />
+      </section>
+
+      <section className="mt-16">
+        <h2 className="label-lg">Home Service</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          An optician who travels — Dehradun, Rishikesh and Haridwar by default. Shows as a band
+          on the homepage and as its own page.
+        </p>
+        <hr className="rule-deco mt-5 mb-6" />
+        <HomeServiceSettings settings={settings} />
       </section>
 
       <section className="mt-16">
