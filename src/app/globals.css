@@ -514,6 +514,19 @@ input[type="number"] {
   color: var(--color-paper);
 }
 
+/* …but not inside a dropdown. The panel has a cream ground of its own, and
+   the rule above would otherwise paint its links cream-on-cream — invisible
+   exactly while the menu is open. */
+.header-over-hero .menu-panel a,
+.header-over-hero .menu-panel button {
+  color: var(--color-ink-soft);
+}
+
+.header-over-hero .menu-panel a:hover,
+.header-over-hero .menu-panel button:hover {
+  color: var(--color-ink);
+}
+
 /* The hero sits under the header rather than below it. The pull-up is the
    header's own height, published by the header as --header-h. */
 .hero-behind-chrome {

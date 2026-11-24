@@ -373,7 +373,7 @@ function DesktopPanel({ panel }: { panel: MenuPanel }) {
   ].filter((c) => c.links.length > 0);
 
   return (
-    <div className="absolute inset-x-0 top-full z-50 border-b border-line bg-paper shadow-[0_18px_40px_-28px_rgba(42,31,23,0.5)]">
+    <div className="menu-panel absolute inset-x-0 top-full z-50 border-b border-line bg-paper shadow-[0_18px_40px_-28px_rgba(42,31,23,0.5)]">
       <div className="mx-auto max-w-[1500px] px-10 py-9">
         <div
           className="grid gap-x-10 gap-y-8"
