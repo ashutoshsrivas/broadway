@@ -12,6 +12,7 @@ import { TrustBoxManager } from "@/components/admin/TrustBoxManager";
 import { HomepageControls } from "@/components/admin/HomepageControls";
 import { HomeServiceSettings } from "@/components/admin/HomeServiceSettings";
 import { ProductCopySettings } from "@/components/admin/ProductCopySettings";
+import { FooterSettings } from "@/components/admin/FooterSettings";
 import { getNavLinks } from "@/lib/nav";
 import { EXCLUSIVE_WHERE } from "@/lib/exclusive";
 import { SETTING_KEYS, getSettings } from "@/lib/settings";
@@ -219,6 +220,16 @@ export default async function BannersPage() {
         </p>
         <hr className="rule-deco mt-5 mb-6" />
         <ExclusiveSettings settings={settings} keys={SETTING_KEYS} count={exclusiveCount} />
+      </section>
+
+      <section className="mt-16">
+        <h2 className="label-lg">Footer &amp; Shipping</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-soft">
+          The shop&rsquo;s address, hours, phone, email and social links, and what the site
+          promises about delivery.
+        </p>
+        <hr className="rule-deco mt-5 mb-6" />
+        <FooterSettings settings={settings} />
       </section>
 
       <section className="mt-16">

@@ -5,6 +5,7 @@ import { CartDrawer } from "@/components/store/CartDrawer";
 import { getPromo } from "@/lib/promo";
 import { getMenu } from "@/lib/menu";
 import { SETTING_KEYS, getSettings, settingOn } from "@/lib/settings";
+import { getContact } from "@/lib/contact";
 import { WelcomeOffer } from "@/components/store/WelcomeOffer";
 
 // The catalogue changes from the admin panel, so the storefront renders per
@@ -31,7 +32,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
       {announcementOn && <AnnouncementBar notices={notices} />}
       <Header navLinks={navLinks} />
       <main className="flex-1">{children}</main>
-      <Footer />
+      <Footer contact={getContact(settings)} />
       <CartDrawer />
       <WelcomeOffer promo={promo} />
     </>

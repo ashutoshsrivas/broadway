@@ -1,17 +1,41 @@
 import type { Metadata } from "next";
 import { PageHeader, Prose } from "@/components/PageHeader";
+import { getSettings } from "@/lib/settings";
+import { getShipping } from "@/lib/contact";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { title: "Shipping" };
 
-export default function ShippingPage() {
+export default async function ShippingPage() {
+  const shipping = getShipping(await getSettings());
+
   return (
     <>
       <PageHeader
         eyebrow="Shipping"
         title="Getting your frames to you"
-        blurb="Complimentary on orders above ₹2,000. Everything else is a flat ₹99."
+        blurb={`Complimentary on orders above ${shipping.freeAbove}. Everything else is a flat ₹99.`}
       />
       <Prose>
+        <h2>Regular shipping</h2>
+        <p>
+          Regular delivery takes <strong>{shipping.regular}</strong> once your order leaves us.
+        </p>
+
+        <h2>Express shipping</h2>
+        {shipping.expressIsPlaceholder ? (
+          <p>
+            Express delivery is available. The cost and the delivery window are still being
+            confirmed — call the store and we will quote it for your pin code.
+          </p>
+        ) : (
+          <p>
+            Express delivery costs <strong>{shipping.expressCost}</strong> and arrives in{" "}
+            <strong>{shipping.expressTime}</strong>. Choose it at checkout.
+          </p>
+        )}
+
         <h2>Dispatch</h2>
         <p>
           Ready-to-wear frames and sunglasses leave our Delhi warehouse within{" "}
@@ -29,7 +53,7 @@ export default function ShippingPage() {
 
         <h2>Charges</h2>
         <p>
-          Shipping is <strong>complimentary on every order above ₹2,000</strong>. Below that, a
+          Shipping is <strong>complimentary on every order above {shipping.freeAbove}</strong>. Below that, a
           flat ₹99 applies, shown at checkout before you pay.
         </p>
 

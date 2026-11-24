@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { Phone, Mail, MapPin } from "lucide-react";
+import { Phone, Mail, MapPin, Clock } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
 import { Instagram, Facebook } from "@/components/Icons";
+import type { ShopContact } from "@/lib/contact";
 
 const COLUMNS = [
   {
@@ -27,6 +28,7 @@ const COLUMNS = [
   {
     heading: "Help",
     links: [
+      { label: "Home Service", href: "/home-service" },
       { label: "Shipping", href: "/shipping" },
       { label: "Returns & Exchange", href: "/returns" },
       { label: "Terms of Service", href: "/terms" },
@@ -35,7 +37,7 @@ const COLUMNS = [
   },
 ];
 
-export function Footer() {
+export function Footer({ contact }: { contact: ShopContact }) {
   return (
     <footer className="relative mt-24 border-t border-line bg-ink text-paper grain">
       <div className="mx-auto max-w-[1500px] px-5 py-16 lg:px-10">
@@ -49,13 +51,12 @@ export function Footer() {
               <em className="text-brass">since 1974.</em>
             </p>
             <p className="mt-5 max-w-xs text-sm leading-relaxed text-paper/60">
-              Five decades of precision lens craft and the world&rsquo;s finest frames, from our
-              first counter in Connaught Place to yours.
+              {contact.blurb}
             </p>
 
             <div className="mt-7 flex gap-3">
               <a
-                href="https://instagram.com"
+                href={contact.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
@@ -64,7 +65,7 @@ export function Footer() {
                 <Instagram className="h-4 w-4" />
               </a>
               <a
-                href="https://facebook.com"
+                href={contact.facebook}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
@@ -96,24 +97,51 @@ export function Footer() {
 
         <hr className="my-12 border-0 h-px bg-paper/15" />
 
-        <div className="grid gap-6 text-sm text-paper/60 sm:grid-cols-3">
+        <div className="grid gap-6 text-sm text-paper/60 sm:grid-cols-2 lg:grid-cols-4">
           <p className="flex items-start gap-3">
             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brass" strokeWidth={1.5} />
-            <span>M-42, Outer Circle, Connaught Place, New Delhi 110001</span>
+            {/* The map link is the address, so the two can never point at
+                different places. */}
+            {contact.mapsUrl ? (
+              <a
+                href={contact.mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-paper"
+              >
+                {contact.address}
+              </a>
+            ) : (
+              <span>{contact.address}</span>
+            )}
           </p>
+
+          <p className="flex items-start gap-3">
+            <Clock className="mt-0.5 h-4 w-4 shrink-0 text-brass" strokeWidth={1.5} />
+            <span>{contact.hours}</span>
+          </p>
+
           <p className="flex items-center gap-3">
             <Phone className="h-4 w-4 shrink-0 text-brass" strokeWidth={1.5} />
-            <a href="tel:+911123412345" className="hover:text-paper">
-              +91 11 2341 2345
+            <a href={`tel:${contact.phone.replace(/[^\d+]/g, "")}`} className="hover:text-paper">
+              {contact.phone}
             </a>
           </p>
+
           <p className="flex items-center gap-3">
             <Mail className="h-4 w-4 shrink-0 text-brass" strokeWidth={1.5} />
-            <a href="mailto:care@broadwayopticals.com" className="hover:text-paper">
-              care@broadwayopticals.com
+            <a href={`mailto:${contact.email}`} className="hover:text-paper">
+              {contact.email}
             </a>
           </p>
         </div>
+
+        {contact.isPlaceholder && (
+          <p className="label mt-7 border border-dashed border-paper/25 px-4 py-3 text-[0.55rem] leading-relaxed text-paper/55">
+            Placeholder details. Set the shop&rsquo;s real address, phone, email, opening hours
+            and map link in Admin → Homepage → Footer &amp; Shipping.
+          </p>
+        )}
       </div>
 
       <div className="border-t border-paper/10">

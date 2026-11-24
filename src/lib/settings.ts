@@ -61,6 +61,22 @@ export const SETTING_KEYS = {
 
   /** Mix the shop grid so one house does not lead every page. */
   shopShuffle: "shop.shuffle",
+
+  // ── Footer: the shop's own details ──
+  footerBlurb: "footer.blurb",
+  footerAddress: "footer.address",
+  footerPhone: "footer.phone",
+  footerEmail: "footer.email",
+  footerHours: "footer.hours",
+  footerMapsUrl: "footer.mapsUrl",
+  footerInstagram: "footer.instagram",
+  footerFacebook: "footer.facebook",
+
+  // ── Shipping ──
+  shippingRegular: "shipping.regular",
+  shippingExpressCost: "shipping.expressCost",
+  shippingExpressTime: "shipping.expressTime",
+  shippingFreeAbove: "shipping.freeAbove",
 } as const;
 
 /**
