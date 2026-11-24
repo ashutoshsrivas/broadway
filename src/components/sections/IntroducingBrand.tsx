@@ -29,7 +29,7 @@ export function IntroducingBrand({
   if (products.length === 0) return null;
 
   return (
-    <section className="border-b border-line bg-paper">
+    <section className="border-b border-line bg-[var(--color-accent-butter)]">
       <div className="mx-auto max-w-[1500px] px-5 py-20 lg:px-10 lg:py-24">
         <p className="label-lg text-center text-ink-muted">{eyebrow}</p>
         {/* The house's name is the headline of this band, so it is set at

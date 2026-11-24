@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Search, User, Menu, X, ChevronRight, ChevronDown } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { LogoMark } from "@/components/Logo";
@@ -32,6 +32,32 @@ export function Header({ navLinks }: { navLinks: MenuItem[] }) {
   // a time: two open mega-panels would overlap each other.
   const [openPanel, setOpenPanel] = useState<string | null>(null);
   const [openDrawerPanel, setOpenDrawerPanel] = useState<string | null>(null);
+  const headerRef = useRef<HTMLElement>(null);
+
+
+  // Publish the chrome's real measurements so the hero can pull itself up by
+  // exactly the right amount. Measured rather than guessed: the header
+  // changes height on scroll and the marquee can be switched off entirely.
+  useEffect(() => {
+    const marquee = document.querySelector<HTMLElement>('[aria-label="Store notices"]');
+
+    const publish = () => {
+      const root = document.documentElement;
+      root.style.setProperty("--header-h", `${headerRef.current?.offsetHeight ?? 0}px`);
+      root.style.setProperty("--marquee-h", `${marquee?.offsetHeight ?? 0}px`);
+    };
+
+    publish();
+    const observer = new ResizeObserver(publish);
+    if (headerRef.current) observer.observe(headerRef.current);
+    if (marquee) observer.observe(marquee);
+    window.addEventListener("resize", publish);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", publish);
+    };
+  }, []);
+
   const { data: session } = useSession();
   const pathname = usePathname();
 
@@ -44,6 +70,15 @@ export function Header({ navLinks }: { navLinks: MenuItem[] }) {
     () => window.scrollY > 24,
     () => false // the server has no scroll position; start untightened
   );
+
+  // The homepage runs its poster behind the chrome. Other pages open on a
+  // heading, where a transparent header would float over nothing.
+  const overHero = pathname === "/";
+
+  // Transparent while the shopper is still on the poster; frosted glass the
+  // moment the page moves. A header that stays transparent all the way down
+  // ends up as cream type on a cream product grid.
+  const transparent = overHero && !scrolled;
 
   // Any navigation closes the drawer — otherwise it stays open over the page
   // the shopper just asked for. Adjusted during render rather than in an
@@ -60,11 +95,11 @@ export function Header({ navLinks }: { navLinks: MenuItem[] }) {
       {/* Sticky, not fixed: the announcement marquee sits above it in normal
           flow and scrolls away, while the header itself stays put. Fixed
           positioning would lift the header over the marquee and hide it. */}
-      <header className="sticky top-0 z-50">
+      <header ref={headerRef} className="sticky top-0 z-50">
         <div
-          className={`border-b border-line bg-paper/95 backdrop-blur-sm transition-all duration-300 ${
-            scrolled ? "py-0" : "py-1.5"
-          }`}
+          className={`border-b transition-all duration-300 ${
+            transparent ? "header-over-hero" : "glass border-line"
+          } ${scrolled ? "py-0" : "py-1.5"}`}
         >
           <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-4 px-5 lg:px-10">
             {/* Left — desktop nav, mobile menu toggle */}
@@ -134,7 +169,9 @@ export function Header({ navLinks }: { navLinks: MenuItem[] }) {
         {/* Category rail — the actual shopping nav, kept on its own rule so the
             brand row stays uncluttered. */}
         <div
-          className="relative hidden border-b border-line bg-paper-raised/95 backdrop-blur-sm lg:block"
+          className={`relative hidden border-b lg:block ${
+            transparent ? "header-over-hero" : "glass-raised border-line"
+          }`}
           onMouseLeave={() => setOpenPanel(null)}
         >
           <nav className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-center gap-x-9 gap-y-2 px-10 py-2.5">

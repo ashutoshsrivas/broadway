@@ -29,7 +29,7 @@ export function InstagramBand({
   if (posts.length === 0) return null;
 
   return (
-    <section className="border-b border-line bg-paper-raised">
+    <section className="border-b border-line bg-[var(--color-accent-blush)]">
       <div className="mx-auto max-w-[1500px] px-5 py-20 lg:px-10 lg:py-24">
         <div className="flex flex-col items-center text-center">
           {heading && <p className="label text-brass">{heading}</p>}

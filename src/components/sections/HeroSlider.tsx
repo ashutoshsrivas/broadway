@@ -95,7 +95,7 @@ export function HeroSlider({ slides }: { slides: Slide[] }) {
 
   return (
     <section
-      className="relative isolate h-[calc(100svh-var(--site-chrome))] min-h-[30rem] w-full overflow-hidden bg-ink"
+      className="relative isolate h-[calc(100svh-var(--marquee-h,0px))] min-h-[30rem] w-full overflow-hidden bg-ink"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       aria-roledescription="carousel"

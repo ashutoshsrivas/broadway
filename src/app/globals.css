@@ -34,6 +34,14 @@
   /* ── Clay: the one warm alarm colour — sale badges, errors, stock warnings. ── */
   --color-clay: #9C4A2F;
 
+  /* ── Accents: three pastels, used as grounds rather than as ink. They lift
+        a page of cream without competing with brass, and because they are
+        only ever backgrounds, a change here cannot hurt legibility. Set any
+        of them to a paper tone to revert that band. ── */
+  --color-accent-butter: #FAF3DC;
+  --color-accent-blush: #F9EDE9;
+  --color-accent-mist: #ECF1EE;
+
   --color-line: #DED4C2;
 
   --font-display: var(--font-bodoni);
@@ -450,4 +458,64 @@ input[type="number"] {
   .group:focus-visible .reveal-on-hover {
     opacity: 1;
   }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   LIQUID GLASS
+
+   Frosted, slightly translucent chrome. `backdrop-filter` is the whole
+   effect, and it is expensive on mid-range Android — so the blur is modest
+   and the layer is kept small and non-animated.
+
+   The fallback is not a missing effect but a different one: where
+   backdrop-filter is unsupported the surface goes nearly opaque, because a
+   translucent bar with nothing frosting it is just unreadable text over a
+   photograph.
+   ───────────────────────────────────────────────────────────────────────── */
+.glass {
+  background-color: color-mix(in srgb, var(--color-paper) 97%, transparent);
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background-color: color-mix(in srgb, var(--color-paper) 72%, transparent);
+    -webkit-backdrop-filter: blur(14px) saturate(1.5);
+    backdrop-filter: blur(14px) saturate(1.5);
+  }
+
+  .glass-raised {
+    background-color: color-mix(in srgb, var(--color-paper-raised) 68%, transparent);
+    -webkit-backdrop-filter: blur(14px) saturate(1.5);
+    backdrop-filter: blur(14px) saturate(1.5);
+  }
+}
+
+.glass-raised {
+  background-color: color-mix(in srgb, var(--color-paper-raised) 97%, transparent);
+}
+
+/* Over the hero the header carries no ground of its own: the poster runs
+   behind it. The type turns to paper so it stays legible on a dark slide,
+   and the hairline goes. */
+.header-over-hero {
+  background-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-color: transparent;
+}
+
+.header-over-hero,
+.header-over-hero a,
+.header-over-hero button {
+  color: var(--color-paper);
+}
+
+.header-over-hero .logo-mark {
+  color: var(--color-paper);
+}
+
+/* The hero sits under the header rather than below it. The pull-up is the
+   header's own height, published by the header as --header-h. */
+.hero-behind-chrome {
+  margin-top: calc(-1 * var(--header-h, 0px));
 }

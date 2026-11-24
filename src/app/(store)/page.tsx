@@ -163,7 +163,11 @@ export default async function HomePage() {
       {/* The banner deck is admin-managed and may legitimately be empty — a
           fresh install, or every slide switched off mid-campaign. The original
           static hero stands in so the homepage never opens on a void. */}
-      {banners.length > 0 ? <HeroSlider slides={banners} /> : <Hero />}
+      {/* The poster runs behind the header. The pull-up is the header's own
+          measured height, so the two cannot drift apart. */}
+      <div className="hero-behind-chrome">
+        {banners.length > 0 ? <HeroSlider slides={banners} /> : <Hero />}
+      </div>
 
       <NewArrivalsDeck brands={arrivalBrands} newDays={newDays} />
 
