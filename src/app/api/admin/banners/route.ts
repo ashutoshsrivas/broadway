@@ -9,6 +9,8 @@ export const bannerSchema = z.object({
   posterUrl: z.string().trim().max(500).nullable().optional(),
 
   eyebrow: z.string().trim().max(80).nullable().optional(),
+  kicker: z.string().trim().max(60).nullable().optional(),
+  indexLabel: z.string().trim().max(60).nullable().optional(),
   heading: z.string().trim().max(160).nullable().optional(),
   subheading: z.string().trim().max(400).nullable().optional(),
   ctaLabel: z.string().trim().max(40).nullable().optional(),

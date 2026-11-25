@@ -326,7 +326,13 @@ model Banner {
   posterUrl String?
 
   eyebrow    String?
+  /// A short place or label above the name — "Berlin", "Paris", "New Delhi".
+  /// Used by the lookbook hero, which sets the house against where it is from.
+  kicker     String?
   heading    String?
+  /// The short name for the numbered index down the side of the lookbook.
+  /// Falls back to the heading, which is usually too long for that column.
+  indexLabel String?
   subheading String?     @db.Text
   ctaLabel   String?
   ctaHref    String?

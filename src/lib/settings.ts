@@ -29,6 +29,12 @@ export const SETTING_KEYS = {
   promoMessage: "promo.message",
   promoDelay: "promo.delaySeconds",
 
+  // ── The hero ──
+  /** "lookbook" — the index-and-watermark deck. "deck" — plain full-bleed. */
+  heroStyle: "homepage.hero.style",
+  /** The line above the whole deck, e.g. "The Lookbook · Six Houses". */
+  heroEyebrow: "homepage.hero.eyebrow",
+
   // ── Homepage behaviour ──
   /** How long a frame stays in New on the Rack, in days. */
   newArrivalsDays: "homepage.newArrivals.days",
@@ -84,6 +90,7 @@ export const SETTING_KEYS = {
  * asked for rather than the way the code happens to fall back.
  */
 export const SETTING_DEFAULTS: Partial<Record<SettingKey, string>> = {
+  "homepage.hero.style": "lookbook",
   "homepage.newArrivals.days": "15",
   "homepage.categoryBoxes.mode": "hidden",
   "homepage.mobileGridCount": "6",

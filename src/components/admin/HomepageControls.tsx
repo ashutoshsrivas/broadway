@@ -24,6 +24,7 @@ export function HomepageControls({ settings }: { settings: Settings }) {
   );
   const [notices, setNotices] = useState(settings[SETTING_KEYS.announcementNotices] ?? "");
   const [mode, setMode] = useState(settings[SETTING_KEYS.categoryBoxesMode] ?? "hidden");
+  const [heroStyle, setHeroStyle] = useState(settings[SETTING_KEYS.heroStyle] ?? "lookbook");
 
   const save = async (key: string, value: string) => {
     setSaving(key);
@@ -44,6 +45,62 @@ export function HomepageControls({ settings }: { settings: Settings }) {
 
   return (
     <div className="space-y-5">
+      {/* ── The hero ────────────────────────────────────────────────────── */}
+      <div className="border border-line bg-paper-raised p-5">
+        <span className="label text-ink-muted">Hero style</span>
+        <div className="mt-3 space-y-3">
+          {[
+            {
+              value: "lookbook",
+              title: "Lookbook",
+              note: "One house at a time: its initial behind the words, the plate alongside, and a numbered index of the houses down the side. The index is also the clock.",
+            },
+            {
+              value: "deck",
+              title: "Full-bleed deck",
+              note: "The original: each slide fills the screen edge to edge, with the caption over it.",
+            },
+          ].map((option) => (
+            <label key={option.value} className="flex cursor-pointer items-start gap-3">
+              <input
+                type="radio"
+                name="heroStyle"
+                checked={heroStyle === option.value}
+                onChange={() => {
+                  setHeroStyle(option.value);
+                  void save(SETTING_KEYS.heroStyle, option.value);
+                }}
+                className="mt-0.5 h-4 w-4 accent-[#B08D4F]"
+              />
+              <span>
+                <span className="label">{option.title}</span>
+                <span className="mt-1.5 block max-w-xl text-xs leading-relaxed text-ink-muted">
+                  {option.note}
+                </span>
+              </span>
+            </label>
+          ))}
+        </div>
+
+        <label className="mt-5 block">
+          <span className="label text-ink-muted">Line above the deck</span>
+          <input
+            defaultValue={settings[SETTING_KEYS.heroEyebrow] ?? ""}
+            placeholder="The Lookbook · Six Houses"
+            onBlur={(e) => {
+              const value = e.target.value.trim();
+              if (value !== (settings[SETTING_KEYS.heroEyebrow] ?? "")) {
+                void save(SETTING_KEYS.heroEyebrow, value);
+              }
+            }}
+            className="field-box mt-1.5 !text-xs"
+          />
+          <span className="mt-1.5 block text-xs text-ink-muted">
+            Each slide&rsquo;s own place and index name are set under Hero Banners.
+          </span>
+        </label>
+      </div>
+
       {/* ── Notice strip ────────────────────────────────────────────────── */}
       <div className="border border-line bg-paper-raised p-5">
         <label className="flex cursor-pointer items-start gap-3">

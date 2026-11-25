@@ -12,7 +12,9 @@ type Banner = {
   mediaType: "IMAGE" | "VIDEO";
   posterUrl: string | null;
   eyebrow: string | null;
+  kicker: string | null;
   heading: string | null;
+  indexLabel: string | null;
   subheading: string | null;
   ctaLabel: string | null;
   ctaHref: string | null;
@@ -30,7 +32,9 @@ type Draft = {
   mediaType: Banner["mediaType"];
   posterUrl: string;
   eyebrow: string;
+  kicker: string;
   heading: string;
+  indexLabel: string;
   subheading: string;
   ctaLabel: string;
   ctaHref: string;
@@ -44,7 +48,9 @@ const BLANK: Draft = {
   mediaType: "IMAGE",
   posterUrl: "",
   eyebrow: "",
+  kicker: "",
   heading: "",
+  indexLabel: "",
   subheading: "",
   ctaLabel: "",
   ctaHref: "",
@@ -334,6 +340,8 @@ function NewBanner({
         ...v,
         posterUrl: v.posterUrl || null,
         eyebrow: v.eyebrow || null,
+        kicker: v.kicker || null,
+        indexLabel: v.indexLabel || null,
         heading: v.heading || null,
         subheading: v.subheading || null,
         ctaLabel: v.ctaLabel || null,
@@ -406,6 +414,10 @@ function NewBanner({
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Eyebrow" value={v.eyebrow} onChange={(x) => set("eyebrow", x)} placeholder="Est. 1974 · New Delhi" />
           <Field label="Heading" value={v.heading} onChange={(x) => set("heading", x)} placeholder="See, and be seen." />
+          {/* Lookbook only. The city sits above the name, and the short label
+              is what fits the numbered index down the side. */}
+          <Field label="Place (lookbook)" value={v.kicker} onChange={(x) => set("kicker", x)} placeholder="Berlin" />
+          <Field label="Index name (lookbook)" value={v.indexLabel} onChange={(x) => set("indexLabel", x)} placeholder="Kuboraum" />
           <div className="sm:col-span-2">
             <label className="label block text-ink-muted">Subheading</label>
             <textarea

@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { productCardSelect } from "@/lib/catalog";
 import { Hero } from "@/components/sections/Hero";
 import { HeroSlider } from "@/components/sections/HeroSlider";
+import { HeroLookbook } from "@/components/sections/HeroLookbook";
 import { NewArrivalsDeck } from "@/components/sections/NewArrivalsDeck";
 import { DiscoverSplit } from "@/components/sections/DiscoverSplit";
 import { ServiceRail } from "@/components/sections/ServiceRail";
@@ -31,6 +32,7 @@ export default async function HomePage() {
   const newDays = settingInt(settings, SETTING_KEYS.newArrivalsDays, NEW_FOR_DAYS);
   const newCutoff = newArrivalCutoff(newDays);
   const mobileLimit = settingInt(settings, SETTING_KEYS.mobileGridCount, 6);
+  const heroStyle = settings[SETTING_KEYS.heroStyle] ?? "lookbook";
 
   const [
     banners,
@@ -48,8 +50,8 @@ export default async function HomePage() {
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
       select: {
         id: true, mediaUrl: true, mediaType: true, posterUrl: true,
-        eyebrow: true, heading: true, subheading: true,
-        ctaLabel: true, ctaHref: true, align: true,
+        eyebrow: true, kicker: true, heading: true, indexLabel: true,
+        subheading: true, ctaLabel: true, ctaHref: true, align: true,
         overlay: true, durationMs: true,
       },
     }),
@@ -164,9 +166,23 @@ export default async function HomePage() {
           fresh install, or every slide switched off mid-campaign. The original
           static hero stands in so the homepage never opens on a void. */}
       {/* The poster runs behind the header. The pull-up is the header's own
-          measured height, so the two cannot drift apart. */}
+          measured height, so the two cannot drift apart — and the lookbook,
+          which is a composed band rather than a full-bleed photograph, keeps
+          its own top edge clear of it. */}
+      {/* Every hero style runs behind the chrome, because the header goes
+          transparent over it — a transparent header above a hero that did
+          not would be cream type on a cream page. */}
       <div className="hero-behind-chrome">
-        {banners.length > 0 ? <HeroSlider slides={banners} /> : <Hero />}
+        {banners.length === 0 ? (
+          <Hero />
+        ) : heroStyle === "lookbook" ? (
+          <HeroLookbook
+            slides={banners}
+            eyebrow={settings[SETTING_KEYS.heroEyebrow] || "The Lookbook"}
+          />
+        ) : (
+          <HeroSlider slides={banners} />
+        )}
       </div>
 
       <NewArrivalsDeck brands={arrivalBrands} newDays={newDays} />
