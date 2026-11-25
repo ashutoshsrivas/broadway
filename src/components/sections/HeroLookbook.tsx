@@ -47,7 +47,11 @@ export function HeroLookbook({
   slides: LookbookSlide[];
   eyebrow?: string | null;
 }) {
-  const [index, setIndex] = useState(0);
+  // The outgoing slide is kept beside the current one rather than derived in
+  // an effect: the lens opens *over* the picture it is replacing, so that
+  // picture has to still be on the page, and it has to change in the same
+  // render as the new one or there would be a frame of neither.
+  const [{ index, prev }, setSlide] = useState({ index: 0, prev: -1 });
   const [paused, setPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -58,7 +62,11 @@ export function HeroLookbook({
   const duration = current?.durationMs ?? 6000;
 
   const go = useCallback(
-    (next: number) => setIndex(((next % count) + count) % count),
+    (next: number) =>
+      setSlide((s) => {
+        const wrapped = ((next % count) + count) % count;
+        return wrapped === s.index ? s : { index: wrapped, prev: s.index };
+      }),
     [count]
   );
 
@@ -103,6 +111,8 @@ export function HeroLookbook({
   const name = current.heading ?? "";
   const mark = name.trim().charAt(0).toUpperCase();
   const poster = current.posterUrl ?? current.mediaUrl;
+  const outgoing = prev >= 0 && prev !== index ? slides[prev] : null;
+  const outgoingPoster = outgoing ? outgoing.posterUrl ?? outgoing.mediaUrl : null;
 
   return (
     <section
@@ -119,24 +129,18 @@ export function HeroLookbook({
           desktop plate rather than repositioned, because the two are
           genuinely different compositions; the browser fetches the one image
           once whichever is showing. */}
-      <div
-        key={`bg-${current.id}`}
-        className="lookbook-plate absolute inset-0 z-0 lg:hidden"
-        aria-hidden="true"
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={poster}
-          alt=""
-          fetchPriority={index === 0 ? "high" : "auto"}
-          className="lookbook-plate-media h-full w-full object-cover"
-        />
+      <div className="absolute inset-0 z-0 overflow-hidden lg:hidden" aria-hidden="true">
+        <div className="lookbook-plate-media h-full w-full">
+          <LensPlate
+            src={poster}
+            outgoing={outgoingPoster}
+            slideId={current.id}
+            priority={index === 0}
+          />
+        </div>
         <div className="absolute inset-0 bg-ink" style={{ opacity: current.overlay / 100 }} />
         {/* Enough ground under the words to read them on any photograph. */}
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/75 to-ink/20" />
-        <span
-          className="lookbook-edge pointer-events-none absolute inset-y-0 left-0 w-px bg-brass-soft"
-        />
       </div>
 
       {/* The next house, far right, very dim — the page is always showing you
@@ -238,10 +242,7 @@ export function HeroLookbook({
 
         {/* ── The plate, as a desktop sees it ── */}
         <div className="relative order-1 hidden lg:order-2 lg:block">
-          <div
-            key={`plate-${current.id}`}
-            className="lookbook-plate relative aspect-[4/5] w-full overflow-hidden bg-ink/40"
-          >
+          <div className="relative aspect-[4/5] w-full overflow-hidden bg-ink/40">
             {current.mediaType === "VIDEO" ? (
               <video
                 ref={videoRef}
@@ -256,25 +257,14 @@ export function HeroLookbook({
                 className="lookbook-plate-media h-full w-full object-cover"
               />
             ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={`img-${current.id}`}
-                src={current.mediaUrl}
-                alt={name}
-                className="lookbook-plate-media h-full w-full object-cover"
-              />
+              <div className="lookbook-plate-media h-full w-full">
+                <LensPlate src={current.mediaUrl} outgoing={outgoingPoster} slideId={current.id} />
+              </div>
             )}
 
             <div
               className="absolute inset-0 bg-ink"
               style={{ opacity: current.overlay / 100 }}
-            />
-
-            {/* The brass edge that rides ahead of the shutter. */}
-            <span
-              key={`edge-${current.id}`}
-              aria-hidden="true"
-              className="lookbook-edge pointer-events-none absolute inset-y-0 left-0 w-px bg-brass-soft"
             />
           </div>
 
@@ -392,5 +382,66 @@ export function HeroLookbook({
         </p>
       </div>
     </section>
+  );
+}
+
+/**
+ * One picture arriving over another, through a pair of lenses.
+ *
+ * Two copies of the incoming image, each clipped to a growing circle placed
+ * where a lens would sit. They open a beat apart, merge, and fill — so the
+ * change reads as a pair of eyes opening rather than as a panel sliding
+ * across. The outgoing picture sits underneath until they have covered it.
+ *
+ * Two <img> tags of the same URL cost one fetch; the browser serves the
+ * second from cache. That is cheaper than the alternatives — a mask on a
+ * single layer cannot be interpolated as reliably across browsers, and an
+ * SVG filter would put a real GPU cost on every phone that loads the page.
+ */
+function LensPlate({
+  src,
+  outgoing,
+  slideId,
+  priority = false,
+}: {
+  src: string;
+  outgoing: string | null;
+  slideId: string;
+  priority?: boolean;
+}) {
+  return (
+    <div className="relative h-full w-full">
+      {outgoing && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={`under-${outgoing}`}
+          src={outgoing}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      )}
+
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        key={`lens-l-${slideId}`}
+        src={src}
+        alt=""
+        fetchPriority={priority ? "high" : "auto"}
+        className="lookbook-lens absolute inset-0 h-full w-full object-cover"
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        key={`lens-r-${slideId}`}
+        src={src}
+        alt=""
+        aria-hidden="true"
+        className="lookbook-lens lookbook-lens-right absolute inset-0 h-full w-full object-cover"
+      />
+
+      {/* A hairline riding each lens as it opens, so the shape of the
+          gesture is readable rather than merely felt. */}
+      <span key={`ring-l-${slideId}`} aria-hidden="true" className="lookbook-ring" />
+      <span key={`ring-r-${slideId}`} aria-hidden="true" className="lookbook-ring lookbook-ring-right" />
+    </div>
   );
 }
