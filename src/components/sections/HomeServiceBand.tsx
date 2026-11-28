@@ -56,7 +56,7 @@ export function HomeServiceBand({ content }: { content: HomeServiceContent }) {
           )}
 
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/home-service" className="btn-ink label px-10 py-4">
+            <Link href="/broadway-at-home" className="btn-ink label px-10 py-4">
               Book a Home Visit
             </Link>
             {content.phone && (

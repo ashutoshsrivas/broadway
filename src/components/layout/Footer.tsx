@@ -28,7 +28,7 @@ const COLUMNS = [
   {
     heading: "Help",
     links: [
-      { label: "Home Service", href: "/home-service" },
+      { label: "Broadway at Home", href: "/broadway-at-home" },
       { label: "Shipping", href: "/shipping" },
       { label: "Returns & Exchange", href: "/returns" },
       { label: "Terms of Service", href: "/terms" },

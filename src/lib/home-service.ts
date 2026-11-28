@@ -7,7 +7,9 @@ export type HomeServiceContent = {
   blurb: string;
   cities: string[];
   imageUrl: string | null;
+  heroImageUrl: string | null;
   phone: string | null;
+  whatsapp: string | null;
   body: string;
   /** True while the shop is still running on our stand-in copy. */
   isPlaceholder: boolean;
@@ -23,7 +25,7 @@ export type HomeServiceContent = {
 export function getHomeService(
   settings: Partial<Record<SettingKey, string>>
 ): HomeServiceContent {
-  const cities = (settings[SETTING_KEYS.homeServiceCities] ?? "Dehradun, Rishikesh, Haridwar")
+  const cities = (settings[SETTING_KEYS.homeServiceCities] ?? "Dehradun, Haridwar, Rishikesh, Mussoorie")
     .split(",")
     .map((c) => c.trim())
     .filter(Boolean);
@@ -34,14 +36,16 @@ export function getHomeService(
 
   return {
     enabled: settingOn(settings, SETTING_KEYS.homeServiceEnabled),
-    eyebrow: settings[SETTING_KEYS.homeServiceEyebrow]?.trim() || "Home Service",
-    heading: heading || "An eye test at your dining table.",
+    eyebrow: settings[SETTING_KEYS.homeServiceEyebrow]?.trim() || "Broadway at Home",
+    heading: heading || "The shop comes to you.",
     blurb:
       blurb ||
-      "Our optician comes to you with the trial set, the frame tray and the equipment — the same examination you would get in store, in your own light.",
+      "An optometrist and one of our team arrive with the season's frames and the testing kit, so you can try them on at your own mirror, in your own light.",
     cities,
     imageUrl: settings[SETTING_KEYS.homeServiceImage]?.trim() || null,
+    heroImageUrl: settings[SETTING_KEYS.homeServiceHeroImage]?.trim() || null,
     phone: settings[SETTING_KEYS.homeServicePhone]?.trim() || null,
+    whatsapp: settings[SETTING_KEYS.homeServiceWhatsapp]?.trim() || null,
     body:
       body ||
       "Placeholder copy. Replace this from Admin → Homepage → Home Service with the wording from the current website.",

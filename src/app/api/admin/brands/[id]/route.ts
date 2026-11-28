@@ -17,6 +17,7 @@ const schema = z.object({
   isPremium: z.boolean().optional(),
   story: z.string().trim().max(8000).nullable().optional(),
   storyImageUrl: z.string().trim().max(500).nullable().optional(),
+  showInLogoRow: z.boolean().optional(),
   showInMenuTop: z.boolean().optional(),
   showInMenuLuxury: z.boolean().optional(),
   /// Hex with the hash, or empty to clear. Validated so a typo cannot end up

@@ -15,6 +15,7 @@ import { IntroducingBrand } from "@/components/sections/IntroducingBrand";
 import { InstagramBand } from "@/components/sections/InstagramBand";
 import { BrandBlocks } from "@/components/sections/BrandBlock";
 import { CategoryBoxes } from "@/components/sections/CategoryBoxes";
+import { BrandLogoRow } from "@/components/sections/BrandLogoRow";
 import { HomeServiceBand } from "@/components/sections/HomeServiceBand";
 import { SETTING_KEYS, getSettings, settingInt } from "@/lib/settings";
 import { getBrandBlocks, PLACEMENTS } from "@/lib/home-blocks";
@@ -43,6 +44,7 @@ export default async function HomePage() {
     instaPosts,
     brandBlocks,
     trustBoxes,
+    logoRowBrands,
     homeCategories,
   ] = await Promise.all([
     db.banner.findMany({
@@ -107,6 +109,20 @@ export default async function HomePage() {
     }),
     getBrandBlocks(),
     getTrustBoxes(),
+    // The six houses under the must-have spotlight. A logo is the whole
+    // point of the row, so a brand without one is not asked for.
+    db.brand.findMany({
+      where: { showInLogoRow: true, logoUrl: { not: null } },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      take: 6,
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        logoUrl: true,
+        _count: { select: { products: { where: { status: "ACTIVE" } } } },
+      },
+    }),
     db.category.findMany({
       where: { isActive: true, showOnHome: true },
       orderBy: { sortOrder: "asc" },
@@ -210,6 +226,18 @@ export default async function HomePage() {
           heading={settings[SETTING_KEYS.mustHaveHeading] || "Eyewear You Must Have!"}
         />
       )}
+
+      {/* Six houses, as their own logos, chosen in the admin panel. */}
+      <BrandLogoRow
+        brands={logoRowBrands.map((b) => ({
+          id: b.id,
+          name: b.name,
+          slug: b.slug,
+          logoUrl: b.logoUrl,
+          stocked: b._count.products > 0,
+        }))}
+        heading={settings[SETTING_KEYS.logoRowHeading]}
+      />
 
       <BrandStripScroll
         brands={brands.map((b) => ({ ...b, tileUrl: b.tileUrl! }))}

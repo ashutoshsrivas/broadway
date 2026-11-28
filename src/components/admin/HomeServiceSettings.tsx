@@ -15,6 +15,85 @@ type Settings = Partial<Record<string, string>>;
  * nobody mistakes our guess for the shop's offer. The moment a heading, blurb
  * or body is typed here, the label goes away.
  */
+/** One uploadable image bound to a setting key. */
+function ImageField({
+  label,
+  hint,
+  settingKey,
+  initial,
+  save,
+}: {
+  label: string;
+  hint: string;
+  settingKey: string;
+  initial: string;
+  save: (key: string, value: string) => Promise<void>;
+}) {
+  const [url, setUrl] = useState(initial);
+  const [busy, setBusy] = useState(false);
+
+  const upload = async (files: FileList | null) => {
+    const file = files?.[0];
+    if (!file) return;
+    setBusy(true);
+    const body = new FormData();
+    body.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body });
+    const data = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (!res.ok) {
+      toast.error(data.error ?? "Could not upload that image.");
+      return;
+    }
+    setUrl(data.url);
+    void save(settingKey, data.url);
+  };
+
+  return (
+    <div>
+      <span className="label text-ink-muted">{label}</span>
+      <p className="mt-1 text-xs leading-relaxed text-ink-muted">{hint}</p>
+      <div className="mt-2.5 flex items-center gap-4">
+        <div className="relative h-20 w-32 shrink-0 overflow-hidden border border-line bg-paper">
+          {url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={url} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <span className="label absolute inset-0 flex items-center justify-center px-2 text-center text-[0.45rem] leading-tight text-ink-muted">
+              Placeholder
+            </span>
+          )}
+        </div>
+
+        <label className="label flex cursor-pointer items-center gap-2 border border-dashed border-line px-5 py-3 text-ink-muted transition-colors hover:border-brass hover:text-brass">
+          <Upload className="h-3.5 w-3.5" strokeWidth={1.5} />
+          {busy ? "Uploading…" : "Upload"}
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/avif"
+            onChange={(e) => void upload(e.target.files)}
+            className="sr-only"
+          />
+        </label>
+
+        {url && (
+          <button
+            type="button"
+            onClick={() => {
+              setUrl("");
+              void save(settingKey, "");
+            }}
+            title="Remove"
+            className="p-1.5 text-ink-muted transition-colors hover:text-clay"
+          >
+            <X className="h-3.5 w-3.5" strokeWidth={1.5} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function HomeServiceSettings({ settings }: { settings: Settings }) {
   const router = useRouter();
   const [on, setOn] = useState((settings[SETTING_KEYS.homeServiceEnabled] ?? "") === "1");
@@ -88,15 +167,16 @@ export function HomeServiceSettings({ settings }: { settings: Settings }) {
           <span className="label">Show the home-service band</span>
           <span className="mt-1.5 block max-w-xl text-xs leading-relaxed text-ink-muted">
             A band on the homepage and its own page at{" "}
-            <code className="text-brass">/home-service</code>. Leave it off until the wording is
-            yours — the page shows a placeholder notice until then.
+            <code className="text-brass">/broadway-at-home</code>. Leave it off until the wording
+            is yours — the page shows a placeholder notice until then.
           </span>
         </span>
       </label>
 
       <div className="grid gap-4 border-t border-line pt-5 lg:grid-cols-2">
         {field(SETTING_KEYS.homeServiceEyebrow, "Eyebrow", "Home Service")}
-        {field(SETTING_KEYS.homeServicePhone, "Phone shown on the buttons", "+91 98100 12345")}
+        {field(SETTING_KEYS.homeServicePhone, "Phone shown on the buttons", "+91 135 2632280")}
+        {field(SETTING_KEYS.homeServiceWhatsapp, "WhatsApp number", "+91 75977 72222")}
         <div className="lg:col-span-2">
           {field(
             SETTING_KEYS.homeServiceHeading,
@@ -127,6 +207,16 @@ export function HomeServiceSettings({ settings }: { settings: Settings }) {
             6
           )}
         </div>
+      </div>
+
+      <div className="grid gap-6 border-t border-line pt-5 lg:grid-cols-2">
+        <ImageField
+          label="Hero photograph"
+          hint="Top of the Broadway at Home page — landscape, it drifts as you scroll"
+          settingKey={SETTING_KEYS.homeServiceHeroImage}
+          initial={settings[SETTING_KEYS.homeServiceHeroImage] ?? ""}
+          save={save}
+        />
       </div>
 
       <div className="border-t border-line pt-5">

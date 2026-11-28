@@ -85,7 +85,7 @@ function DiscoverPane({ panel }: { panel: Panel }) {
       // carries the panel entirely while the photograph is still a
       // placeholder.
       style={panel.backdropHex ? { backgroundColor: panel.backdropHex } : undefined}
-      className="group relative block h-[62svh] min-h-[26rem] overflow-hidden bg-paper-sunk md:h-[78svh]"
+      className="group relative block h-[72svh] min-h-[30rem] overflow-hidden bg-paper-sunk md:h-[88svh]"
       onMouseEnter={() => {
         // Only nudge playback on hover for a video that has stalled; an
         // already-playing loop is left alone.
@@ -137,13 +137,22 @@ function DiscoverPane({ panel }: { panel: Panel }) {
       <span className="pointer-events-none absolute inset-y-0 right-0 hidden w-px bg-paper/15 md:block" />
 
       <div className="relative flex h-full flex-col justify-end p-8 lg:p-12">
-        {panel.eyebrow && <p className="label-lg text-brass-soft">{panel.eyebrow}</p>}
+        {/* "For Him" / "For Her" is the whole caption now. It was a small
+            label over a headline; with the headline gone it has to carry the
+            panel on its own, so it is set at display size.
 
-        <p className="display mt-4 text-[clamp(2rem,4.5vw,3.5rem)] leading-[1.05] text-paper">
-          {panel.heading}
-        </p>
+            The heading is still read by a screen reader as the link's name —
+            "For Him" alone does not say where the link goes — it is simply
+            no longer drawn. */}
+        {panel.eyebrow && (
+          <p className="display text-[clamp(2.4rem,5.5vw,4.25rem)] leading-[1.02] text-paper">
+            {panel.eyebrow}
+          </p>
+        )}
 
-        <span className="label mt-6 inline-flex items-center gap-2.5 text-paper">
+        <span className="sr-only">{panel.heading}</span>
+
+        <span className="label mt-7 inline-flex items-center gap-2.5 text-paper">
           Discover
           <span className="flex h-9 w-9 items-center justify-center rounded-full border border-paper/40 transition-colors group-hover:border-brass group-hover:bg-brass group-hover:text-ink">
             <ArrowUpRight

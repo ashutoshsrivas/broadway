@@ -18,6 +18,7 @@ export type BrandRow = {
   showInBrandStrip: boolean;
   isStoreExclusive: boolean;
   accentHex: string | null;
+  showInLogoRow: boolean;
   showInMenuTop: boolean;
   showInMenuLuxury: boolean;
   posterHasLogo: boolean;
@@ -75,6 +76,7 @@ export function BrandManager({ initial }: { initial: BrandRow[] }) {
         showInBrandStrip: false,
         showInNewArrivals: false,
         accentHex: null,
+        showInLogoRow: false,
         showInMenuTop: false,
         showInMenuLuxury: false,
         posterHasLogo: false,
@@ -222,6 +224,13 @@ export function BrandManager({ initial }: { initial: BrandRow[] }) {
                 label="Featured roll-call"
                 checked={brand.isFeatured}
                 onChange={(v) => void patch(brand.id, { isFeatured: v })}
+              />
+              <Toggle
+                label="Homepage logo row"
+                hint={!brand.logoUrl ? "Needs a logo" : "Six, under Must-Have"}
+                checked={brand.showInLogoRow}
+                disabled={!brand.logoUrl}
+                onChange={(v) => void patch(brand.id, { showInLogoRow: v })}
               />
               <Toggle
                 label="Menu · top brands"

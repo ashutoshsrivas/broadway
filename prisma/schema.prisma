@@ -179,6 +179,9 @@ model Brand {
   /// Stocked in store only. The frames are listed and browsable but carry no
   /// price and cannot be added to a bag — buying goes through WhatsApp.
   isStoreExclusive  Boolean @default(false)
+  /// One of the six houses in the logo row under "Eyewear You Must Have".
+  /// Needs logoUrl to be worth showing, so the storefront filters on both.
+  showInLogoRow     Boolean @default(false)
   /// Listed under "Top brands" in the Sunglasses and Optical Frames menus.
   /// The shop picks six to eight.
   showInMenuTop     Boolean @default(false)

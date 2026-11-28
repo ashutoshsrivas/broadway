@@ -56,6 +56,7 @@ export default async function AdminCategoriesPage() {
             showInBrandStrip: b.showInBrandStrip,
             isStoreExclusive: b.isStoreExclusive,
             accentHex: b.accentHex,
+            showInLogoRow: b.showInLogoRow,
             showInMenuTop: b.showInMenuTop,
             showInMenuLuxury: b.showInMenuLuxury,
             posterHasLogo: b.posterHasLogo,

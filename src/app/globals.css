@@ -745,3 +745,75 @@ input[type="number"] {
     opacity: 0.07;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PARALLAX AND SCROLL REVEALS
+
+   Used by Broadway at Home. Both are CSS-only: the parallax is a scroll
+   timeline where the browser supports one, and the reveals are an
+   IntersectionObserver toggling a single class. No scroll handler runs on
+   the main thread in either case, which is what keeps a long page like that
+   smooth on a mid-range Android.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* A layer that drifts against the scroll. Falls back to standing still,
+   which is a perfectly good photograph rather than a broken effect. */
+.parallax-layer {
+  will-change: transform;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes parallax-drift {
+      from {
+        transform: translate3d(0, calc(var(--parallax-depth, 12%) * -1), 0) scale(1.25);
+      }
+      to {
+        transform: translate3d(0, var(--parallax-depth, 12%), 0) scale(1.25);
+      }
+    }
+
+    .parallax-layer {
+      animation: parallax-drift linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+  }
+}
+
+/* Scroll reveals. The element is laid out from the start — only its paint
+   changes — so nothing reflows as the page is read, and a reveal that never
+   fires leaves the content visible rather than hidden. */
+.reveal {
+  opacity: 0;
+  transform: translateY(1.75rem);
+  transition:
+    opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* The safety net: if JavaScript never runs, the observer never attaches and
+   `.is-in` is never added, so the page would be blank. This turns the whole
+   effect off unless a script has marked the document as able to drive it. */
+html:not(.js) .reveal {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .parallax-layer {
+    animation: none;
+  }
+}

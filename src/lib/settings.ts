@@ -40,6 +40,8 @@ export const SETTING_KEYS = {
   newArrivalsDays: "homepage.newArrivals.days",
   /** How the New on the Rack brand tabs are labelled: "logo", "name" or "both". */
   newArrivalsTabs: "homepage.newArrivals.tabs",
+  /** Heading over the row of brand logos under the must-have spotlight. */
+  logoRowHeading: "homepage.logoRow.heading",
   /** "hidden" — no category boxes at all. "hover" — revealed on hover. */
   categoryBoxesMode: "homepage.categoryBoxes.mode",
   /** How many products a homepage grid shows on a phone before "See more". */
@@ -49,7 +51,7 @@ export const SETTING_KEYS = {
   announcementEnabled: "announcement.enabled",
   announcementNotices: "announcement.notices",
 
-  // ── Home service (Dehradun, Rishikesh, Haridwar) ──
+  // ── Broadway at Home (the at-home appointment service) ──
   homeServiceEnabled: "homeService.enabled",
   homeServiceEyebrow: "homeService.eyebrow",
   homeServiceHeading: "homeService.heading",
@@ -58,6 +60,10 @@ export const SETTING_KEYS = {
   homeServiceImage: "homeService.imageUrl",
   homeServicePhone: "homeService.phone",
   homeServiceBody: "homeService.body",
+  /** The hero photograph on the Broadway at Home page. */
+  homeServiceHeroImage: "homeService.heroImageUrl",
+  /** The number the Call and WhatsApp buttons use on that page. */
+  homeServiceWhatsapp: "homeService.whatsapp",
 
   // ── The collapsible blocks on every product page ──
   productAuthenticity: "product.authenticity",

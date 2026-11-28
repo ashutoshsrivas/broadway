@@ -207,6 +207,29 @@ export function HomepageControls({ settings }: { settings: Settings }) {
         </p>
       </div>
 
+      {/* ── The logo row ─────────────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-end gap-4 border border-line bg-paper-raised p-5">
+        <label className="block flex-1">
+          <span className="label text-ink-muted">Brand logo row — heading</span>
+          <input
+            defaultValue={settings[SETTING_KEYS.logoRowHeading] ?? ""}
+            placeholder="The Houses We Carry"
+            onBlur={(e) => {
+              const value = e.target.value.trim();
+              if (value !== (settings[SETTING_KEYS.logoRowHeading] ?? "")) {
+                void save(SETTING_KEYS.logoRowHeading, value);
+              }
+            }}
+            className="field-box mt-1.5 !text-xs"
+          />
+        </label>
+        <p className="w-full text-xs leading-relaxed text-ink-muted">
+          Six houses shown as their own logos, under &ldquo;Eyewear You Must Have&rdquo;. Pick
+          them with the &ldquo;Homepage logo row&rdquo; tick under Categories &amp; Brands — a
+          brand needs a logo uploaded before it can go in.
+        </p>
+      </div>
+
       {/* ── Category boxes ──────────────────────────────────────────────── */}
       <div className="border border-line bg-paper-raised p-5">
         <span className="label text-ink-muted">Category boxes</span>
