@@ -30,7 +30,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
   return (
     <>
       {announcementOn && <AnnouncementBar notices={notices} />}
-      <Header navLinks={navLinks} />
+      <Header navLinks={navLinks} whatsapp={settings[SETTING_KEYS.whatsappNumber]} />
       <main className="flex-1">{children}</main>
       <Footer contact={getContact(settings)} />
       <CartDrawer />

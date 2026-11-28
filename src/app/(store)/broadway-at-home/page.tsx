@@ -7,6 +7,7 @@ import { getTrustBoxes } from "@/lib/trust";
 import { getContact } from "@/lib/contact";
 import { ServiceRail } from "@/components/sections/ServiceRail";
 import { Reveal } from "@/components/store/Reveal";
+import { DeliveryJourney } from "@/components/sections/DeliveryJourney";
 
 export const dynamic = "force-dynamic";
 
@@ -169,6 +170,9 @@ export default async function BroadwayAtHomePage() {
           </ol>
         </div>
       </section>
+
+      {/* ───────────────────────── The journey ───────────────────────── */}
+      <DeliveryJourney />
 
       {/* ───────────────────────── The second plate ─────────────────────────
           A full-bleed band with its own drift, to break the reading. */}

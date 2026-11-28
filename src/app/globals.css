@@ -817,3 +817,131 @@ html:not(.js) .reveal {
     animation: none;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE JOURNEY
+
+   A pair of spectacles travelling from the shop to a front door as the
+   section is scrolled. The route draws itself ahead of them.
+
+   Driven by `animation-timeline: view()`, so the position is tied to the
+   scroll rather than to a clock — the glasses go back the way they came if
+   the reader scrolls up, which is the whole point of doing it on scroll
+   instead of playing a canned animation when the section appears.
+
+   Where scroll timelines are unsupported it falls back to a one-shot
+   animation started by the reveal observer, which reads nearly the same on
+   a first pass down the page.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes journey-travel {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+@keyframes journey-draw {
+  from {
+    stroke-dashoffset: var(--route-length, 1000);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes journey-arrive {
+  0%,
+  72% {
+    opacity: 0.25;
+    transform: scale(0.96);
+  }
+  88%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.journey-rider {
+  offset-path: var(--route-path);
+  offset-rotate: 0deg;
+  offset-distance: 0%;
+}
+
+.journey-route {
+  stroke-dasharray: var(--route-length, 1000);
+  stroke-dashoffset: var(--route-length, 1000);
+}
+
+/* The destination sits dim until the glasses are nearly there. */
+.journey-door {
+  opacity: 0.25;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .journey-rider {
+      animation: journey-travel linear both;
+      animation-timeline: view();
+      animation-range: entry 55% cover 85%;
+    }
+
+    .journey-route {
+      animation: journey-draw linear both;
+      animation-timeline: view();
+      animation-range: entry 50% cover 80%;
+    }
+
+    .journey-door {
+      animation: journey-arrive linear both;
+      animation-timeline: view();
+      animation-range: entry 55% cover 85%;
+    }
+  }
+
+  /* No scroll timeline: play it once, when the band is reached. */
+  @supports not (animation-timeline: view()) {
+    .journey.is-in .journey-rider {
+      animation: journey-travel 2600ms cubic-bezier(0.37, 0, 0.3, 1) 200ms both;
+    }
+
+    .journey.is-in .journey-route {
+      animation: journey-draw 2400ms cubic-bezier(0.37, 0, 0.3, 1) 150ms both;
+    }
+
+    .journey.is-in .journey-door {
+      animation: journey-arrive 2600ms linear 200ms both;
+    }
+  }
+}
+
+/* Reduced motion, or no JavaScript to add `is-in`: the route is simply drawn
+   and the glasses have arrived. Nothing is hidden and nothing is waiting. */
+@media (prefers-reduced-motion: reduce) {
+  .journey-route {
+    stroke-dashoffset: 0;
+  }
+
+  .journey-rider {
+    offset-distance: 100%;
+  }
+
+  .journey-door {
+    opacity: 1;
+  }
+}
+
+html:not(.js) .journey-route {
+  stroke-dashoffset: 0;
+}
+
+html:not(.js) .journey-rider {
+  offset-distance: 100%;
+}
+
+html:not(.js) .journey-door {
+  opacity: 1;
+}

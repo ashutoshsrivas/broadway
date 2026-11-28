@@ -9,7 +9,8 @@ import { LogoMark } from "@/components/Logo";
 import { SearchOverlay } from "@/components/layout/SearchOverlay";
 import { BagButton } from "@/components/store/BagButton";
 
-import type { MenuItem, MenuPanel } from "@/lib/menu";
+import type { MenuBrand, MenuColumn, MenuItem, MenuPanel } from "@/lib/menu";
+import { brandEnquiryLink } from "@/lib/whatsapp";
 
 function subscribeToScroll(onChange: () => void) {
   window.addEventListener("scroll", onChange, { passive: true });
@@ -24,7 +25,14 @@ const AUDIENCES = [
   { label: "Kids", href: "/shop?gender=Kids" },
 ];
 
-export function Header({ navLinks }: { navLinks: MenuItem[] }) {
+export function Header({
+  navLinks,
+  whatsapp,
+}: {
+  navLinks: MenuItem[];
+  /** For houses we list but do not stock — the menu sends them to WhatsApp. */
+  whatsapp?: string | null;
+}) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [drawerRoute, setDrawerRoute] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -208,7 +216,7 @@ export function Header({ navLinks }: { navLinks: MenuItem[] }) {
 
           {navLinks.map((link) =>
             link.panel && openPanel === link.id ? (
-              <DesktopPanel key={link.id} panel={link.panel} />
+              <DesktopPanel key={link.id} panel={link.panel} whatsapp={whatsapp} />
             ) : null
           )}
         </div>
@@ -260,7 +268,9 @@ export function Header({ navLinks }: { navLinks: MenuItem[] }) {
                             strokeWidth={1.5}
                           />
                         </button>
-                        {openDrawerPanel === link.id && <DrawerPanel panel={link.panel} />}
+                        {openDrawerPanel === link.id && (
+                          <DrawerPanel panel={link.panel} whatsapp={whatsapp} />
+                        )}
                       </>
                     ) : (
                       <Link
@@ -350,57 +360,160 @@ export function Header({ navLinks }: { navLinks: MenuItem[] }) {
   );
 }
 
+/** The destination line at the foot of a panel, in that panel's own words. */
+function panelFooterLabel(panel: MenuPanel): string {
+  if (panel.kind === "brands") return "See the brand wall →";
+  if (panel.kind === "shop") return "Shop everything →";
+  return `Shop all ${panel.title.toLowerCase()} →`;
+}
+
 /**
- * The mega-panel that drops out of a department on desktop.
+ * Turns a panel into plain columns of links.
  *
+ * The three panel kinds differ in what they contain, not in how a column of
+ * links looks, so the shape is flattened once here and both the desktop and
+ * the drawer renderer below work from the result. Empty columns are dropped
+ * rather than printed as a heading with nothing under it.
+ */
+function columnsOf(panel: MenuPanel): MenuColumn[] {
+  const brandLinks = (brands: MenuBrand[]) =>
+    brands.map((b) => ({ label: b.name, href: `/brands/${b.slug}` }));
+
+  const columns: MenuColumn[] =
+    panel.kind === "shop"
+      ? [
+          { title: "Featured brands", links: brandLinks(panel.featuredBrands) },
+          { title: "Shop for", links: panel.genders },
+          { title: "Category", links: panel.categories },
+        ]
+      : panel.kind === "department"
+        ? [
+            { title: "Shop for", links: panel.genders },
+            { title: "Top brands", links: brandLinks(panel.topBrands) },
+            { title: "Exclusive luxury", links: brandLinks(panel.luxuryBrands) },
+          ]
+        : [];
+
+  return columns.filter((c) => c.links.length > 0);
+}
+
+/**
+ * Where a house in the menu should send someone.
+ *
+ * A brand we list but have nothing on the shelf for has no page worth
+ * opening, so it goes straight to WhatsApp — the same rule the brand wall
+ * and the A–Z list already follow.
+ */
+function brandHref(brand: MenuBrand, whatsapp?: string | null): string {
+  return brand.stocked ? `/brands/${brand.slug}` : brandEnquiryLink(brand.name, whatsapp);
+}
+
+/** The wall of logos under Our Brands. */
+function BrandWall({
+  brands,
+  whatsapp,
+  compact = false,
+}: {
+  brands: MenuBrand[];
+  whatsapp?: string | null;
+  compact?: boolean;
+}) {
+  return (
+    <ul
+      className={`grid gap-x-6 gap-y-6 ${
+        compact ? "grid-cols-3" : "grid-cols-4 xl:grid-cols-6"
+      }`}
+    >
+      {brands.map((brand) => {
+        const href = brandHref(brand, whatsapp);
+        const external = !brand.stocked;
+        return (
+          <li key={brand.slug}>
+            <Link
+              href={href}
+              {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              aria-label={
+                external ? `${brand.name} — enquire on WhatsApp` : brand.name
+              }
+              className="group flex h-11 items-center justify-center"
+            >
+              {brand.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={brand.logoUrl}
+                  alt=""
+                  loading="lazy"
+                  className="max-h-full w-auto max-w-full object-contain opacity-55 grayscale transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0"
+                />
+              ) : (
+                <span className="label text-center text-[0.6rem] text-ink-muted transition-colors group-hover:text-ink">
+                  {brand.name}
+                </span>
+              )}
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+/**
+ * The mega-panel that drops out of a link on desktop. *
  * Four columns, in the order the shop asked for: who it is for, the shapes we
  * actually stock, the houses worth naming and the few that are not for
  * everyone. A column with nothing in it is left out rather than printed as an
  * empty heading.
  */
-function DesktopPanel({ panel }: { panel: MenuPanel }) {
-  const columns: { title: string; links: { label: string; href: string }[] }[] = [
-    { title: "Shop for", links: panel.genders },
-    { title: "Shape", links: panel.shapes },
-    {
-      title: "Top brands",
-      links: panel.topBrands.map((b) => ({ label: b.name, href: `/brands/${b.slug}` })),
-    },
-    {
-      title: "Exclusive luxury",
-      links: panel.luxuryBrands.map((b) => ({ label: b.name, href: `/brands/${b.slug}` })),
-    },
-  ].filter((c) => c.links.length > 0);
+function DesktopPanel({
+  panel,
+  whatsapp,
+}: {
+  panel: MenuPanel;
+  whatsapp?: string | null;
+}) {
+  const columns = columnsOf(panel);
 
   return (
     <div className="menu-panel absolute inset-x-0 top-full z-50 border-b border-line bg-paper shadow-[0_18px_40px_-28px_rgba(42,31,23,0.5)]">
       <div className="mx-auto max-w-[1500px] px-10 py-9">
-        <div
-          className="grid gap-x-10 gap-y-8"
-          style={{ gridTemplateColumns: `repeat(${Math.max(columns.length, 1)}, minmax(0, 1fr))` }}
-        >
-          {columns.map((column) => (
-            <div key={column.title}>
-              <p className="label text-brass">{column.title}</p>
-              <ul className="mt-4 space-y-2.5">
-                {column.links.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="label text-[0.68rem] text-ink-soft transition-colors hover:text-ink"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+        {panel.kind === "brands" ? (
+          <>
+            <p className="label text-brass">Every house we carry</p>
+            <div className="mt-6">
+              <BrandWall brands={panel.brands} whatsapp={whatsapp} />
             </div>
-          ))}
-        </div>
+          </>
+        ) : (
+          <div
+            className="grid gap-x-10 gap-y-8"
+            style={{
+              gridTemplateColumns: `repeat(${Math.max(columns.length, 1)}, minmax(0, 1fr))`,
+            }}
+          >
+            {columns.map((column) => (
+              <div key={column.title}>
+                <p className="label text-brass">{column.title}</p>
+                <ul className="mt-4 space-y-2.5">
+                  {column.links.map((link) => (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
+                        className="label text-[0.68rem] text-ink-soft transition-colors hover:text-ink"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="mt-8 border-t border-line pt-5">
           <Link href={panel.allHref} className="label link-rule text-ink">
-            Shop all {panel.categoryName.toLowerCase()} →
+            {panelFooterLabel(panel)}
           </Link>
         </div>
       </div>
@@ -414,45 +527,46 @@ function DesktopPanel({ panel }: { panel: MenuPanel }) {
  * Shapes and brands are laid out as tappable chips: a phone menu of forty
  * underlined links is a scroll nobody finishes.
  */
-function DrawerPanel({ panel }: { panel: MenuPanel }) {
-  const groups: { title: string; links: { label: string; href: string }[] }[] = [
-    { title: "Shop for", links: panel.genders },
-    { title: "Shape", links: panel.shapes },
-    {
-      title: "Top brands",
-      links: panel.topBrands.map((b) => ({ label: b.name, href: `/brands/${b.slug}` })),
-    },
-    {
-      title: "Exclusive luxury",
-      links: panel.luxuryBrands.map((b) => ({ label: b.name, href: `/brands/${b.slug}` })),
-    },
-  ].filter((g) => g.links.length > 0);
+function DrawerPanel({
+  panel,
+  whatsapp,
+}: {
+  panel: MenuPanel;
+  whatsapp?: string | null;
+}) {
+  const groups = columnsOf(panel);
 
   return (
     <div className="border-b border-line/60 bg-paper-raised px-4 py-5">
-      {groups.map((group) => (
-        <div key={group.title} className="mb-5 last:mb-0">
-          <p className="label text-[0.55rem] text-brass">{group.title}</p>
-          <ul className="mt-2.5 flex flex-wrap gap-2">
-            {group.links.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="label block border border-line bg-paper px-3.5 py-2 text-[0.6rem] text-ink-soft"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+      {panel.kind === "brands" ? (
+        <>
+          <p className="label text-[0.55rem] text-brass">Every house we carry</p>
+          <div className="mt-3">
+            <BrandWall brands={panel.brands} whatsapp={whatsapp} compact />
+          </div>
+        </>
+      ) : (
+        groups.map((group) => (
+          <div key={group.title} className="mb-5 last:mb-0">
+            <p className="label text-[0.55rem] text-brass">{group.title}</p>
+            <ul className="mt-2.5 flex flex-wrap gap-2">
+              {group.links.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="label block border border-line bg-paper px-3.5 py-2 text-[0.6rem] text-ink-soft"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      )}
 
-      <Link
-        href={panel.allHref}
-        className="label mt-5 block border-t border-line pt-4 text-brass"
-      >
-        Shop all {panel.categoryName.toLowerCase()} →
+      <Link href={panel.allHref} className="label mt-5 block border-t border-line pt-4 text-brass">
+        {panelFooterLabel(panel)}
       </Link>
     </div>
   );
