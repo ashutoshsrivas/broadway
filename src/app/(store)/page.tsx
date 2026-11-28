@@ -87,6 +87,7 @@ export default async function HomePage() {
         id: true,
         name: true,
         slug: true,
+        logoUrl: true,
         // "New on the rack" means exactly that: a frame shows here for the
         // configured number of days and falls off the day after, with no
         // flag for anyone to remember to clear.
@@ -185,7 +186,13 @@ export default async function HomePage() {
         )}
       </div>
 
-      <NewArrivalsDeck brands={arrivalBrands} newDays={newDays} />
+      <NewArrivalsDeck
+        brands={arrivalBrands}
+        newDays={newDays}
+        tabStyle={
+          (settings[SETTING_KEYS.newArrivalsTabs] as "logo" | "name" | "both") ?? "logo"
+        }
+      />
 
       {/* A brand block directly under New on the Rack, chosen in the admin. */}
       <BrandBlocks

@@ -10,8 +10,12 @@ export type BrandDeck = {
   id: string;
   name: string;
   slug: string;
+  logoUrl: string | null;
   products: ProductCardData[];
 };
+
+/** How the tabs are labelled. Set in the admin panel. */
+export type TabStyle = "logo" | "name" | "both";
 
 /** Milliseconds a card holds before the carousel advances. */
 const STEP_MS = 2000;
@@ -28,10 +32,12 @@ const STEP_MS = 2000;
 export function NewArrivalsDeck({
   brands,
   newDays,
+  tabStyle = "logo",
 }: {
   brands: BrandDeck[];
   /** How long a frame stays on this rack, from the admin panel. */
   newDays?: number;
+  tabStyle?: TabStyle;
 }) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -129,30 +135,81 @@ export function NewArrivalsDeck({
           </div>
         </div>
 
-        {/* ── Brand tabs ── */}
+        {/* ── Brand tabs ──
+            The houses are shown by their own logo where one has been
+            uploaded, because that is how a shopper recognises them — the
+            name is the fallback, not the default.
+
+            The tabs sit on paper rather than reversing to ink when active.
+            A logo is artwork someone else owns: knocking it out to white so
+            it reads on a dark tab works for a black wordmark and ruins a
+            logo that is already light, and we cannot know which we have
+            been given. Keeping every tab on the same light ground means the
+            artwork is always shown as its owner drew it. */}
         <div
           role="tablist"
           aria-label="Brands"
-          className="-mx-5 mt-9 flex gap-2 overflow-x-auto px-5 pb-1 lg:mx-0 lg:px-0"
+          className="-mx-5 mt-9 flex gap-2.5 overflow-x-auto px-5 pb-1 lg:mx-0 lg:px-0"
         >
           {brands.map((brand, i) => {
             const selected = i === active;
+            const showLogo = tabStyle !== "name" && Boolean(brand.logoUrl);
+            const showName = tabStyle === "name" || tabStyle === "both" || !brand.logoUrl;
+
             return (
               <button
                 key={brand.id}
                 role="tab"
                 aria-selected={selected}
+                // The logo carries no text, so the tab needs its own label.
+                aria-label={brand.name}
                 onClick={() => chooseBrand(i)}
-                className={`label shrink-0 border px-6 py-3 transition-colors ${
+                className={`group flex shrink-0 flex-col items-center justify-center gap-1.5 border bg-paper-raised px-5 py-3 transition-colors ${
                   selected
-                    ? "border-ink bg-ink text-paper"
-                    : "border-line text-ink-soft hover:border-ink hover:text-ink"
+                    ? "border-ink"
+                    : "border-line hover:border-ink-muted"
                 }`}
               >
-                {brand.name}
-                <span className={`ml-2 ${selected ? "text-brass-soft" : "text-ink-muted"}`}>
-                  {brand.products.length}
+                {showLogo && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={brand.logoUrl!}
+                    alt=""
+                    loading="lazy"
+                    className={`h-6 w-auto max-w-[7rem] object-contain transition-all lg:h-7 ${
+                      selected
+                        ? "opacity-100"
+                        : "opacity-45 grayscale group-hover:opacity-80 group-hover:grayscale-0"
+                    }`}
+                  />
+                )}
+
+                {showName && (
+                  <span
+                    className={`label whitespace-nowrap transition-colors ${
+                      selected ? "text-ink" : "text-ink-muted group-hover:text-ink-soft"
+                    }`}
+                  >
+                    {brand.name}
+                  </span>
+                )}
+
+                <span
+                  className={`label text-[0.5rem] transition-colors ${
+                    selected ? "text-brass" : "text-ink-muted/70"
+                  }`}
+                >
+                  {brand.products.length} new
                 </span>
+
+                {/* The brass rule is what marks the active house, now that
+                    the tab itself no longer reverses. */}
+                <span
+                  aria-hidden="true"
+                  className={`mt-0.5 h-px w-full transition-colors ${
+                    selected ? "bg-brass" : "bg-transparent"
+                  }`}
+                />
               </button>
             );
           })}

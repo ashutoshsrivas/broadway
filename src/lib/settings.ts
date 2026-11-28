@@ -38,6 +38,8 @@ export const SETTING_KEYS = {
   // ── Homepage behaviour ──
   /** How long a frame stays in New on the Rack, in days. */
   newArrivalsDays: "homepage.newArrivals.days",
+  /** How the New on the Rack brand tabs are labelled: "logo", "name" or "both". */
+  newArrivalsTabs: "homepage.newArrivals.tabs",
   /** "hidden" — no category boxes at all. "hover" — revealed on hover. */
   categoryBoxesMode: "homepage.categoryBoxes.mode",
   /** How many products a homepage grid shows on a phone before "See more". */
@@ -92,6 +94,7 @@ export const SETTING_KEYS = {
 export const SETTING_DEFAULTS: Partial<Record<SettingKey, string>> = {
   "homepage.hero.style": "lookbook",
   "homepage.newArrivals.days": "15",
+  "homepage.newArrivals.tabs": "logo",
   "homepage.categoryBoxes.mode": "hidden",
   "homepage.mobileGridCount": "6",
   "announcement.enabled": "1",

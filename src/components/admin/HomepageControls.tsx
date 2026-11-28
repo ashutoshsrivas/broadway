@@ -25,6 +25,7 @@ export function HomepageControls({ settings }: { settings: Settings }) {
   const [notices, setNotices] = useState(settings[SETTING_KEYS.announcementNotices] ?? "");
   const [mode, setMode] = useState(settings[SETTING_KEYS.categoryBoxesMode] ?? "hidden");
   const [heroStyle, setHeroStyle] = useState(settings[SETTING_KEYS.heroStyle] ?? "lookbook");
+  const [tabs, setTabs] = useState(settings[SETTING_KEYS.newArrivalsTabs] ?? "logo");
 
   const save = async (key: string, value: string) => {
     setSaving(key);
@@ -160,6 +161,49 @@ export function HomepageControls({ settings }: { settings: Settings }) {
         <p className="flex-1 text-xs leading-relaxed text-ink-muted">
           How long a frame shows on the New on the Rack deck and wears the New badge. At 15, a
           frame added today drops off on day 16. Nothing to clear by hand.
+        </p>
+      </div>
+
+      {/* ── How the brand tabs on that deck are labelled ─────────────────── */}
+      <div className="border border-line bg-paper-raised p-5">
+        <span className="label text-ink-muted">New on the Rack — brand tabs</span>
+        <div className="mt-3 space-y-3">
+          {[
+            {
+              value: "logo",
+              title: "Logo only",
+              note: "The house's own logo, which is how a shopper recognises it. A brand with no logo uploaded falls back to its name, so nothing disappears.",
+            },
+            {
+              value: "both",
+              title: "Logo and name",
+              note: "Both, stacked. Useful while the logos are still going up.",
+            },
+            { value: "name", title: "Name only", note: "The original — text tabs." },
+          ].map((option) => (
+            <label key={option.value} className="flex cursor-pointer items-start gap-3">
+              <input
+                type="radio"
+                name="newArrivalsTabs"
+                checked={tabs === option.value}
+                onChange={() => {
+                  setTabs(option.value);
+                  void save(SETTING_KEYS.newArrivalsTabs, option.value);
+                }}
+                className="mt-0.5 h-4 w-4 accent-[#B08D4F]"
+              />
+              <span>
+                <span className="label">{option.title}</span>
+                <span className="mt-1.5 block max-w-xl text-xs leading-relaxed text-ink-muted">
+                  {option.note}
+                </span>
+              </span>
+            </label>
+          ))}
+        </div>
+        <p className="mt-4 border-t border-line pt-3 text-xs leading-relaxed text-ink-muted">
+          Logos are uploaded per brand under Categories &amp; Brands, and which houses appear on
+          this deck is the &ldquo;Arrivals deck&rdquo; tick there.
         </p>
       </div>
 
