@@ -327,9 +327,17 @@ input[type="number"] {
   to   { width: 100%; }
 }
 
+/* A seamless loop needs the moving element to travel exactly one copy of
+   its content. That only holds when the animation is on the wrapper holding
+   two identical runs — put it on each run instead and every run slides half
+   of *itself*, which lands mid-list and snaps back.
+
+   It also needs the spacing to belong to the items, not to be a flex `gap`
+   between the runs: a gap between the two copies makes the wrapper wider
+   than two runs, so -50% stops short by half a gap and the seam shows. */
 @keyframes marquee {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
 }
 
 .animate-rise {

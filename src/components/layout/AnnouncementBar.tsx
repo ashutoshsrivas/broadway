@@ -6,9 +6,11 @@ const FALLBACK = [
 ];
 
 /**
- * Marquee bar. Two identical tracks sit side by side and the pair slides left
- * by exactly half its width, so the loop has no visible seam. Hovering pauses
- * it, because a notice that can't be read is just motion.
+ * Marquee bar. Two identical tracks sit side by side and the *pair* slides
+ * left by exactly half its width — one whole track — so the loop has no
+ * visible seam. Animating each track instead slides each by half of itself,
+ * which finishes mid-list and snaps. Hovering pauses it, because a notice
+ * that can't be read is just motion.
  *
  * The whole strip can be switched off in the admin panel, and the notices are
  * written there too — a sale line goes up and comes down without a deploy.
@@ -17,7 +19,7 @@ export function AnnouncementBar({ notices }: { notices?: string[] }) {
   const lines = notices?.length ? notices : FALLBACK;
 
   const track = (
-    <ul className="flex shrink-0 items-center animate-marquee">
+    <ul className="flex shrink-0 items-center">
       {lines.map((notice, i) => (
         <li
           key={`${notice}-${i}`}
@@ -32,7 +34,10 @@ export function AnnouncementBar({ notices }: { notices?: string[] }) {
 
   return (
     <div className="marquee-host overflow-hidden bg-ink" aria-label="Store notices">
-      <div className="flex w-max" style={{ ["--marquee-duration" as string]: "46s" }}>
+      <div
+        className="flex w-max animate-marquee"
+        style={{ ["--marquee-duration" as string]: "46s" }}
+      >
         {track}
         {/* Duplicate is decorative only — screen readers hear the list once. */}
         <div aria-hidden="true" className="contents">
