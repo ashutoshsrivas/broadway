@@ -93,21 +93,9 @@ export default async function AdminProductsPage() {
                       price={product.price}
                       mrp={product.mrp}
                       stock={stock}
+                      status={product.status}
                       variantCount={product.variants.length}
                     />
-                    <td className="px-5 py-3.5">
-                      <span
-                        className={`label border px-2.5 py-1.5 ${
-                          product.status === "ACTIVE"
-                            ? "border-forest/40 text-forest"
-                            : product.status === "DRAFT"
-                              ? "border-line text-ink-muted"
-                              : "border-clay/40 text-clay"
-                        }`}
-                      >
-                        {product.status}
-                      </span>
-                    </td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center justify-end gap-4">
                         <Link

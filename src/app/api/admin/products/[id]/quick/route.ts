@@ -8,8 +8,9 @@ const schema = z
   .object({
     price: z.number().min(0).max(10_000_000).optional(),
     stock: z.number().int().min(0).max(100_000).optional(),
+    status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]).optional(),
   })
-  .refine((v) => v.price !== undefined || v.stock !== undefined, {
+  .refine((v) => v.price !== undefined || v.stock !== undefined || v.status !== undefined, {
     message: "Nothing to change",
   });
 
@@ -44,7 +45,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   });
   if (!product) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const { price, stock } = parsed.data;
+  const { price, stock, status } = parsed.data;
 
   if (price !== undefined && price > product.mrp) {
     return NextResponse.json(
@@ -61,8 +62,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   await db.$transaction(async (tx) => {
-    if (price !== undefined) {
-      await tx.product.update({ where: { id }, data: { price } });
+    if (price !== undefined || status !== undefined) {
+      await tx.product.update({
+        where: { id },
+        data: { ...(price !== undefined ? { price } : {}), ...(status ? { status } : {}) },
+      });
     }
     if (stock !== undefined) {
       await tx.productVariant.update({ where: { id: product.variants[0].id }, data: { stock } });
@@ -77,6 +81,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     select: {
       price: true,
       mrp: true,
+      status: true,
       soldOutAt: true,
       variants: { select: { stock: true } },
     },
@@ -85,6 +90,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   return NextResponse.json({
     price: fresh?.price,
     stock: fresh?.variants.reduce((sum, v) => sum + v.stock, 0) ?? 0,
+    status: fresh?.status,
     soldOut: Boolean(fresh?.soldOutAt),
   });
 }

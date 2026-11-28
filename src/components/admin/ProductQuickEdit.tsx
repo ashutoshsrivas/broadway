@@ -15,24 +15,28 @@ import { formatPrice, discountPct } from "@/lib/utils";
  * thing to forget. A rejected change is rolled back on screen, so the cell
  * never shows a number the database does not hold.
  */
+const STATUSES = ["DRAFT", "ACTIVE", "ARCHIVED"] as const;
+
 export function ProductQuickEdit({
   id,
   price,
   mrp,
   stock,
+  status,
   variantCount,
 }: {
   id: string;
   price: number;
   mrp: number;
   stock: number;
+  status: string;
   variantCount: number;
 }) {
   const router = useRouter();
-  const [values, setValues] = useState({ price, stock });
+  const [values, setValues] = useState({ price, stock, status });
   const [busy, setBusy] = useState(false);
 
-  const save = async (patch: { price?: number; stock?: number }) => {
+  const save = async (patch: { price?: number; stock?: number; status?: string }) => {
     const before = values;
     setValues((v) => ({ ...v, ...patch }));
     setBusy(true);
@@ -51,7 +55,7 @@ export function ProductQuickEdit({
       return;
     }
 
-    setValues({ price: data.price, stock: data.stock });
+    setValues({ price: data.price, stock: data.stock, status: data.status });
     toast.success("Saved");
     router.refresh();
   };
@@ -117,6 +121,31 @@ export function ProductQuickEdit({
             </span>
           </Link>
         )}
+      </td>
+
+      <td className="px-5 py-3.5">
+        {/* Draft and back is the switch the shop reaches for most — taking a
+            frame off sale while a photograph is reshot, or putting one live
+            the moment it lands. */}
+        <select
+          value={values.status}
+          disabled={busy}
+          onChange={(e) => void save({ status: e.target.value })}
+          aria-label="Status"
+          className={`field-box !text-xs ${
+            values.status === "ACTIVE"
+              ? "!text-forest"
+              : values.status === "ARCHIVED"
+                ? "!text-clay"
+                : "!text-ink-muted"
+          }`}
+        >
+          {STATUSES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
       </td>
     </>
   );
