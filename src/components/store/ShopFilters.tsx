@@ -14,6 +14,7 @@ type Facets = {
   genders: string[];
   shapes: string[];
   materials: string[];
+  sizes: string[];
   colours: string[];
 };
 
@@ -185,6 +186,19 @@ export function ShopFilters({
               label={material}
               checked={params.getAll("material").includes(material)}
               onChange={() => toggle("material", material)}
+            />
+          ))}
+        </Group>
+      )}
+
+      {facets.sizes.length > 0 && (
+        <Group title="Size">
+          {facets.sizes.map((size) => (
+            <Option
+              key={size}
+              label={size}
+              checked={params.getAll("size").includes(size)}
+              onChange={() => toggle("size", size)}
             />
           ))}
         </Group>

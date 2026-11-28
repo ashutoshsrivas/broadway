@@ -141,7 +141,7 @@ export function ProductDetail({
     <div className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
       {/* ── Gallery ── */}
       <div className="lg:sticky lg:top-[124px] lg:self-start">
-        <div className="relative aspect-[4/3] overflow-hidden bg-paper-sunk">
+        <div className="relative aspect-[4/5] overflow-hidden bg-paper-sunk">
           {product.images[activeImage] ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -222,7 +222,7 @@ export function ProductDetail({
             </div>
             <p className="mt-1.5 text-xs text-ink-muted">
               {product.category.gstPercent
-                ? `Inclusive of GST at ${product.category.gstPercent}%`
+                ? `MRP inclusive of ${product.category.gstPercent}% GST`
                 : "Inclusive of all taxes"}
             </p>
           </>

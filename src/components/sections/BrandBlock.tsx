@@ -1,6 +1,7 @@
 import Link from "next/link";
-import type { BrandBlockData } from "@/lib/home-blocks";
+import type { BlockProduct, BrandBlockData } from "@/lib/home-blocks";
 import { brandEnquiryLink } from "@/lib/whatsapp";
+import { formatPrice, discountPct } from "@/lib/utils";
 
 /**
  * A brand block: the house's own logo on its own colour, one line of copy and
@@ -33,12 +34,24 @@ export function BrandBlock({
     block.ctaLabel?.trim() ||
     (brand.isStoreExclusive ? "Enquire on WhatsApp" : "Shop the Brand");
 
+  // With frames chosen the block becomes a split: copy on the left, frames
+  // on the right. With none it stays the centred band it has always been,
+  // so adding this did not change any block already in use.
+  const split = block.products.length > 0;
+
   return (
     <section
       className={`border-y border-line ${onColour ? "" : "bg-paper-raised"}`}
       style={backdrop ? { backgroundColor: backdrop } : undefined}
     >
-      <div className="mx-auto flex max-w-[1500px] flex-col items-center px-5 py-14 text-center lg:px-10 lg:py-20">
+      <div
+        className={
+          split
+            ? "mx-auto grid max-w-[1500px] items-center gap-10 px-5 py-14 lg:grid-cols-[1fr_1fr] lg:gap-16 lg:px-10 lg:py-20"
+            : "mx-auto flex max-w-[1500px] flex-col items-center px-5 py-14 text-center lg:px-10 lg:py-20"
+        }
+      >
+        <div className={split ? "flex flex-col items-start text-left" : "contents"}>
         {block.eyebrow && (
           <p className={`label-lg ${onColour ? "text-paper/70" : "text-brass"}`}>
             {block.eyebrow}
@@ -113,8 +126,85 @@ export function BrandBlock({
         >
           {cta}
         </Link>
+        </div>
+
+        {split && (
+          <ul
+            className={`grid gap-5 ${
+              block.products.length > 1 ? "grid-cols-2" : "mx-auto max-w-sm grid-cols-1"
+            }`}
+          >
+            {block.products.map((product) => (
+              <li key={product.id}>
+                <BlockFrame product={product} onColour={onColour} />
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </section>
+  );
+}
+
+/**
+ * One frame beside a brand block.
+ *
+ * Deliberately plainer than the shop card — no colour dots, no New badge.
+ * This is a brand showcase, and a row of badges would pull against it.
+ */
+function BlockFrame({
+  product,
+  onColour,
+}: {
+  product: BlockProduct;
+  onColour: boolean;
+}) {
+  const save = product.priceHidden ? 0 : discountPct(product.mrp, product.price);
+
+  return (
+    <Link href={`/product/${product.slug}`} className="group block">
+      <div className="relative aspect-[4/5] overflow-hidden bg-paper-sunk">
+        {product.imageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={product.imageUrl}
+            alt={product.name}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          />
+        )}
+        {save > 0 && (
+          <span className="label absolute left-3 top-3 bg-clay px-2.5 py-1.5 text-paper">
+            Save {save}%
+          </span>
+        )}
+      </div>
+
+      <p
+        className={`label mt-4 text-[0.7rem] transition-colors ${
+          onColour ? "text-paper group-hover:text-brass-soft" : "text-ink group-hover:text-brass"
+        }`}
+      >
+        {product.name}
+      </p>
+
+      <p className="label mt-2 text-[0.7rem]">
+        {product.priceHidden ? (
+          <span className={onColour ? "text-paper/70" : "text-ink-muted"}>Price in store</span>
+        ) : (
+          <>
+            <span className={save > 0 ? "text-clay" : onColour ? "text-paper/70" : "text-ink-soft"}>
+              {formatPrice(product.price)}
+            </span>
+            {save > 0 && (
+              <span className={`ml-2 line-through ${onColour ? "text-paper/45" : "text-ink-muted"}`}>
+                {formatPrice(product.mrp)}
+              </span>
+            )}
+          </>
+        )}
+      </p>
+    </Link>
   );
 }
 

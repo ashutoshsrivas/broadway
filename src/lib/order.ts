@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { shippingFor } from "@/lib/shipping";
+import { shippingFor, type ShippingMethod } from "@/lib/shipping";
 import { toRupees } from "@/lib/utils";
 import { syncSoldOut } from "@/lib/stock-status";
 
@@ -71,7 +71,8 @@ export type Repriced = {
  * item is the trouble instead of failing whole.
  */
 export async function repriceCart(
-  input: { variantId: string; quantity: number }[]
+  input: { variantId: string; quantity: number }[],
+  method: ShippingMethod = "STANDARD"
 ): Promise<Repriced> {
   const variants = await db.productVariant.findMany({
     where: { id: { in: input.map((i) => i.variantId) } },
@@ -145,7 +146,7 @@ export async function repriceCart(
   const subtotal = lines
     .filter((l) => l.available)
     .reduce((sum, l) => sum + l.totalPrice, 0);
-  const shipping = shippingFor(subtotal);
+  const shipping = shippingFor(subtotal, method);
 
   return {
     lines,
@@ -161,9 +162,10 @@ export async function repriceCart(
  * rather than be displayed.
  */
 export async function priceCart(
-  input: { variantId: string; quantity: number }[]
+  input: { variantId: string; quantity: number }[],
+  method: ShippingMethod = "STANDARD"
 ): Promise<{ lines: PricedLine[]; subtotal: number; shipping: number; total: number }> {
-  const priced = await repriceCart(input);
+  const priced = await repriceCart(input, method);
 
   const bad = priced.lines.find((l) => !l.available);
   if (bad) throw new Error(`${bad.productName}: ${bad.issue}`);

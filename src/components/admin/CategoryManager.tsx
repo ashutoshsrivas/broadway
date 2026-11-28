@@ -76,8 +76,9 @@ export function CategoryManager({ categories }: { categories: CategoryRow[] }) {
       <h2 className="label-lg">Categories</h2>
       <p className="mt-2 max-w-2xl text-xs leading-relaxed text-ink-muted">
         The departments products are filed under. A category with products cannot be deleted.
-        GST is charged per department — sunglasses are 18%; optical frames are seeded at 12% and
-        should be confirmed with your accountant. Leave it blank to charge nothing.
+        GST is charged per department — 18% on sunglasses, 5% on optical frames. Every price
+        you enter already includes it, so this rate is for the invoice and the tax breakdown,
+        not something added at checkout. Leave it blank to show no rate.
       </p>
       <hr className="rule-deco mt-4 mb-6" />
 

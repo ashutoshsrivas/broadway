@@ -68,7 +68,7 @@ export function MustHaveSpotlight({
         <div className="mt-14 grid items-center gap-10 lg:grid-cols-2 lg:gap-20">
           <Link
             href={`/product/${product.slug}`}
-            className="group relative block aspect-[4/3] overflow-hidden bg-paper"
+            className="group relative block aspect-[4/5] overflow-hidden bg-paper"
           >
             {product.images[0] && (
               // eslint-disable-next-line @next/next/no-img-element

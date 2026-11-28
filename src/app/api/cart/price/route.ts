@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { repriceCart } from "@/lib/order";
+import { asShippingMethod } from "@/lib/shipping";
 
 const schema = z.object({
   items: z
@@ -11,6 +12,8 @@ const schema = z.object({
       })
     )
     .max(50),
+  /** Which delivery the shopper has picked, so the quoted total matches. */
+  shippingMethod: z.string().optional(),
 });
 
 /**
@@ -31,7 +34,9 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    return NextResponse.json(await repriceCart(parsed.data.items));
+    return NextResponse.json(
+      await repriceCart(parsed.data.items, asShippingMethod(parsed.data.shippingMethod))
+    );
   } catch (err) {
     console.error("Reprice failed", err);
     return NextResponse.json({ error: "Could not price your bag." }, { status: 500 });

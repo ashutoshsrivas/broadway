@@ -85,6 +85,10 @@ export const SETTING_KEYS = {
   footerMapsUrl: "footer.mapsUrl",
   footerInstagram: "footer.instagram",
   footerFacebook: "footer.facebook",
+  /** The second number in the contact column. */
+  footerPhoneAlt: "footer.phoneAlt",
+  /** The About Us paragraphs in the footer. A blank line starts a new one. */
+  footerAbout: "footer.about",
 
   // ── Shipping ──
   shippingRegular: "shipping.regular",

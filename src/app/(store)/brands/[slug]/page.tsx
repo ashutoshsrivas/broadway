@@ -83,10 +83,22 @@ export default async function BrandPage({ params }: { params: Promise<{ slug: st
   // theirs is the one thing a brand will notice.
   const poster = brand.bannerUrl ?? brand.tileUrl;
   const backdrop = brand.accentHex?.trim() || null;
+
+  // The house colour, published once as a custom property on the page root.
+  // Everything below that should follow the brand — rules, the eyebrow, the
+  // buttons — reads it from there rather than each taking its own copy, so
+  // changing the colour in the admin changes the page in one place.
+  const theme = backdrop
+    ? ({ ["--brand" as string]: backdrop } as React.CSSProperties)
+    : undefined;
+  // Without a colour the page keeps the house palette, so a brand nobody has
+  // themed still looks like Broadway rather than like a mistake.
+  const brandInk = backdrop ? "text-[var(--brand)]" : "text-brass";
+  const brandRule = backdrop ? "border-[var(--brand)]" : "border-brass";
   const showLogoOverPoster = Boolean(brand.logoUrl) && !brand.posterHasLogo;
 
   return (
-    <>
+    <div style={theme}>
       {/* ── Cover ── */}
       <section
         className="relative isolate h-[46svh] min-h-[20rem] overflow-hidden bg-ink lg:h-[58svh]"
@@ -158,7 +170,11 @@ export default async function BrandPage({ params }: { params: Promise<{ slug: st
       {brand.description && (
         <section className="border-b border-line bg-paper-raised">
           <div className="mx-auto max-w-3xl px-5 py-16 text-center lg:py-20">
-            <p className="label text-brass">The House</p>
+            <p className={`label ${brandInk}`}>The House</p>
+            <hr
+              className={`mx-auto mt-5 w-16 border-0 border-t-2 ${brandRule}`}
+              aria-hidden="true"
+            />
             <p className="mt-6 whitespace-pre-line text-[1.05rem] leading-relaxed text-ink-soft">
               {brand.description}
             </p>
@@ -168,7 +184,10 @@ export default async function BrandPage({ params }: { params: Promise<{ slug: st
 
       {/* ── The long read, for the premium houses ── */}
       {brand.isPremium && (
-        <section className="border-b border-line bg-ink text-paper grain">
+        <section
+          className="border-b border-line text-paper grain"
+          style={{ backgroundColor: backdrop ?? "var(--color-ink)" }}
+        >
           <div className="mx-auto grid max-w-[1500px] gap-10 px-5 py-16 lg:grid-cols-2 lg:items-center lg:gap-16 lg:px-10 lg:py-24">
             <div className="deco-frame relative aspect-[4/5] overflow-hidden bg-paper-sunk/10 lg:order-last">
               {brand.storyImageUrl ? (
@@ -220,10 +239,19 @@ export default async function BrandPage({ params }: { params: Promise<{ slug: st
       {/* ── Their frames ── */}
       <section className="mx-auto max-w-[1500px] px-5 py-16 lg:px-10 lg:py-20">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <h2 className="display text-[clamp(1.6rem,3.5vw,2.5rem)]">
-            {brand.name} <em>frames</em>
-          </h2>
-          <Link href={`/shop?brand=${brand.slug}`} className="label link-rule pb-1 text-ink-soft">
+          <div>
+            <span
+              className={`block h-0.5 w-12 ${backdrop ? "bg-[var(--brand)]" : "bg-brass"}`}
+              aria-hidden="true"
+            />
+            <h2 className="display mt-4 text-[clamp(1.6rem,3.5vw,2.5rem)]">
+              {brand.name} <em>frames</em>
+            </h2>
+          </div>
+          <Link
+            href={`/shop?brand=${brand.slug}`}
+            className={`label link-rule pb-1 ${backdrop ? "text-[var(--brand)]" : "text-ink-soft"}`}
+          >
             Filter &amp; sort all {brand.name} →
           </Link>
         </div>
@@ -262,13 +290,17 @@ export default async function BrandPage({ params }: { params: Promise<{ slug: st
             </ul>
 
             <div className="mt-12 text-center">
-              <Link href="/shop" className="btn-ink label inline-block px-12 py-4">
+              <Link
+                href="/shop"
+                className="label inline-block px-12 py-4 text-paper transition-opacity hover:opacity-85"
+                style={{ backgroundColor: backdrop ?? "var(--color-ink)" }}
+              >
                 Shop All Eyewear
               </Link>
             </div>
           </div>
         </section>
       )}
-    </>
+    </div>
   );
 }

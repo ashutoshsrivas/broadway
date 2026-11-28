@@ -13,6 +13,8 @@ export const brandBlockSchema = z.object({
   heading: z.string().trim().max(160).nullable().optional(),
   blurb: z.string().trim().max(600).nullable().optional(),
   ctaLabel: z.string().trim().max(60).nullable().optional(),
+  productAId: z.string().trim().nullable().optional(),
+  productBId: z.string().trim().nullable().optional(),
   sortOrder: z.number().int().min(0).max(99).default(0),
   isActive: z.boolean().default(true),
 });

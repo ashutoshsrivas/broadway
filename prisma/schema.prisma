@@ -524,6 +524,13 @@ model HomeBrandBlock {
   blurb    String? @db.Text
   ctaLabel String?
 
+  /// Up to two frames shown beside the copy. With neither set the block
+  /// stays centred as it was; with one or two the copy moves left and the
+  /// frames take the right. Ids rather than a relation, because a block
+  /// must survive the product being deleted — it simply shows fewer.
+  productAId String?
+  productBId String?
+
   sortOrder Int     @default(0)
   isActive  Boolean @default(true)
 
@@ -593,6 +600,9 @@ model Order {
 
   subtotal     Float
   shipping     Float   @default(0)
+  /// "STANDARD" or "EXPRESS", as chosen at checkout. Recorded so the shop
+  /// knows which promise it made when the parcel is packed.
+  shippingMethod String @default("STANDARD")
   /// Money off the subtotal, in rupees. Always computed server-side from the
   /// configured percentage — never taken from the browser.
   discount     Float   @default(0)

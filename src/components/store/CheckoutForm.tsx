@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { Lock, Banknote, CreditCard } from "lucide-react";
 import { useCartStore } from "@/lib/store";
 import { useCartPricing } from "@/lib/use-cart-pricing";
+import { SHIPPING_COPY, SHIPPING_METHODS, type ShippingMethod } from "@/lib/shipping";
 import { formatPrice } from "@/lib/utils";
 import { shippingFor } from "@/lib/shipping";
 import { useHydrated } from "@/lib/use-hydrated";
@@ -35,7 +36,8 @@ export function CheckoutForm({
 }) {
   const router = useRouter();
   const { items, clearCart } = useCartStore();
-  const { priced, stale } = useCartPricing();
+  const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("STANDARD");
+  const { priced, stale } = useCartPricing(shippingMethod);
   const hydrated = useHydrated();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -83,6 +85,7 @@ export function CheckoutForm({
       body: JSON.stringify({
         code,
         email: email.trim(),
+        shippingMethod,
         items: items.map((i) => ({
           variantId: i.variantId,
           quantity: i.quantity,
@@ -120,6 +123,7 @@ export function CheckoutForm({
       paymentMethod: method,
       promoCode: promo?.code,
       // Only ids and quantities go over the wire; the server prices the bag.
+      shippingMethod,
       items: items.map((i) => ({
         variantId: i.variantId,
         quantity: i.quantity,
@@ -251,6 +255,41 @@ export function CheckoutForm({
               <Field name="city" label="City" required />
               <Field name="state" label="State" required />
               <Field name="pincode" label="PIN code" inputMode="numeric" maxLength={6} required />
+            </div>
+          </section>
+
+          <section>
+            <h2 className="label-lg">Delivery</h2>
+            <hr className="rule-deco mt-4 mb-6" />
+            <div className="space-y-3">
+              {SHIPPING_METHODS.map((option) => {
+                const copy = SHIPPING_COPY[option];
+                const selected = shippingMethod === option;
+                return (
+                  <label
+                    key={option}
+                    className={`flex cursor-pointer items-start gap-4 border p-5 transition-colors ${
+                      selected ? "border-ink bg-paper-raised" : "border-line hover:border-ink-muted"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="shippingMethod"
+                      value={option}
+                      checked={selected}
+                      onChange={() => setShippingMethod(option)}
+                      className="mt-1 h-4 w-4 accent-[#2A1F17]"
+                    />
+                    <span className="flex-1">
+                      <span className="label flex flex-wrap items-baseline gap-x-3">
+                        {copy.label}
+                        <span className="text-[0.6rem] text-brass">{copy.days}</span>
+                      </span>
+                      <span className="mt-1.5 block text-xs text-ink-muted">{copy.note}</span>
+                    </span>
+                  </label>
+                );
+              })}
             </div>
           </section>
 
@@ -391,7 +430,12 @@ export function CheckoutForm({
                 </div>
               )}
               <div className="flex justify-between">
-                <dt className="text-ink-soft">Shipping</dt>
+                <dt className="text-ink-soft">
+                  Shipping
+                  <span className="ml-2 text-xs text-ink-muted">
+                    {SHIPPING_COPY[shippingMethod].label} · {SHIPPING_COPY[shippingMethod].days}
+                  </span>
+                </dt>
                 <dd>
                   {shipping === 0 ? <span className="text-brass">Complimentary</span> : formatPrice(shipping)}
                 </dd>

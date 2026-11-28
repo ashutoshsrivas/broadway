@@ -6,6 +6,7 @@ import { rateLimit, callerIp } from "@/lib/rate-limit";
 import { nextOrderNumber, priceCart, deductStock } from "@/lib/order";
 import { isRazorpayConfigured, razorpay } from "@/lib/razorpay";
 import { checkPromo } from "@/lib/promo";
+import { asShippingMethod } from "@/lib/shipping";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Name is required").max(200),
@@ -28,6 +29,7 @@ const schema = z.object({
   notes: z.string().trim().max(1000).optional(),
   promoCode: z.string().trim().max(40).optional(),
   // Only ids and quantities are accepted. Prices are always derived server-side.
+  shippingMethod: z.string().optional(),
   items: z
     .array(
       z.object({
@@ -75,7 +77,7 @@ export async function POST(req: NextRequest) {
 
   let priced;
   try {
-    priced = await priceCart(data.items);
+    priced = await priceCart(data.items, asShippingMethod(data.shippingMethod));
   } catch (err) {
     // priceCart throws readable, shopper-facing messages (out of stock, etc).
     return NextResponse.json(
@@ -131,6 +133,7 @@ export async function POST(req: NextRequest) {
           paymentStatus: "PENDING",
           subtotal: priced.subtotal,
           shipping: priced.shipping,
+          shippingMethod: asShippingMethod(data.shippingMethod),
           discount,
           discountCode,
           total,

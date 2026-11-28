@@ -12,6 +12,7 @@ export type ShopFilters = {
   shape?: string[];
   material?: string[];
   colour?: string[];
+  size?: string[];
   frameType?: string[];
   minPrice?: number;
   maxPrice?: number;
@@ -77,6 +78,7 @@ function buildWhere(f: ShopFilters): Prisma.ProductWhereInput {
   // Colour lives on the colourway, not the product, so a colour filter asks
   // for products that have at least one variant in that colour.
   if (f.colour?.length) where.variants = { some: { colorName: { in: f.colour } } };
+  if (f.size?.length) where.size = { in: f.size };
   if (f.frameType?.length) where.frameType = { in: f.frameType as never };
 
   if (f.minPrice != null || f.maxPrice != null) {
@@ -230,6 +232,7 @@ export async function shopFacets() {
     genders: of("GENDER"),
     shapes: of("SHAPE"),
     materials: of("MATERIAL"),
+    sizes: of("SIZE"),
     colours: colourRows.map((c) => c.colorName).filter(Boolean),
   };
 }

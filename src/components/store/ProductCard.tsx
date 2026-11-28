@@ -34,7 +34,7 @@ export function ProductCard({
   return (
     <article className="group">
       <Link href={`/product/${product.slug}`} className="block">
-        <div className="relative aspect-[4/3] overflow-hidden bg-paper-sunk">
+        <div className="relative aspect-[4/5] overflow-hidden bg-paper-sunk">
           {primary ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}

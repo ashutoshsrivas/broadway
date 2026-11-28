@@ -138,6 +138,11 @@ export default async function BannersPage() {
         <hr className="rule-deco mt-5 mb-6" />
         <BrandBlockManager
           initial={brandBlocks}
+          products={products.map((p) => ({
+            id: p.id,
+            name: p.name,
+            brand: p.brand?.name ?? null,
+          }))}
           brands={brands.map((b) => ({
             id: b.id,
             name: b.name,

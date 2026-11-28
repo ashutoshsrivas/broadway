@@ -57,12 +57,20 @@ export function FooterSettings({ settings }: { settings: Settings }) {
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           {field(SETTING_KEYS.footerAddress, "Address", "M-42, Outer Circle, Connaught Place…", 2)}
           {field(SETTING_KEYS.footerHours, "Opening hours", "Open 7 days a week · 10am – 8pm")}
-          {field(SETTING_KEYS.footerPhone, "Phone", "+91 11 2341 2345")}
+          {field(SETTING_KEYS.footerPhone, "Phone", "+91 135 2632280")}
+          {field(SETTING_KEYS.footerPhoneAlt, "Second phone", "+91 99999 72580")}
           {field(SETTING_KEYS.footerEmail, "Email", "care@broadwayopticals.com")}
           {field(SETTING_KEYS.footerMapsUrl, "Google Maps link", "https://maps.app.goo.gl/…")}
           {field(SETTING_KEYS.footerInstagram, "Instagram", "https://instagram.com/…")}
           {field(SETTING_KEYS.footerFacebook, "Facebook", "https://facebook.com/…")}
-          {field(SETTING_KEYS.footerBlurb, "The line under the wordmark", "Five decades of…", 2)}
+          <div className="lg:col-span-2">
+            {field(
+              SETTING_KEYS.footerAbout,
+              "About Us — the footer paragraphs",
+              "Founded in 1960… (a blank line starts a new paragraph)",
+              5
+            )}
+          </div>
         </div>
         <p className="mt-4 border-t border-line pt-3 text-xs leading-relaxed text-ink-muted">
           Until the address, phone and email are all filled in, the footer carries a notice saying

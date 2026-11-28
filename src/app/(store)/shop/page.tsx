@@ -12,6 +12,7 @@ import { ShopEditorialTile } from "@/components/store/ShopEditorialTile";
 import { buildShopGrid, DEFAULT_ROWS_BETWEEN } from "@/lib/shop-grid";
 import { SETTING_KEYS, getSettings, settingOn } from "@/lib/settings";
 import { ShuffleSeed } from "@/components/store/ShuffleSeed";
+import { SHIPPING_COPY } from "@/lib/shipping";
 import { db } from "@/lib/db";
 
 export const metadata: Metadata = {
@@ -65,6 +66,7 @@ export default async function ShopPage({
       shape: asList(sp.shape),
       material: asList(sp.material),
       colour: asList(sp.colour),
+      size: asList(sp.size),
       frameType: asList(sp.frameType),
       minPrice: asNumber(sp.minPrice),
       maxPrice: asNumber(sp.maxPrice),
@@ -94,7 +96,7 @@ export default async function ShopPage({
     : activeCategory?.name ?? "All Eyewear";
 
   const activeFilterCount =
-    ["brand", "gender", "shape", "material", "colour", "frameType"].reduce(
+    ["brand", "gender", "shape", "material", "colour", "size", "frameType"].reduce(
       (sum, key) => sum + asList(sp[key]).length,
       0
     ) +
@@ -110,6 +112,21 @@ export default async function ShopPage({
   return (
     <div className="mx-auto max-w-[1500px] px-5 py-10 lg:px-10 lg:py-14">
       <ShuffleSeed />
+
+      {/* The shop asked that express be visible before checkout, not
+          discovered there. */}
+      <p className="label mb-6 flex flex-wrap items-center gap-x-2.5 gap-y-1 border border-line bg-paper-raised px-4 py-3 text-[0.6rem] text-ink-muted">
+        <span className="text-brass">Delivery</span>
+        <span>
+          {SHIPPING_COPY.STANDARD.label} {SHIPPING_COPY.STANDARD.days}
+        </span>
+        <span className="text-line">·</span>
+        <span>
+          {SHIPPING_COPY.EXPRESS.label} {SHIPPING_COPY.EXPRESS.days}, {SHIPPING_COPY.EXPRESS.note}
+        </span>
+        <span className="text-line">·</span>
+        <span>Choose at checkout</span>
+      </p>
 
       <nav className="label mb-7 flex items-center gap-2 text-ink-muted" aria-label="Breadcrumb">
         <Link href="/" className="hover:text-ink">

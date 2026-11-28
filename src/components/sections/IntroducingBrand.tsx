@@ -51,7 +51,7 @@ export function IntroducingBrand({
                 className="w-[calc(50%-0.625rem)] lg:w-[calc(25%-1.5rem)]"
               >
                 <Link href={`/product/${product.slug}`} className="group block text-center">
-                  <div className="aspect-[4/3] overflow-hidden bg-paper">
+                  <div className="aspect-[4/5] overflow-hidden bg-paper">
                     {product.images[0] && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img

@@ -5,6 +5,26 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Upload, Plus, Trash2, X } from "lucide-react";
 
+/**
+ * A short palette of house colours.
+ *
+ * Not an attempt at every brand's exact book colour — it is the handful of
+ * grounds that actually suit a logo wall, so the common case is one click
+ * and anything else is typed as a hex below.
+ */
+const BRAND_SWATCHES = [
+  { name: "Crimson", hex: "#8B1D24" },
+  { name: "Forest", hex: "#1F3A2E" },
+  { name: "Ink", hex: "#2A1F17" },
+  { name: "Charcoal", hex: "#2A2A33" },
+  { name: "Navy", hex: "#1B2A4A" },
+  { name: "Brass", hex: "#B08D4F" },
+  { name: "Clay", hex: "#9C4A2F" },
+  { name: "Olive", hex: "#4A4A2E" },
+  { name: "Plum", hex: "#3E2436" },
+  { name: "Stone", hex: "#6F6A61" },
+] as const;
+
 export type BrandRow = {
   id: string;
   name: string;
@@ -171,35 +191,80 @@ export function BrandManager({ initial }: { initial: BrandRow[] }) {
               />
             </label>
 
-            {/* The house colour. Used behind the logo on the brand page when
-                there is no poster, and behind a homepage brand block. */}
-            <label className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-4">
-              <span>
-                <span className="label text-ink-muted">Brand colour</span>
-                <span className="mt-1 block text-[0.65rem] leading-relaxed text-ink-muted">
-                  Backdrop when there is no poster
+            {/* The house colour. It themes the whole brand page — the cover,
+                the rules, the buttons — so it is worth getting right. */}
+            <div className="mt-4 border-t border-line pt-4">
+              <div className="flex items-start justify-between gap-3">
+                <span>
+                  <span className="label text-ink-muted">Brand colour</span>
+                  <span className="mt-1 block text-[0.65rem] leading-relaxed text-ink-muted">
+                    Themes this house&rsquo;s page
+                  </span>
                 </span>
-              </span>
-              <span className="flex items-center gap-2">
-                <input
-                  type="color"
-                  value={brand.accentHex ?? "#1F3A2E"}
-                  onChange={(e) => void patch(brand.id, { accentHex: e.target.value })}
-                  aria-label={`${brand.name} brand colour`}
-                  className="h-9 w-12 cursor-pointer border border-line bg-paper p-0.5"
-                />
-                {brand.accentHex && (
-                  <button
-                    type="button"
-                    onClick={() => void patch(brand.id, { accentHex: null })}
-                    title="Clear the colour"
-                    className="p-1.5 text-ink-muted transition-colors hover:text-clay"
-                  >
-                    <X className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  </button>
-                )}
-              </span>
-            </label>
+                <span className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={brand.accentHex ?? "#1F3A2E"}
+                    onChange={(e) => void patch(brand.id, { accentHex: e.target.value })}
+                    aria-label={`${brand.name} brand colour`}
+                    className="h-9 w-12 cursor-pointer border border-line bg-paper p-0.5"
+                  />
+                  {brand.accentHex && (
+                    <button
+                      type="button"
+                      onClick={() => void patch(brand.id, { accentHex: null })}
+                      title="Clear the colour"
+                      className="p-1.5 text-ink-muted transition-colors hover:text-clay"
+                    >
+                      <X className="h-3.5 w-3.5" strokeWidth={1.5} />
+                    </button>
+                  )}
+                </span>
+              </div>
+
+              {/* Swatches for the houses whose colour everyone already knows,
+                  so the common case is one click rather than hunting for a
+                  hex in a colour wheel. */}
+              <ul className="mt-3 flex flex-wrap gap-1.5">
+                {BRAND_SWATCHES.map((swatch) => {
+                  const chosen =
+                    brand.accentHex?.toLowerCase() === swatch.hex.toLowerCase();
+                  return (
+                    <li key={swatch.hex}>
+                      <button
+                        type="button"
+                        onClick={() => void patch(brand.id, { accentHex: swatch.hex })}
+                        title={`${swatch.name} · ${swatch.hex}`}
+                        aria-label={swatch.name}
+                        className={`h-6 w-6 border transition-transform hover:scale-110 ${
+                          chosen ? "border-ink ring-1 ring-ink ring-offset-1" : "border-line"
+                        }`}
+                        style={{ backgroundColor: swatch.hex }}
+                      />
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {/* The hex itself, typed or pasted — a brand book gives you a
+                  hex, not a point on a colour wheel. */}
+              <input
+                defaultValue={brand.accentHex ?? ""}
+                key={brand.accentHex ?? "blank"}
+                onBlur={(e) => {
+                  const value = e.target.value.trim();
+                  if (value === (brand.accentHex ?? "")) return;
+                  if (!value) return void patch(brand.id, { accentHex: null });
+                  if (!/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value)) {
+                    toast.error("Use a hex colour like #8B1D24");
+                    return;
+                  }
+                  void patch(brand.id, { accentHex: value });
+                }}
+                placeholder="#8B1D24"
+                className="field-box mt-2.5 !text-xs"
+              />
+            </div>
 
             <div className="mt-4 space-y-2.5 border-t border-line pt-4">
               <Toggle

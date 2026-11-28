@@ -4,6 +4,8 @@ export type ShopContact = {
   blurb: string;
   address: string;
   phone: string;
+  phoneAlt: string | null;
+  about: string;
   email: string;
   hours: string;
   mapsUrl: string | null;
@@ -35,6 +37,10 @@ export function getContact(settings: Partial<Record<SettingKey, string>>): ShopC
       "Five decades of precision lens craft and the world's finest frames.",
     address: address || PLACEHOLDER_ADDRESS,
     phone: phone || PLACEHOLDER_PHONE,
+    phoneAlt: settings[SETTING_KEYS.footerPhoneAlt]?.trim() || null,
+    about:
+      settings[SETTING_KEYS.footerAbout]?.trim() ||
+      "Founded in 1960, Broadway Opticians is a niche eyewear boutique in the foothills of the Himalayas at Mussoorie.\n\nOur mission is an unparalleled eyewear experience, through a curated selection of the finest international designer houses — chosen to suit your own style rather than the season's.",
     email: email || PLACEHOLDER_EMAIL,
     hours: settings[SETTING_KEYS.footerHours]?.trim() || "Open 7 days a week · 10am – 8pm",
     mapsUrl: settings[SETTING_KEYS.footerMapsUrl]?.trim() || null,

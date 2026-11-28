@@ -14,9 +14,13 @@ export type BlockRow = {
   heading: string | null;
   blurb: string | null;
   ctaLabel: string | null;
+  productAId: string | null;
+  productBId: string | null;
   sortOrder: number;
   isActive: boolean;
 };
+
+export type ProductOption = { id: string; name: string; brand: string | null };
 
 export type BrandOption = {
   id: string;
@@ -36,9 +40,11 @@ export type BrandOption = {
 export function BrandBlockManager({
   initial,
   brands,
+  products,
 }: {
   initial: BlockRow[];
   brands: BrandOption[];
+  products: ProductOption[];
 }) {
   const router = useRouter();
   const [blocks, setBlocks] = useState(initial);
@@ -203,6 +209,34 @@ export function BrandBlockManager({
                     placeholder="Button — defaults to “Shop the Brand”"
                     className="field-box !text-xs"
                   />
+                </div>
+
+                {/* Up to two frames. Choosing one moves the copy to the
+                    left and puts the frames on the right; choosing neither
+                    leaves the block centred as it was. */}
+                <div className="mt-4 grid gap-3 border-t border-line pt-4 sm:grid-cols-2">
+                  {([
+                    ["productAId", "First frame"],
+                    ["productBId", "Second frame"],
+                  ] as const).map(([key, label]) => (
+                    <label key={key} className="block">
+                      <span className="label text-[0.55rem] text-ink-muted">{label}</span>
+                      <select
+                        value={block[key] ?? ""}
+                        onChange={(e) =>
+                          void patch(block.id, { [key]: e.target.value || null })
+                        }
+                        className="field-box mt-1 !text-xs"
+                      >
+                        <option value="">None</option>
+                        {products.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.brand ? `${p.brand} — ${p.name}` : p.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ))}
                 </div>
 
                 <div className="mt-4 flex items-center justify-end gap-1 border-t border-line pt-3">
