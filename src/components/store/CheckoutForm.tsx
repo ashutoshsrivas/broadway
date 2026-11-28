@@ -44,6 +44,10 @@ export function CheckoutForm({
   const [method, setMethod] = useState<"RAZORPAY" | "COD">(
     onlinePaymentAvailable ? "RAZORPAY" : "COD"
   );
+  const [giftCode, setGiftCode] = useState("");
+  const [gift, setGift] = useState<{ code: string; applies: number; balance: number } | null>(null);
+  const [giftError, setGiftError] = useState<string | null>(null);
+  const [checkingGift, setCheckingGift] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [promo, setPromo] = useState<{ amount: number; percent: number; code: string } | null>(null);
   const [promoError, setPromoError] = useState<string | null>(null);
@@ -60,11 +64,39 @@ export function CheckoutForm({
 
   // Server prices, so the figure the shopper agrees to is the figure the
   // gateway is asked for.
+  const applyGift = async () => {
+    const code = giftCode.trim();
+    if (!code) return;
+
+    setCheckingGift(true);
+    setGiftError(null);
+
+    const res = await fetch("/api/gift-cards", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code, subtotal: Math.max(0, (priced?.subtotal ?? 0) - (promo?.amount ?? 0)) }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setCheckingGift(false);
+
+    if (!res.ok) {
+      setGift(null);
+      setGiftError(data.error ?? "That card could not be used.");
+      return;
+    }
+    setGift({ code: data.code, applies: data.applies, balance: data.balance });
+  };
+
   const subtotal = priced?.subtotal ?? 0;
   const shipping = priced?.shipping ?? shippingFor(subtotal);
   const unavailable = priced?.lines.filter((l) => !l.available) ?? [];
   const discount = promo?.amount ?? 0;
-  const total = Math.max(0, subtotal - discount) + shipping;
+  // A card comes off what is left after any offer, and cannot take the order
+  // below zero. The server recomputes all of this; these figures are only
+  // what the shopper is shown while deciding.
+  const afterDiscount = Math.max(0, subtotal - discount);
+  const giftApplied = gift ? Math.min(gift.applies, afterDiscount) : 0;
+  const total = Math.max(0, afterDiscount - giftApplied) + shipping;
 
   /** Ask the server whether this code applies. The answer is advisory —
    *  /api/orders re-checks it when the order is actually created. */
@@ -86,6 +118,7 @@ export function CheckoutForm({
         code,
         email: email.trim(),
         shippingMethod,
+        giftCardCode: gift?.code,
         items: items.map((i) => ({
           variantId: i.variantId,
           quantity: i.quantity,
@@ -124,6 +157,7 @@ export function CheckoutForm({
       promoCode: promo?.code,
       // Only ids and quantities go over the wire; the server prices the bag.
       shippingMethod,
+      giftCardCode: gift?.code,
       items: items.map((i) => ({
         variantId: i.variantId,
         quantity: i.quantity,
@@ -418,6 +452,56 @@ export function CheckoutForm({
               )}
             </div>
 
+            {/* ── Gift card ── */}
+            <div className="mt-4 border-t border-line pt-5">
+              {gift ? (
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm">
+                    <span className="label text-brass">{gift.code}</span>
+                    <span className="mt-1 block text-xs text-ink-muted">
+                      {formatPrice(Math.max(0, gift.balance - giftApplied))} left after this order
+                    </span>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setGift(null);
+                      setGiftCode("");
+                    }}
+                    className="label text-ink-muted hover:text-clay"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="flex gap-2">
+                    <input
+                      value={giftCode}
+                      onChange={(e) => setGiftCode(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          void applyGift();
+                        }
+                      }}
+                      placeholder="Gift card code"
+                      className="field-box flex-1 uppercase"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => void applyGift()}
+                      disabled={checkingGift || !giftCode.trim()}
+                      className="btn-outline label shrink-0 px-5"
+                    >
+                      {checkingGift ? "…" : "Apply"}
+                    </button>
+                  </div>
+                  {giftError && <p className="mt-2 text-xs text-clay">{giftError}</p>}
+                </>
+              )}
+            </div>
+
             <dl className="mt-5 space-y-2.5 border-t border-line pt-5 text-sm">
               <div className="flex justify-between">
                 <dt className="text-ink-soft">Subtotal</dt>
@@ -427,6 +511,12 @@ export function CheckoutForm({
                 <div className="flex justify-between text-clay">
                   <dt>Offer ({promo?.percent}%)</dt>
                   <dd>−{formatPrice(discount)}</dd>
+                </div>
+              )}
+              {giftApplied > 0 && (
+                <div className="flex justify-between text-forest">
+                  <dt>Gift card</dt>
+                  <dd>−{formatPrice(giftApplied)}</dd>
                 </div>
               )}
               <div className="flex justify-between">

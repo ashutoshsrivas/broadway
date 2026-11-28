@@ -19,6 +19,7 @@ const SHOP_LINKS = [
   { label: "Shop by Brand", href: "/shop-by-brand" },
   { label: "Our Brands", href: "/brands" },
   { label: "Broadway at Home", href: "/broadway-at-home" },
+  { label: "Gift Cards", href: "/gift-cards" },
 ];
 
 /**

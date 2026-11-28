@@ -562,6 +562,59 @@ model TrustBox {
   @@index([isActive, sortOrder])
 }
 
+/// A gift card, bought for a value the giver chooses.
+///
+/// `balance` starts equal to `value` and only ever goes down. That is the
+/// whole guard against the loophole the shop described: a card is worth what
+/// was paid for it, because the amount paid is the only thing that ever sets
+/// the balance, and redemption subtracts rather than assigns.
+model GiftCard {
+  id   String @id @default(cuid())
+  /// What the buyer quotes at checkout. Unique, and never reused.
+  code String @unique
+
+  /// Paid for the card, in rupees. Never changes.
+  value   Float
+  /// What is left on it. Set to `value` at issue, decremented on redemption.
+  balance Float
+
+  recipientName  String?
+  recipientEmail String?
+  senderName     String?
+  message        String? @db.Text
+
+  /// PENDING until the order that buys it is paid; ACTIVE once it can be
+  /// spent; SPENT at a zero balance; VOID if the shop cancels it.
+  status String @default("PENDING")
+
+  /// The order that bought this card.
+  purchaseOrderId String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  expiresAt DateTime?
+
+  redemptions GiftCardRedemption[]
+
+  @@index([status])
+}
+
+/// One use of a card against one order. A ledger rather than a flag, so the
+/// balance can always be re-derived from what was actually spent.
+model GiftCardRedemption {
+  id         String   @id @default(cuid())
+  giftCardId String
+  giftCard   GiftCard @relation(fields: [giftCardId], references: [id], onDelete: Cascade)
+
+  orderId String
+  amount  Float
+
+  createdAt DateTime @default(now())
+
+  @@index([giftCardId])
+  @@index([orderId])
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // ORDERS
 // ──────────────────────────────────────────────────────────────────────────────
@@ -608,6 +661,9 @@ model Order {
   discount     Float   @default(0)
   /// The code that earned it, kept so the shop can see what was redeemed.
   discountCode String?
+  /// A gift card spent on this order, and how much of it went.
+  giftCardCode   String?
+  giftCardAmount Float   @default(0)
   total        Float
 
   notes String? @db.Text

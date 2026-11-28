@@ -400,8 +400,16 @@ export function ProductDetail({
         {/* 4 — Everything else, folded away. Specifications open, because
             that is the one block a shopper came for. */}
         <div className="mt-10 border-t border-line">
-          {specs.length > 0 && (
-            <Collapsible title="Product specifications" defaultOpen>
+          {(specs.length > 0 || product.description) && (
+            <Collapsible title="Product Specifications" defaultOpen>
+              {/* The description lives at the head of the specs rather than
+                  in a row of its own, so the accordion is the six the shop
+                  asked for and not seven. */}
+              {product.description && (
+                <p className="mb-6 whitespace-pre-line text-[0.95rem] leading-relaxed text-ink-soft">
+                  {product.description}
+                </p>
+              )}
               <dl className="grid gap-x-8 sm:grid-cols-2">
                 {specs.map(([term, value]) => (
                   <div
@@ -416,16 +424,8 @@ export function ProductDetail({
             </Collapsible>
           )}
 
-          {product.description && (
-            <Collapsible title="Description">
-              <p className="whitespace-pre-line text-[0.95rem] leading-relaxed text-ink-soft">
-                {product.description}
-              </p>
-            </Collapsible>
-          )}
-
           {product.brand?.description && (
-            <Collapsible title={`About ${product.brand.name}`}>
+            <Collapsible title="About Brand">
               <p className="whitespace-pre-line text-[0.95rem] leading-relaxed text-ink-soft">
                 {product.brand.description}
               </p>

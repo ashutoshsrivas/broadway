@@ -7,6 +7,7 @@ import { nextOrderNumber, priceCart, deductStock } from "@/lib/order";
 import { isRazorpayConfigured, razorpay } from "@/lib/razorpay";
 import { checkPromo } from "@/lib/promo";
 import { asShippingMethod } from "@/lib/shipping";
+import { checkGiftCard, commitGiftCard } from "@/lib/gift-card";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Name is required").max(200),
@@ -30,6 +31,7 @@ const schema = z.object({
   promoCode: z.string().trim().max(40).optional(),
   // Only ids and quantities are accepted. Prices are always derived server-side.
   shippingMethod: z.string().optional(),
+  giftCardCode: z.string().trim().max(40).optional(),
   items: z
     .array(
       z.object({
@@ -104,7 +106,22 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const total = Math.max(0, priced.subtotal - discount) + priced.shipping;
+  // A gift card comes off what is left after any promo, and never takes the
+  // order below zero. Re-checked here rather than trusted from the browser,
+  // so the amount applied is decided by the balance in the database.
+  const afterDiscount = Math.max(0, priced.subtotal - discount);
+  let giftCardCode: string | null = null;
+  let giftCardAmount = 0;
+
+  if (data.giftCardCode) {
+    const card = await checkGiftCard(data.giftCardCode, afterDiscount);
+    if (card.ok) {
+      giftCardCode = card.code;
+      giftCardAmount = card.applies;
+    }
+  }
+
+  const total = Math.max(0, afterDiscount - giftCardAmount) + priced.shipping;
 
   const session = await auth();
   const userId = session?.user?.id ?? null;
@@ -134,6 +151,8 @@ export async function POST(req: NextRequest) {
           subtotal: priced.subtotal,
           shipping: priced.shipping,
           shippingMethod: asShippingMethod(data.shippingMethod),
+          giftCardCode,
+          giftCardAmount,
           discount,
           discountCode,
           total,
@@ -163,6 +182,7 @@ export async function POST(req: NextRequest) {
 
   if (data.paymentMethod === "COD") {
     await deductStock(order.id);
+    await commitGiftCard(order.id);
     return NextResponse.json({ orderNumber: order.orderNumber, paid: false });
   }
 

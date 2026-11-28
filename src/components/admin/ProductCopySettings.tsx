@@ -88,7 +88,7 @@ export function ProductCopySettings({ settings }: { settings: Settings }) {
       <div className="grid gap-4 border-t border-line pt-5 lg:grid-cols-2">
         {[
           SETTING_KEYS.productAuthenticity,
-          SETTING_KEYS.productWarranty,
+          SETTING_KEYS.productCare,
           SETTING_KEYS.productShipping,
           SETTING_KEYS.productAfterSales,
         ].map((key) =>

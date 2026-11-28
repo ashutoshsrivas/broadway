@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { db } from "@/lib/db";
-import { formatPrice, discountPct } from "@/lib/utils";
 import { DeleteProductButton } from "@/components/admin/DeleteProductButton";
+import { ProductQuickEdit } from "@/components/admin/ProductQuickEdit";
 
 export default async function AdminProductsPage() {
   const products = await db.product.findMany({
@@ -40,9 +40,10 @@ export default async function AdminProductsPage() {
         </div>
       ) : (
         <div className="overflow-x-auto border border-line bg-paper-raised">
-          <table className="w-full min-w-[820px] text-sm">
+          <table className="w-full min-w-[900px] text-sm">
             <thead>
               <tr className="border-b border-line">
+                <th className="label px-5 py-3.5 text-right text-ink-muted">#</th>
                 <th className="label px-5 py-3.5 text-left text-ink-muted">Product</th>
                 <th className="label px-5 py-3.5 text-left text-ink-muted">Category</th>
                 <th className="label px-5 py-3.5 text-right text-ink-muted">Price</th>
@@ -52,11 +53,16 @@ export default async function AdminProductsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
-              {products.map((product) => {
+              {products.map((product, i) => {
                 const stock = product.variants.reduce((sum, v) => sum + v.stock, 0);
-                const save = discountPct(product.mrp, product.price);
                 return (
                   <tr key={product.id}>
+                    {/* A plain running number, so the shop can say "row 14"
+                        on the phone. It follows the list's order rather than
+                        being stored, because it is a position, not an id. */}
+                    <td className="label px-5 py-3.5 text-right tabular-nums text-ink-muted">
+                      {i + 1}
+                    </td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3.5">
                         <div className="h-12 w-14 shrink-0 overflow-hidden bg-paper-sunk">
@@ -81,23 +87,14 @@ export default async function AdminProductsPage() {
                       </div>
                     </td>
                     <td className="px-5 py-3.5 text-ink-soft">{product.category.name}</td>
-                    <td className="px-5 py-3.5 text-right">
-                      <span className={save > 0 ? "text-clay" : ""}>
-                        {formatPrice(product.price)}
-                      </span>
-                      {save > 0 && (
-                        <span className="block text-xs text-ink-muted line-through">
-                          {formatPrice(product.mrp)}
-                        </span>
-                      )}
-                    </td>
-                    <td
-                      className={`px-5 py-3.5 text-right tabular-nums ${
-                        stock === 0 ? "text-clay" : stock <= 3 ? "text-brass" : ""
-                      }`}
-                    >
-                      {stock}
-                    </td>
+
+                    <ProductQuickEdit
+                      id={product.id}
+                      price={product.price}
+                      mrp={product.mrp}
+                      stock={stock}
+                      variantCount={product.variants.length}
+                    />
                     <td className="px-5 py-3.5">
                       <span
                         className={`label border px-2.5 py-1.5 ${

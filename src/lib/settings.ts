@@ -67,7 +67,7 @@ export const SETTING_KEYS = {
 
   // ── The collapsible blocks on every product page ──
   productAuthenticity: "product.authenticity",
-  productWarranty: "product.warranty",
+  productCare: "product.care",
   productShipping: "product.shipping",
   productAfterSales: "product.afterSales",
   productAssistHeading: "product.assist.heading",

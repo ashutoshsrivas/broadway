@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { deductStock } from "@/lib/order";
+import { commitGiftCard } from "@/lib/gift-card";
 import { verifyPaymentSignature } from "@/lib/razorpay";
 
 const schema = z.object({
@@ -67,6 +68,7 @@ export async function POST(req: NextRequest) {
     },
   });
   await deductStock(order.id);
+  await commitGiftCard(order.id);
 
   return NextResponse.json({ ok: true, orderNumber: order.orderNumber });
 }
